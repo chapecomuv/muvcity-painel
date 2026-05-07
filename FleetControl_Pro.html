@@ -9,7 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="MuvCity">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%237c3aed'/></linearGradient></defs><rect width='180' height='180' rx='40' fill='url(%23g)'/><path d='M38 122h19l-14-41h-11c-3 0-5 2-5 4v32c0 3 2 5 5 5h6zm104 0h-6c-3 0-5-2-5-5V85c0-3 2-5 5-5h11l-14 41h9zm-9-46H40c-3 0-5 2-5 5v42c0 3 2 5 5 5h93c3 0 5-2 5-5V81c0-3-2-5-5-5zm-83 36c-5 0-8-4-8-9s4-9 8-9 9 4 9 9-4 9-9 9zm74 0c-5 0-8-4-8-9s4-9 8-9 9 4 9 9-4 9-9 9z' fill='white'/></svg>">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>FleetControl Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1020,12 +1021,26 @@ html{scroll-behavior:smooth}
       <h2 id="page-title">Dashboard</h2>
       <div class="sub" id="page-sub">Visão geral da frota</div>
     </div>
-    <div class="topbar-r" id="topbar-actions">
+    <div class="topbar-r">
+      <span id="topbar-actions" style="display:contents"></span>
+      <label class="btn btn-ol btn-sm" title="Importar viagem finalizada do motorista" style="cursor:pointer;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+        Do Motorista
+        <input type="file" accept=".json" style="display:none" onchange="importDriverTrip(event)">
+      </label>
       <label class="btn btn-ol btn-sm" title="Importar lançamentos do sócio" style="cursor:pointer;gap:6px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Importar do Sócio
+        Do Sócio
         <input type="file" accept=".json" style="display:none" onchange="importPartnerData(event)">
       </label>
+      <button class="btn btn-ol btn-sm" title="Configurar sincronização na nuvem" onclick="openSyncSettings()" style="gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        Sync
+      </button>
+      <button class="btn btn-ol btn-sm" title="Bloquear painel (sair)" onclick="logoutApp()" style="gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Bloquear
+      </button>
     </div>
   </div>
   <div class="content" id="content">
@@ -1122,7 +1137,7 @@ html{scroll-behavior:smooth}
                 Despesas Variáveis
               </div>
               <div class="expv-sub">Gestão completa de gastos da operação · planos de pagamento · parcelas e boletos</div>
-              <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(99,102,241,.18));border:1px solid rgba(96,165,250,.4);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#a5b4fc">✨ Design v3.9 — Mobile Ready</div>
+              <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(99,102,241,.18));border:1px solid rgba(96,165,250,.4);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#a5b4fc">✨ Design v4.2 — Sync na Nuvem</div>
             </div>
             <div class="fl-row ic" style="gap:10px;flex-wrap:wrap">
               <div class="mnav">
@@ -3013,7 +3028,254 @@ function loadDB(){
 
   }catch(e){ DB = JSON.parse(JSON.stringify(INIT)); }
 }
-function saveDB(){ localStorage.setItem('fleetcontrol_db',JSON.stringify(DB)); }
+function saveDB(){
+  localStorage.setItem('fleetcontrol_db',JSON.stringify(DB));
+  // Sync na nuvem (se configurado)
+  if(typeof cloudSync==='object' && cloudSync.enabled) cloudSync.scheduledPush();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  CLOUD SYNC — Firebase Realtime Database (sem SDK, REST puro)
+// ════════════════════════════════════════════════════════════════
+const cloudSync = {
+  KEY:'muvcity_sync_url',
+  POLL_INTERVAL:20000,    // 20s
+  PUSH_DEBOUNCE:600,
+  enabled:false,
+  url:null,
+  pollTimer:null,
+  pushTimer:null,
+  lastPushTs:0,
+  lastPullTs:0,
+  status:'idle',     // idle | syncing | ok | error | offline
+
+  init(){
+    this.url=localStorage.getItem(this.KEY);
+    this.enabled=!!this.url;
+    if(this.enabled) this.startPolling();
+    this.renderIndicator();
+  },
+  setURL(url){
+    if(url && !url.endsWith('.json')) url=url.replace(/\/?$/,'/db.json');
+    if(url) localStorage.setItem(this.KEY,url);
+    else localStorage.removeItem(this.KEY);
+    this.url=url; this.enabled=!!url;
+    if(this.enabled) this.startPolling(); else this.stopPolling();
+    this.renderIndicator();
+  },
+  scheduledPush(){
+    if(!this.enabled) return;
+    clearTimeout(this.pushTimer);
+    this.pushTimer=setTimeout(()=>this.push(), this.PUSH_DEBOUNCE);
+  },
+  async push(){
+    if(!this.enabled||!this.url) return;
+    this.setStatus('syncing');
+    try{
+      const ts=Date.now();
+      const payload={...DB, _meta:{lastWrite:ts, lastWriter:'gestor', device:navigator.userAgent.slice(0,40)}};
+      const res=await fetch(this.url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      this.lastPushTs=ts;
+      localStorage.setItem('muvcity_lastWrite',String(ts));
+      this.setStatus('ok');
+    }catch(err){
+      console.warn('[sync] push falhou:',err);
+      this.setStatus('error');
+    }
+  },
+  async pull(){
+    if(!this.enabled||!this.url) return;
+    try{
+      const res=await fetch(this.url+'?cb='+Date.now());
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      if(data){
+        const cloudTs=parseInt(data?._meta?.lastWrite||0);
+        const localTs=parseInt(localStorage.getItem('muvcity_lastWrite')||'0');
+        if(cloudTs>localTs){
+          const {_meta,...db}=data;
+          DB=db;
+          localStorage.setItem('fleetcontrol_db',JSON.stringify(db));
+          localStorage.setItem('muvcity_lastWrite',String(cloudTs));
+          try{ renderCurrentPage(); updateSidebarLogo(); }catch(_){}
+          if(typeof showToast==='function') showToast('☁️ Atualizações recebidas','ok');
+        }
+      }
+      // Verifica também /drivers/* pra trazer atualizações dos motoristas
+      await this.pullDriverUpdates();
+      this.setStatus('ok');
+    }catch(err){
+      console.warn('[sync] pull falhou:',err);
+      this.setStatus('error');
+    }
+  },
+  async pullDriverUpdates(){
+    try{
+      const driversURL=this.url.replace('/db.json','/drivers.json')+'?cb='+Date.now();
+      const res=await fetch(driversURL);
+      if(!res.ok) return;
+      const drivers=await res.json();
+      if(!drivers) return;
+      let updated=0;
+      Object.values(drivers).forEach(driverData=>{
+        if(!driverData||!driverData.trips) return;
+        driverData.trips.forEach(dTrip=>{
+          if(!dTrip||!dTrip.id) return;
+          // Procura a viagem original no DB
+          const i=DB.trips.findIndex(t=>t.id===dTrip.id);
+          if(i===-1) return;
+          const orig=DB.trips[i];
+          // Só atualiza se status do motorista for diferente do registrado
+          if(orig.driverLastSync && orig.driverLastSync>=(dTrip._lastChange||0)) return;
+          // Aplica atualização vinda do motorista
+          if(dTrip.kmStart) orig.kmStart=n(dTrip.kmStart);
+          if(dTrip.kmEnd) orig.kmEnd=n(dTrip.kmEnd);
+          if(dTrip.kmEnd && dTrip.kmStart) orig.kmDriven=n(dTrip.kmEnd)-n(dTrip.kmStart);
+          if(dTrip.startedAt) orig.startedAt=dTrip.startedAt;
+          if(dTrip.finishedAt) orig.finishedAt=dTrip.finishedAt;
+          if(dTrip.status) orig.driverStatus=dTrip.status;
+          if(dTrip.expenses){
+            // Soma despesas categorizadas
+            let f=0,fd=0,h=0,o=0,oDescs=[];
+            dTrip.expenses.forEach(e=>{
+              const a=n(e.amount);
+              if(e.type==='combustivel') f+=a;
+              else if(e.type==='alimentacao') fd+=a;
+              else if(e.type==='hospedagem') h+=a;
+              else { o+=a; if(e.description) oDescs.push(e.description); }
+            });
+            orig.fuelCost=f; orig.foodCost=fd; orig.accommodationCost=h; orig.otherCost=o;
+            if(oDescs.length) orig.otherCostDesc='[motorista] '+oDescs.join('; ');
+            orig.driverExpenses=dTrip.expenses;
+          }
+          orig.driverLastSync=dTrip._lastChange||Date.now();
+          updated++;
+        });
+      });
+      if(updated>0){
+        localStorage.setItem('fleetcontrol_db',JSON.stringify(DB));
+        try{ renderCurrentPage(); }catch(_){}
+        if(typeof showToast==='function') showToast(`🚗 ${updated} atualização(ões) do motorista recebida(s)`,'ok');
+        // Sincroniza de volta pra cloud com os dados consolidados
+        this.scheduledPush();
+      }
+    }catch(err){
+      console.warn('[sync] pullDriverUpdates:',err);
+    }
+  },
+  startPolling(){
+    if(this.pollTimer) clearInterval(this.pollTimer);
+    setTimeout(()=>this.pull(),500);   // pull imediato
+    this.pollTimer=setInterval(()=>this.pull(),this.POLL_INTERVAL);
+  },
+  stopPolling(){
+    if(this.pollTimer){ clearInterval(this.pollTimer); this.pollTimer=null; }
+  },
+  setStatus(s){
+    this.status=s;
+    this.renderIndicator();
+  },
+  renderIndicator(){
+    let el=document.getElementById('sync-indicator');
+    if(!el){
+      el=document.createElement('div');
+      el.id='sync-indicator';
+      el.style.cssText='position:fixed;bottom:14px;right:14px;z-index:300;display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:22px;background:rgba(13,24,41,.95);border:1px solid rgba(148,163,184,.2);backdrop-filter:blur(12px);font-size:11.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.4);transition:all .2s;letter-spacing:.2px';
+      el.onclick=()=>openSyncSettings();
+      document.body.appendChild(el);
+    }
+    if(!this.enabled){
+      el.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:#64748b"></span> ☁️ Sync desligado`;
+      el.style.color='#94a3b8';
+      el.title='Clique pra ativar sincronização entre dispositivos';
+    } else if(this.status==='syncing'){
+      el.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;animation:pulse 1s infinite"></span> ☁️ Sincronizando…`;
+      el.style.color='#fbbf24';
+    } else if(this.status==='error'){
+      el.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:#ef4444"></span> ⚠️ Erro de sync`;
+      el.style.color='#fca5a5';
+      el.title='Clique pra ver as configurações';
+    } else {
+      el.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 0 0 rgba(16,185,129,.4);animation:pulse 2.4s infinite"></span> ☁️ Sincronizado`;
+      el.style.color='#34d399';
+      el.title='Sync ativo — todos dispositivos atualizados';
+    }
+  }
+};
+
+// Animação do ponto verde
+(function(){
+  if(document.getElementById('sync-anim-style')) return;
+  const s=document.createElement('style'); s.id='sync-anim-style';
+  s.textContent='@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}';
+  document.head.appendChild(s);
+})();
+
+function openSyncSettings(){
+  const isEnabled=cloudSync.enabled;
+  const cur=cloudSync.url||'';
+  const html=`<div class="overlay show" id="sync-overlay" onclick="if(event.target===this)closeSyncSettings()" style="display:flex">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-h">
+        <span class="modal-t">☁️ Sincronização na Nuvem</span>
+        <button class="xbtn" onclick="closeSyncSettings()">✕</button>
+      </div>
+      <div class="banner info" style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);border-radius:11px;padding:14px 16px;color:#a3e8ff;font-size:12.5px;line-height:1.6;margin-bottom:18px">
+        💡 <b>Como funciona:</b> com sync ativado, tudo que você lança no PC aparece em segundos no celular (e vice-versa). O sócio e o motorista também sincronizam. Sem mais export/import.
+      </div>
+      <div class="fsec">
+        <div class="fsec-t">URL do Firebase</div>
+        <input type="text" class="fc" id="sync-url" placeholder="https://meu-painel-default-rtdb.firebaseio.com/db.json" value="${cur}">
+        <div class="txs txm mt2">URL completa do seu Firebase Realtime Database. Veja o passo a passo abaixo se ainda não criou.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.025);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:14px 0">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#7ba9f9;text-transform:uppercase;margin-bottom:10px">📋 Como criar (4 minutos, é grátis)</div>
+        <ol style="font-size:12.5px;line-height:1.8;color:#cbd5f5;padding-left:20px">
+          <li>Acesse <a href="https://console.firebase.google.com" target="_blank" style="color:#67e8f9">console.firebase.google.com</a> e faça login com sua conta Google</li>
+          <li>Clique em <b>"Adicionar projeto"</b>, dê o nome <code style="background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px">muvcity-painel</code>, desative o Google Analytics e crie</li>
+          <li>No menu esquerdo, vá em <b>Build → Realtime Database</b> → <b>Criar banco de dados</b></li>
+          <li>Escolha região <b>"southamerica-east1"</b> (São Paulo)</li>
+          <li>Selecione <b>"Iniciar no modo de teste"</b> e clique Ativar</li>
+          <li>Quando o banco abrir, copie a URL no topo (algo como <code style="background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px">https://muvcity-painel-default-rtdb.firebaseio.com/</code>)</li>
+          <li>Cole aqui em cima e clique em <b>Salvar</b></li>
+          <li>Pronto. Faça o mesmo nos celulares (gestor, sócio, motorista) — todos com a mesma URL</li>
+        </ol>
+        <div style="margin-top:12px;padding:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:9px;font-size:11.5px;color:#fbbf24">
+          ⚠️ <b>Importante:</b> as regras padrão expiram em 30 dias. Vá em <b>Realtime Database → Regras</b> e cole:<br>
+          <code style="display:block;background:rgba(0,0,0,.3);padding:8px;border-radius:6px;margin-top:6px;font-size:10.5px;color:#cbd5f5;font-family:monospace">{ "rules": { ".read": true, ".write": true } }</code>
+          <span style="font-size:11px;display:block;margin-top:6px">Isso libera leitura/escrita pra qualquer pessoa com a URL — então NÃO compartilhe a URL publicamente, apenas com seu sócio/motoristas.</span>
+        </div>
+      </div>
+      <div class="fl-row ic jb mt4" style="flex-wrap:wrap;gap:8px">
+        <div>
+          ${isEnabled?`<button class="btn btn-gh" onclick="cloudSync.pull();showToast('Verificando atualizações...','ok')">🔄 Buscar agora</button>
+          <button class="btn btn-gh" style="color:#fca5a5" onclick="if(confirm('Desativar sync? Os dados continuam no celular.'))cloudSync.setURL('')">🚫 Desativar</button>`:''}
+        </div>
+        <div class="fl-row ic" style="gap:8px">
+          <button class="btn btn-gh" onclick="closeSyncSettings()">Fechar</button>
+          <button class="btn btn-pr" onclick="saveSyncSettings()">💾 Salvar e Ativar</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  let host=document.getElementById('sync-host');
+  if(!host){ host=document.createElement('div'); host.id='sync-host'; document.body.appendChild(host); }
+  host.innerHTML=html;
+}
+function closeSyncSettings(){ const h=document.getElementById('sync-host'); if(h) h.innerHTML=''; }
+function saveSyncSettings(){
+  const url=(document.getElementById('sync-url').value||'').trim();
+  if(!url){ alert('Cole a URL do Firebase'); return; }
+  if(!url.startsWith('https://') || !url.includes('firebaseio.com')){
+    if(!confirm('A URL não parece ser do Firebase. Continuar mesmo assim?')) return;
+  }
+  cloudSync.setURL(url);
+  closeSyncSettings();
+  showToast('☁️ Sync ativado! Em alguns segundos você verá os dados','ok');
+  // Faz primeiro pull pra trazer dados existentes
+  setTimeout(()=>cloudSync.pull(), 1500);
+}
 
 // ══════════ HELPERS ══════════
 function uid(){ return '_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
@@ -3697,6 +3959,7 @@ function renderTrips(){
       <td class="${c.netProfit>=0?'tsc':'tdr'} fb">${R(c.netProfit)}</td>
       <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span></td>
       <td style="white-space:nowrap">
+        <button class="btn btn-pr btn-xs" onclick="sendTripToDriver('${t.id}')" title="Enviar para o motorista (gera link/código)" style="margin-right:2px">📤</button>
         <button class="btn btn-gh btn-xs" onclick="editTrip('${t.id}')">✏️</button>
         <button class="btn btn-gh btn-xs" onclick="confirmDelete('trip','${t.id}')">🗑️</button></td>
     </tr>`;
@@ -5280,6 +5543,140 @@ function onTripNFInput(){
     else nfEl.dataset.manual='0';   // se voltou a igualar, retoma o auto-preenchimento
   }
   calcTripProfit();
+}
+
+// ════════ ENVIAR VIAGEM PRO MOTORISTA ════════
+function sendTripToDriver(tripId){
+  const t=DB.trips.find(x=>x.id===tripId);
+  if(!t){ alert('Viagem não encontrada'); return; }
+  // Monta payload simplificado pra mandar pro motorista
+  const veh=getVehicle(t.vehicleId);
+  const tripPayload={
+    id:t.id,
+    code: 'MV-'+(t.id||'').slice(-6).toUpperCase(),
+    date:t.date||t.departureDate,
+    returnDate:t.returnDate||null,
+    origin:t.origin||'',
+    destination:t.destination||'',
+    description:t.description||'',
+    vehicleId:t.vehicleId,
+    vehiclePlate:veh.plate||'',
+    vehicleModel:[veh.brand,veh.model].filter(Boolean).join(' '),
+    client:t.client||'',
+    driverName:t.driverName||'',
+    type:t.type||'avulso',
+    status:'programada',
+    expenses:[]
+  };
+  const payload={type:'muvcity-trip',version:'1.0',generatedAt:new Date().toISOString(),trip:tripPayload};
+  const json=JSON.stringify(payload);
+  const code=btoa(unescape(encodeURIComponent(json)));
+  // URL completa do app do motorista
+  const baseURL=location.href.replace(/\/[^/]*$/,'/');
+  const driverURL=baseURL+'FleetControl_Motorista.html?trip='+code;
+
+  const html=`<div class="overlay show" id="send-driver-overlay" onclick="if(event.target===this)closeSendDriver()" style="display:flex">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-h">
+        <span class="modal-t">📤 Enviar Viagem pro Motorista</span>
+        <button class="xbtn" onclick="closeSendDriver()">✕</button>
+      </div>
+      <div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);border-radius:11px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#a3e8ff;line-height:1.55">
+        💡 <b>Cole o link ou o código abaixo no WhatsApp do motorista.</b> Ele clica/cola e a viagem aparece no app dele já programada, pronta pra iniciar.
+      </div>
+      <div class="fsec">
+        <div class="fsec-t">🔗 Link direto (mais fácil)</div>
+        <textarea class="fc" readonly id="driver-link" rows="3" style="font-family:monospace;font-size:11.5px">${driverURL}</textarea>
+        <button class="btn btn-pr btn-sm mt2" onclick="copyText('driver-link','Link copiado!')" style="width:100%">📋 Copiar link</button>
+      </div>
+      <div class="fsec">
+        <div class="fsec-t">📝 Ou código (caso prefira)</div>
+        <textarea class="fc" readonly id="driver-code" rows="4" style="font-family:monospace;font-size:10.5px">${code}</textarea>
+        <button class="btn btn-ol btn-sm mt2" onclick="copyText('driver-code','Código copiado!')" style="width:100%">📋 Copiar código</button>
+      </div>
+      <div class="txs txm" style="margin-top:10px">
+        <b>Detalhes da viagem:</b> ${tripPayload.code} · ${tripPayload.origin} → ${tripPayload.destination} · ${fmtDate(tripPayload.date)} · ${tripPayload.vehiclePlate||'sem veículo'}
+      </div>
+    </div>
+  </div>`;
+  let host=document.getElementById('send-driver-host');
+  if(!host){ host=document.createElement('div'); host.id='send-driver-host'; document.body.appendChild(host); }
+  host.innerHTML=html;
+}
+function closeSendDriver(){
+  const h=document.getElementById('send-driver-host');
+  if(h) h.innerHTML='';
+}
+function copyText(id, msg){
+  const el=document.getElementById(id);
+  el.select(); el.setSelectionRange(0,99999);
+  try{
+    navigator.clipboard.writeText(el.value).then(()=>{
+      showToast(msg||'Copiado!','ok');
+    });
+  }catch(_){
+    document.execCommand('copy');
+    showToast(msg||'Copiado!','ok');
+  }
+}
+
+// ════════ IMPORTAR VIAGEM DO MOTORISTA ════════
+function importDriverTrip(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  event.target.value='';
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const payload=JSON.parse(ev.target.result);
+      if(payload.type!=='muvcity-trip-result'||!payload.trip){
+        alert('Arquivo inválido. Esse não é um arquivo de viagem do motorista.'); return;
+      }
+      const t=payload.trip;
+      const driverInfo=`${payload.exportedBy||'motorista'}${payload.driverPhone?' ('+payload.driverPhone+')':''}`;
+      const expCount=(t.expenses||[]).length;
+      const expSum=(t.expenses||[]).reduce((s,e)=>s+n(e.amount),0);
+      const km=(t.kmEnd&&t.kmStart)?(n(t.kmEnd)-n(t.kmStart)):0;
+      if(!confirm(`📥 Importar viagem do motorista\n\nMotorista: ${driverInfo}\nViagem: ${t.code||t.id}\nRota: ${t.origin||'?'} → ${t.destination||'?'}\nKM rodado: ${km.toLocaleString('pt-BR')} km\nLançamentos: ${expCount} (R$ ${expSum.toFixed(2)})\nStatus: ${t.status}\n\nIsso vai atualizar a viagem no painel.\n\nConfirmar?`)) return;
+
+      // Encontra a viagem original ou cria nova
+      let existing=DB.trips.find(x=>x.id===t.id);
+      if(existing){
+        // Atualiza com os dados do motorista
+        existing.kmStart=n(t.kmStart);
+        existing.kmEnd=n(t.kmEnd);
+        existing.kmDriven=km>0?km:existing.kmDriven;
+        existing.startedAt=t.startedAt;
+        existing.finishedAt=t.finishedAt;
+        existing.driverStatus=t.status;
+        // Soma despesas
+        let fuelSum=0, foodSum=0, hotelSum=0, otherSum=0;
+        (t.expenses||[]).forEach(e=>{
+          if(e.type==='combustivel') fuelSum+=n(e.amount);
+          else if(e.type==='alimentacao') foodSum+=n(e.amount);
+          else if(e.type==='hospedagem') hotelSum+=n(e.amount);
+          else otherSum+=n(e.amount);
+        });
+        existing.fuelCost=(n(existing.fuelCost)||0)+fuelSum;
+        existing.foodCost=(n(existing.foodCost)||0)+foodSum;
+        existing.accommodationCost=(n(existing.accommodationCost)||0)+hotelSum;
+        existing.otherCost=(n(existing.otherCost)||0)+otherSum;
+        if(otherSum>0){ existing.otherCostDesc=(existing.otherCostDesc||'')+' [motorista: '+(t.expenses.filter(e=>e.type==='outros').map(e=>e.description||'').filter(Boolean).join('; '))+']'; }
+        existing.driverExpenses=t.expenses;   // mantém detalhamento original
+        showToast('✅ Viagem atualizada com lançamentos do motorista','ok');
+      } else {
+        // Nova viagem (sem original)
+        DB.trips.push({...t, driverExpenses:t.expenses});
+        showToast('✅ Viagem importada (não havia original — criada nova)','warn');
+      }
+      saveDB();
+      renderCurrentPage();
+    } catch(err){
+      console.error(err);
+      alert('Erro ao ler o arquivo: '+err.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 function calcTripProfit(){
@@ -8436,10 +8833,111 @@ function importPartnerData(event){
 }
 
 // ══════════ INIT ══════════
-loadDB();
-updateSidebarLogo();
-updateMonthLabels();
-renderDashboard();
+function bootApp(){
+  loadDB();
+  updateSidebarLogo();
+  updateMonthLabels();
+  renderDashboard();
+  // Inicializa sync na nuvem (se já configurado)
+  cloudSync.init();
+}
+
+// ── PROTEÇÃO POR SENHA ──
+async function sha256(text){
+  const buf=new TextEncoder().encode(text);
+  const hash=await crypto.subtle.digest('SHA-256',buf);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function getStoredPassHash(){ return localStorage.getItem('fleetcontrol_passhash'); }
+function setStoredPassHash(h){ localStorage.setItem('fleetcontrol_passhash',h); }
+function setSession(){ sessionStorage.setItem('fleetcontrol_authok','1'); }
+function isLoggedThisSession(){ return sessionStorage.getItem('fleetcontrol_authok')==='1'; }
+
+function showLockOverlay(){
+  const has=getStoredPassHash();
+  const isFirst=!has;
+  const html=`
+    <div id="lock-overlay" style="position:fixed;inset:0;z-index:9000;background:radial-gradient(900px 500px at 12% -10%,rgba(59,130,246,.18),transparent 60%),radial-gradient(700px 480px at 92% 4%,rgba(139,92,246,.15),transparent 65%),#060d1a;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Inter',system-ui,sans-serif;color:#e6ecf6">
+      <div style="max-width:420px;width:100%;background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));border:1px solid rgba(148,163,184,.18);border-radius:20px;padding:36px 28px;box-shadow:0 32px 80px rgba(0,0,0,.6);text-align:center">
+        <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#7c3aed);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(59,130,246,.45);color:#fff">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h2 style="font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px;background:linear-gradient(135deg,#fff,#a3b8e3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${isFirst?'Definir Senha':'Painel Bloqueado'}</h2>
+        <p style="font-size:13px;color:#7689a1;margin-bottom:22px;line-height:1.55">${isFirst?'Esta é a primeira vez. Crie uma senha para proteger seus dados financeiros.':'Digite a senha para acessar o painel'}</p>
+        <input id="lock-pass" type="password" placeholder="${isFirst?'Crie uma senha forte':'Sua senha'}" autocomplete="current-password" style="width:100%;padding:12px 14px;border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.04);color:#e6ecf6;border-radius:11px;font-size:14px;outline:none;font-family:inherit;margin-bottom:${isFirst?'10px':'14px'}">
+        ${isFirst?`<input id="lock-pass2" type="password" placeholder="Confirme a senha" autocomplete="new-password" style="width:100%;padding:12px 14px;border:1px solid rgba(148,163,184,.22);background:rgba(255,255,255,.04);color:#e6ecf6;border-radius:11px;font-size:14px;outline:none;font-family:inherit;margin-bottom:14px">`:''}
+        <button id="lock-btn" style="width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:-.1px;box-shadow:0 8px 22px rgba(59,130,246,.4);transition:all .18s">${isFirst?'Criar Senha e Entrar':'Entrar'}</button>
+        ${isFirst?'':`<div style="margin-top:14px"><a href="#" id="lock-forgot" style="font-size:11.5px;color:#7689a1;text-decoration:none">Esqueci a senha</a></div>`}
+        <div id="lock-err" style="display:none;margin-top:12px;padding:9px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;color:#fca5a5;font-size:12.5px"></div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+  const inp=document.getElementById('lock-pass');
+  const inp2=document.getElementById('lock-pass2');
+  const btn=document.getElementById('lock-btn');
+  const err=document.getElementById('lock-err');
+  setTimeout(()=>inp.focus(),60);
+  const showErr=msg=>{err.textContent=msg;err.style.display='';};
+  const submit=async()=>{
+    err.style.display='none';
+    const pw=(inp.value||'').trim();
+    if(pw.length<4){ showErr('Senha precisa ter no mínimo 4 caracteres.'); return; }
+    if(isFirst){
+      const pw2=(inp2.value||'').trim();
+      if(pw!==pw2){ showErr('Senhas não conferem.'); return; }
+      const h=await sha256(pw);
+      setStoredPassHash(h);
+      setSession();
+      document.getElementById('lock-overlay').remove();
+      bootApp();
+    } else {
+      const h=await sha256(pw);
+      if(h!==has){ showErr('Senha incorreta. Tente novamente.'); inp.value=''; inp.focus(); return; }
+      setSession();
+      document.getElementById('lock-overlay').remove();
+      bootApp();
+    }
+  };
+  btn.addEventListener('click',submit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); if(isFirst){inp2.focus();}else submit();}});
+  if(inp2) inp2.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); submit();}});
+  const fg=document.getElementById('lock-forgot');
+  if(fg) fg.addEventListener('click',e=>{
+    e.preventDefault();
+    if(confirm('Esqueceu a senha?\n\nVocê pode RESETAR a senha — isso não apaga os dados, apenas remove a proteção. Você precisará criar uma nova senha em seguida.\n\nResetar agora?')){
+      localStorage.removeItem('fleetcontrol_passhash');
+      sessionStorage.removeItem('fleetcontrol_authok');
+      location.reload();
+    }
+  });
+}
+
+// Função pra trocar senha (chamada das Configurações)
+async function changeAppPassword(){
+  const cur=prompt('Senha atual:');
+  if(cur===null) return;
+  const curHash=await sha256(cur.trim());
+  if(curHash!==getStoredPassHash()){ alert('Senha atual incorreta.'); return; }
+  const nw=prompt('Nova senha (mínimo 4 caracteres):');
+  if(!nw||nw.trim().length<4){ alert('Senha inválida.'); return; }
+  const nw2=prompt('Confirme a nova senha:');
+  if(nw.trim()!==nw2?.trim()){ alert('Senhas não conferem.'); return; }
+  setStoredPassHash(await sha256(nw.trim()));
+  alert('Senha atualizada com sucesso! Use a nova senha no próximo acesso.');
+}
+function logoutApp(){
+  if(!confirm('Sair do painel? Você precisará digitar a senha novamente.')) return;
+  sessionStorage.removeItem('fleetcontrol_authok');
+  location.reload();
+}
+
+// Boot: se já logado nesta sessão, entra direto. Senão mostra lock.
+if(isLoggedThisSession()){
+  bootApp();
+} else {
+  showLockOverlay();
+}
 </script>
 </body>
 </html>
