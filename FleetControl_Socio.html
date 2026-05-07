@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FleetControl — Lançamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pr:#3b82f6;--prl:#60a5fa;--prd:#2563eb;
+  --sc:#10b981;--dg:#ef4444;--wn:#f59e0b;
+  --bg:#07111f;--bg2:#0d1829;--bg3:#162033;--bg4:#1e2d44;
+  --tx:#e2e8f0;--txm:#64748b;--bd:rgba(148,163,184,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:15px}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#0d1829,#0a1520);border-bottom:1px solid var(--bd);padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.header-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--pr),#6366f1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.header-title{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.header-sub{font-size:11px;color:var(--txm);margin-top:1px}
+.badge-count{margin-left:auto;background:var(--pr);color:#fff;border-radius:20px;padding:3px 11px;font-size:12px;font-weight:700}
+
+/* ── CONTENT ── */
+.content{padding:20px 16px;max-width:600px;margin:0 auto}
+
+/* ── CARDS ── */
+.card{background:rgba(255,255,255,.025);border:1px solid var(--bd);border-radius:16px;padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--prl);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;margin-bottom:14px}
+.fl{font-size:11px;font-weight:700;color:var(--txm);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.fc{background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.15);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:15px;width:100%;transition:all .18s;font-family:inherit;-webkit-appearance:none}
+.fc:focus{outline:none;border-color:var(--pr);background:rgba(59,130,246,.06);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.fc::placeholder{color:rgba(100,116,139,.5)}
+select.fc{cursor:pointer}
+select.fc option{background:#0d1829}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── TYPE SELECTOR ── */
+.type-sel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.type-btn{border:2px solid var(--bd);border-radius:14px;padding:14px 10px;background:rgba(255,255,255,.02);cursor:pointer;text-align:center;transition:all .2s;color:var(--txm)}
+.type-btn.active{border-color:var(--pr);background:rgba(59,130,246,.1);color:var(--tx)}
+.type-btn svg{display:block;margin:0 auto 8px}
+.type-btn-label{font-size:14px;font-weight:600}
+.type-btn-sub{font-size:11px;opacity:.7;margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;transition:all .18s;font-family:inherit;letter-spacing:-.1px}
+.btn-pr{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 4px 16px rgba(59,130,246,.35)}
+.btn-pr:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,.45)}
+.btn-pr:active{transform:translateY(0)}
+.btn-sc{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.3)}
+.btn-sc:hover{transform:translateY(-1px)}
+.btn-gh{background:rgba(255,255,255,.05);color:var(--txm);border:1px solid var(--bd)}
+.btn-sm{padding:9px 14px;font-size:13px;width:auto;border-radius:9px}
+
+/* ── ENTRIES LIST ── */
+.entry-item{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.entry-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.entry-icon-exp{background:rgba(239,68,68,.12);color:#f87171}
+.entry-icon-trip{background:rgba(59,130,246,.12);color:#60a5fa}
+.entry-body{flex:1;min-width:0}
+.entry-title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-meta{font-size:12px;color:var(--txm);margin-top:3px}
+.entry-value{font-weight:800;font-size:15px;color:#34d399;white-space:nowrap}
+.entry-del{background:none;border:none;color:rgba(239,68,68,.6);cursor:pointer;padding:4px;border-radius:6px;transition:all .15s;flex-shrink:0}
+.entry-del:hover{background:rgba(239,68,68,.1);color:#f87171}
+
+/* ── EMPTY ── */
+.empty-entries{text-align:center;padding:36px 20px;color:var(--txm)}
+.empty-entries svg{opacity:.3;margin-bottom:12px}
+.empty-entries p{font-size:14px}
+
+/* ── NAME CHIP ── */
+.name-chip{display:flex;align-items:center;gap:8px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 14px;margin-bottom:20px}
+.name-chip input{background:none;border:none;color:var(--tx);font-size:14px;font-family:inherit;font-weight:500;flex:1;outline:none}
+.name-chip input::placeholder{color:var(--txm)}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--bd);margin:20px 0}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#10b981;color:#fff;padding:12px 24px;border-radius:12px;font-weight:600;font-size:14px;transition:transform .3s ease;z-index:200;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── SECTION LABEL ── */
+.section-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txm);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+  </div>
+  <div>
+    <div class="header-title">FleetControl</div>
+    <div class="header-sub">Lançamentos do Sócio</div>
+  </div>
+  <span class="badge-count" id="entry-count">0</span>
+</div>
+
+<div class="content">
+
+  <!-- IDENTIFICAÇÃO -->
+  <div class="name-chip">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--prl)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <input type="text" id="sender-name" placeholder="Seu nome (quem está lançando)" maxlength="40">
+  </div>
+
+  <!-- FORMULÁRIO DE LANÇAMENTO -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Novo Lançamento
+    </div>
+
+    <!-- TIPO -->
+    <div class="type-sel">
+      <div class="type-btn active" id="btn-type-exp" onclick="setType('expense')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <div class="type-btn-label">Despesa</div>
+        <div class="type-btn-sub">Combustível, pedágio...</div>
+      </div>
+      <div class="type-btn" id="btn-type-trip" onclick="setType('trip')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        <div class="type-btn-label">Viagem</div>
+        <div class="type-btn-sub">Receita de frete...</div>
+      </div>
+    </div>
+
+    <!-- CAMPOS COMUNS -->
+    <div class="fr2">
+      <div class="fg">
+        <label class="fl">Placa do Veículo</label>
+        <input type="text" class="fc" id="f-plate" placeholder="RMR6B55" maxlength="10" style="text-transform:uppercase">
+      </div>
+      <div class="fg">
+        <label class="fl">Data</label>
+        <input type="date" class="fc" id="f-date">
+      </div>
+    </div>
+
+    <!-- CAMPOS DESPESA -->
+    <div id="expense-fields">
+      <div class="fg">
+        <label class="fl">Categoria</label>
+        <select class="fc" id="f-exp-cat">
+          <option value="combustivel">Combustível</option>
+          <option value="pedagio">Pedágio</option>
+          <option value="manutencao">Manutenção</option>
+          <option value="alimentacao">Alimentação</option>
+          <option value="hospedagem">Hospedagem</option>
+          <option value="motorista">Pagamento Motorista</option>
+          <option value="bordo">Serviço de Bordo</option>
+          <option value="internet">Internet</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Descrição</label>
+        <input type="text" class="fc" id="f-exp-desc" placeholder="Descreva a despesa...">
+      </div>
+      <div class="fr2">
+        <div class="fg">
+          <label class="fl">Valor (R$)</label>
+          <input type="number" class="fc" id="f-exp-value" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="fg">
+          <label class="fl">Nota Fiscal?</label>
+          <select class="fc" id="f-exp-nf">
+            <option value="nao">Não</option>
+            <option value="sim">Sim</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMPOS VIAGEM -->
+    <div id="trip-fields" style="display:none">
+      <div class="fg">
+        <label class="fl">Cliente</label>
+        <input type="text" class="fc" id="f-trip-client" placeholder="Nome do cliente">
+      </div>
+      <div class="fg">
+        <label class="fl">Destino</label>
+        <input type="text" class="fc" id="f-trip-dest" placeholder="Cidade / rota">
+      </div>
+      <div class="fr2">
+        <div class="fg">
+          <label class="fl">Tipo de Receita</label>
+          <select class="fc" id="f-trip-type">
+            <option value="Diária">Diária</option>
+            <option value="Frete">Frete</option>
+            <option value="Excursão">Excursão</option>
+            <option value="Transfer">Transfer</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Valor Bruto (R$)</label>
+          <input type="number" class="fc" id="f-trip-value" placeholder="0,00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Observações</label>
+        <input type="text" class="fc" id="f-trip-notes" placeholder="Informações adicionais...">
+      </div>
+    </div>
+
+    <button class="btn btn-pr" onclick="addEntry()" style="margin-top:4px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Adicionar à Lista
+    </button>
+  </div>
+
+  <!-- LISTA DE LANÇAMENTOS -->
+  <div class="section-label">Lançamentos adicionados</div>
+  <div id="entries-list">
+    <div class="empty-entries" id="empty-msg">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <p>Nenhum lançamento ainda.<br>Adicione despesas ou viagens acima.</p>
+    </div>
+  </div>
+
+  <!-- EXPORTAR -->
+  <div id="export-section" style="display:none;margin-top:8px">
+    <div class="divider"></div>
+    <button class="btn btn-sc" onclick="exportEntries()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Gerar Arquivo para Importar
+    </button>
+    <p style="font-size:12px;color:var(--txm);text-align:center;margin-top:10px">
+      Baixe o arquivo e envie para o seu sócio importar no painel.
+    </p>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+let entries = [];
+let currentType = 'expense';
+
+// ── Init ──
+document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+const savedName = localStorage.getItem('fc_socio_name');
+if(savedName) document.getElementById('sender-name').value = savedName;
+document.getElementById('sender-name').addEventListener('change', e => {
+  localStorage.setItem('fc_socio_name', e.target.value);
+});
+
+function setType(type){
+  currentType = type;
+  document.getElementById('expense-fields').style.display = type==='expense' ? '' : 'none';
+  document.getElementById('trip-fields').style.display   = type==='trip'    ? '' : 'none';
+  document.getElementById('btn-type-exp').classList.toggle('active', type==='expense');
+  document.getElementById('btn-type-trip').classList.toggle('active', type==='trip');
+}
+
+function uid(){ return '_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
+function n(v){ return parseFloat(String(v).replace(',','.'))||0; }
+function R(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
+function fmtDate(d){ if(!d)return'—'; const p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+function addEntry(){
+  const plate = document.getElementById('f-plate').value.trim().toUpperCase();
+  const date  = document.getElementById('f-date').value;
+  if(!plate){ showToast('Informe a placa do veículo','warn'); document.getElementById('f-plate').focus(); return; }
+  if(!date)  { showToast('Informe a data','warn'); return; }
+
+  if(currentType === 'expense'){
+    const cat   = document.getElementById('f-exp-cat').value;
+    const desc  = document.getElementById('f-exp-desc').value.trim();
+    const value = n(document.getElementById('f-exp-value').value);
+    const nf    = document.getElementById('f-exp-nf').value === 'sim';
+    if(!value)  { showToast('Informe o valor da despesa','warn'); document.getElementById('f-exp-value').focus(); return; }
+
+    const catLabels = {
+      combustivel:'Combustível',pedagio:'Pedágio',manutencao:'Manutenção',
+      alimentacao:'Alimentação',hospedagem:'Hospedagem',motorista:'Pagamento Motorista',
+      bordo:'Serviço de Bordo',internet:'Internet',outros:'Outros'
+    };
+    entries.push({
+      id:uid(), type:'expense', plate, date, category:cat,
+      categoryLabel: catLabels[cat]||cat,
+      description:desc||catLabels[cat], amount:value, hasNF:nf,
+      addedAt: new Date().toISOString()
+    });
+    // Clear value and desc only
+    document.getElementById('f-exp-value').value='';
+    document.getElementById('f-exp-desc').value='';
+
+  } else {
+    const client = document.getElementById('f-trip-client').value.trim();
+    const dest   = document.getElementById('f-trip-dest').value.trim();
+    const type   = document.getElementById('f-trip-type').value;
+    const value  = n(document.getElementById('f-trip-value').value);
+    const notes  = document.getElementById('f-trip-notes').value.trim();
+    if(!client){ showToast('Informe o cliente','warn'); document.getElementById('f-trip-client').focus(); return; }
+    if(!value) { showToast('Informe o valor da viagem','warn'); document.getElementById('f-trip-value').focus(); return; }
+
+    entries.push({
+      id:uid(), type:'trip', plate, date, client, destination:dest,
+      revenueType:type, grossRevenue:value, notes,
+      addedAt: new Date().toISOString()
+    });
+    document.getElementById('f-trip-client').value='';
+    document.getElementById('f-trip-dest').value='';
+    document.getElementById('f-trip-value').value='';
+    document.getElementById('f-trip-notes').value='';
+  }
+
+  renderEntries();
+  showToast('Lançamento adicionado!');
+}
+
+function removeEntry(id){
+  entries = entries.filter(e => e.id !== id);
+  renderEntries();
+}
+
+function renderEntries(){
+  const list = document.getElementById('entries-list');
+  const empty = document.getElementById('empty-msg');
+  const exportSec = document.getElementById('export-section');
+  const badge = document.getElementById('entry-count');
+
+  badge.textContent = entries.length;
+  exportSec.style.display = entries.length > 0 ? '' : 'none';
+
+  if(!entries.length){
+    list.innerHTML = '';
+    list.appendChild(empty);
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = entries.map((e,i) => {
+    const isExp = e.type === 'expense';
+    const title = isExp ? `${e.categoryLabel} — ${e.plate}` : `${e.client} — ${e.plate}`;
+    const meta  = isExp
+      ? `${fmtDate(e.date)} · ${e.description||''}${e.hasNF?' · NF':''}`
+      : `${fmtDate(e.date)} · ${e.revenueType}${e.destination?' · '+e.destination:''}`;
+    const value = isExp ? R(e.amount) : R(e.grossRevenue);
+    const iconClass = isExp ? 'entry-icon-exp' : 'entry-icon-trip';
+    const icon = isExp
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>`;
+
+    return `<div class="entry-item">
+      <div class="entry-icon ${iconClass}">${icon}</div>
+      <div class="entry-body">
+        <div class="entry-title">${title}</div>
+        <div class="entry-meta">${meta}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <span class="entry-value">${value}</span>
+        <button class="entry-del" onclick="removeEntry('${e.id}')" title="Remover">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportEntries(){
+  if(!entries.length){ showToast('Nada para exportar','warn'); return; }
+  const sender = document.getElementById('sender-name').value.trim() || 'Sócio';
+  const payload = {
+    type: 'fleetcontrol-partner-import',
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    exportedBy: sender,
+    totalEntries: entries.length,
+    entries
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `lancamentos_${sender.replace(/\s+/g,'_')}_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`${entries.length} lançamento(s) exportado(s)!`);
+}
+
+let toastTimer;
+function showToast(msg, type='ok'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type==='warn' ? '#f59e0b' : '#10b981';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+renderEntries();
+</script>
+</body>
+</html>
