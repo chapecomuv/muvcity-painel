@@ -997,6 +997,8 @@ html{scroll-behavior:smooth}
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clientes</div>
     <div class="nav-item" onclick="nav('drivers')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></span>Motoristas</div>
+    <div class="nav-item" onclick="nav('admins')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M22 11l-3-3m0 0l-3 3m3-3v9"/></svg></span>Administradores</div>
     <div class="nav-grp">Análises</div>
     <div class="nav-item" onclick="nav('receivables')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>A Receber</div>
@@ -1137,7 +1139,7 @@ html{scroll-behavior:smooth}
                 Despesas Variáveis
               </div>
               <div class="expv-sub">Gestão completa de gastos da operação · planos de pagamento · parcelas e boletos</div>
-              <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(99,102,241,.18));border:1px solid rgba(96,165,250,.4);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#a5b4fc">✨ Design v4.2 — Sync na Nuvem</div>
+              <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(99,102,241,.18));border:1px solid rgba(96,165,250,.4);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#a5b4fc">✨ Design v4.3 — Multi-Admin</div>
             </div>
             <div class="fl-row ic" style="gap:10px;flex-wrap:wrap">
               <div class="mnav">
@@ -1626,6 +1628,25 @@ html{scroll-behavior:smooth}
           </div>
 
         </div>
+      </div>
+    </div>
+
+    <!-- ── ADMINISTRADORES ── -->
+    <div class="page" id="page-admins">
+      <div class="fl-row ic jb mb4">
+        <div>
+          <div class="sec-t">👥 Administradores do Painel</div>
+          <div class="txs txm mt1">Pessoas com acesso ao Painel Gestor. Cada uma com PIN próprio.</div>
+        </div>
+        <button class="btn btn-pr" onclick="openAdminModal()">➕ Novo Administrador</button>
+      </div>
+      <div class="card">
+        <div class="banner info" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:11px;padding:12px 16px;color:#c4b5fd;font-size:12.5px;line-height:1.6;margin-bottom:14px">
+          💡 <b>Como funciona:</b> cada administrador entra no Painel Gestor com o nome e PIN próprios. Você decide o papel (Gestor, Sócio, Contabilidade ou Secretaria). Esse cadastro é separado do "Motoristas" — motoristas usam o app deles, não esse painel.
+        </div>
+        <div class="wrap"><table><thead><tr>
+          <th>Nome</th><th>Papel</th><th>E-mail/contato</th><th>PIN</th><th>Status</th><th>Último acesso</th><th>Ações</th>
+        </tr></thead><tbody id="admins-tbody"></tbody></table></div>
       </div>
     </div>
 
@@ -2708,6 +2729,59 @@ html{scroll-behavior:smooth}
 </div>
 
 <!-- CLIENT MODAL -->
+<!-- ADMIN MODAL -->
+<div class="overlay" id="modal-admin">
+<div class="modal" style="max-width:560px">
+  <div class="modal-h">
+    <span class="modal-t" id="admin-modal-title">Novo Administrador</span>
+    <button class="xbtn" onclick="closeModal('modal-admin')">✕</button>
+  </div>
+  <input type="hidden" id="admin-id">
+
+  <div class="fsec">
+    <div class="fsec-t">Identificação</div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">Nome *</label>
+        <input type="text" class="fc" id="admin-name" placeholder="Ex: Lucas Gozdzink"></div>
+      <div class="fg"><label class="fl">Papel *</label>
+        <select class="fc" id="admin-role">
+          <option value="gestor">👑 Gestor (acesso total)</option>
+          <option value="socio">🤝 Sócio</option>
+          <option value="contabilidade">📊 Contabilidade</option>
+          <option value="secretaria">📋 Secretaria</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">E-mail (opcional)</label>
+        <input type="email" class="fc" id="admin-email" placeholder="contato@email.com"></div>
+      <div class="fg"><label class="fl">Telefone (opcional)</label>
+        <input type="text" class="fc" id="admin-phone" placeholder="(00) 0000-0000" oninput="maskPhone(this)"></div>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <div class="fsec-t">Acesso</div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">PIN de acesso (4 a 6 dígitos) *</label>
+        <input type="text" inputmode="numeric" maxlength="6" class="fc" id="admin-pin" placeholder="0000" style="font-size:20px;font-weight:800;letter-spacing:6px;text-align:center"></div>
+      <div class="fg"><label class="fl">Status</label>
+        <select class="fc" id="admin-active">
+          <option value="true">✅ Ativo</option>
+          <option value="false">⏸️ Desativado</option>
+        </select>
+      </div>
+    </div>
+    <div class="txs txm">Quem souber esse PIN entra no Painel Gestor com esse nome. Cada pessoa tem o seu.</div>
+  </div>
+
+  <div class="fl-row ic jb mt4">
+    <button class="btn btn-gh" onclick="closeModal('modal-admin')">Cancelar</button>
+    <button class="btn btn-pr" onclick="saveAdmin()">💾 Salvar Administrador</button>
+  </div>
+</div>
+</div>
+
 <div class="overlay" id="modal-client">
 <div class="modal" style="max-width:720px">
   <div class="modal-h">
@@ -3037,6 +3111,9 @@ function saveDB(){
 // ════════════════════════════════════════════════════════════════
 //  CLOUD SYNC — Firebase Realtime Database (sem SDK, REST puro)
 // ════════════════════════════════════════════════════════════════
+// 🔥 URL hardcoded — ninguém precisa configurar. Se quiser trocar a base, edite aqui.
+const FIREBASE_URL_DEFAULT = 'https://muvcity-painel-default-rtdb.firebaseio.com/db.json';
+
 const cloudSync = {
   KEY:'muvcity_sync_url',
   POLL_INTERVAL:20000,    // 20s
@@ -3050,9 +3127,10 @@ const cloudSync = {
   status:'idle',     // idle | syncing | ok | error | offline
 
   init(){
-    this.url=localStorage.getItem(this.KEY);
-    this.enabled=!!this.url;
-    if(this.enabled) this.startPolling();
+    // Usa override do localStorage (se houver) OU a URL padrão hardcoded
+    this.url=localStorage.getItem(this.KEY) || FIREBASE_URL_DEFAULT;
+    this.enabled=true;   // sempre ligado
+    this.startPolling();
     this.renderIndicator();
   },
   setURL(url){
@@ -3595,6 +3673,7 @@ function nav(page){
     dashboard:['Dashboard','Visão geral da frota'],
     fleet:['Frota','Gerenciamento de veículos'],
     trips:['Viagens & Receitas','Lançamentos de viagens'],
+    admins:['Administradores','Pessoas com acesso ao Painel Gestor'],
     expenses:['Despesas Variáveis','Gastos variáveis da operação · planos de pagamento e parcelas'],
     commitments:['Despesas Fixas','Financiamentos, seguros e parcelamentos'],
     investors:['Investidores','Gestão de aportes e retornos'],
@@ -3626,6 +3705,7 @@ function renderTopbarActions(){
     drivers:`<button class="btn btn-pr" onclick="openDriverModal()">➕ Novo Motorista</button>`,
     agency:`<button class="btn btn-pr" onclick="openAgencyModal()">➕ Nova Comissão</button>`,
     shared:`<button class="btn btn-pr" onclick="openSharedModal()">➕ Nova Despesa</button>`,
+    admins:`<button class="btn btn-pr" onclick="openAdminModal()">➕ Novo Administrador</button>`,
   };
   el.innerHTML=map[currentPage]||'';
 }
@@ -3643,7 +3723,7 @@ function renderCurrentPage(){
     expenses:renderExpenses,commitments:renderCommitments,
     investors:renderInvestors,clients:renderClients,drivers:renderDrivers,
     agency:renderAgency,shared:renderShared,receivables:renderReceivables,
-    reports:renderReports,settings:renderSettings};
+    reports:renderReports,settings:renderSettings,admins:renderAdmins};
   r[currentPage]?.();
 }
 
@@ -5545,15 +5625,14 @@ function onTripNFInput(){
   calcTripProfit();
 }
 
-// ════════ ENVIAR VIAGEM PRO MOTORISTA ════════
-function sendTripToDriver(tripId){
+// ════════ ENVIAR VIAGEM PRO MOTORISTA (código de 6 dígitos) ════════
+async function sendTripToDriver(tripId){
   const t=DB.trips.find(x=>x.id===tripId);
   if(!t){ alert('Viagem não encontrada'); return; }
-  // Monta payload simplificado pra mandar pro motorista
+  // Gera código de 6 dígitos único e salva no Firebase em /trip-codes/<código>
   const veh=getVehicle(t.vehicleId);
   const tripPayload={
     id:t.id,
-    code: 'MV-'+(t.id||'').slice(-6).toUpperCase(),
     date:t.date||t.departureDate,
     returnDate:t.returnDate||null,
     origin:t.origin||'',
@@ -5564,44 +5643,90 @@ function sendTripToDriver(tripId){
     vehicleModel:[veh.brand,veh.model].filter(Boolean).join(' '),
     client:t.client||'',
     driverName:t.driverName||'',
+    driverPhone:t.driverPhone||'',
     type:t.type||'avulso',
     status:'programada',
-    expenses:[]
+    expenses:[],
+    generatedAt:new Date().toISOString()
   };
-  const payload={type:'muvcity-trip',version:'1.0',generatedAt:new Date().toISOString(),trip:tripPayload};
-  const json=JSON.stringify(payload);
-  const code=btoa(unescape(encodeURIComponent(json)));
-  // URL completa do app do motorista
-  const baseURL=location.href.replace(/\/[^/]*$/,'/');
-  const driverURL=baseURL+'FleetControl_Motorista.html?trip='+code;
 
-  const html=`<div class="overlay show" id="send-driver-overlay" onclick="if(event.target===this)closeSendDriver()" style="display:flex">
-    <div class="modal" style="max-width:560px">
-      <div class="modal-h">
-        <span class="modal-t">📤 Enviar Viagem pro Motorista</span>
-        <button class="xbtn" onclick="closeSendDriver()">✕</button>
+  // Mostra modal carregando
+  const host=document.getElementById('send-driver-host')||(()=>{const d=document.createElement('div');d.id='send-driver-host';document.body.appendChild(d);return d;})();
+  host.innerHTML=`<div class="overlay show" style="display:flex"><div class="modal modal-sm"><div class="modal-h"><span class="modal-t">📤 Gerando código…</span></div><div style="padding:24px;text-align:center"><div style="font-size:32px;margin-bottom:10px">⏳</div><div class="txs txm">Salvando viagem na nuvem…</div></div></div></div>`;
+
+  try{
+    // Tenta gerar código único (10 tentativas)
+    let code=null;
+    const baseURL=(cloudSync?.url||FIREBASE_URL_DEFAULT).replace('/db.json','');
+    for(let attempt=0;attempt<10;attempt++){
+      const c=String(Math.floor(100000+Math.random()*900000));   // 6 dígitos
+      // Verifica se já existe
+      const check=await fetch(baseURL+'/trip-codes/'+c+'.json');
+      const exists=await check.json();
+      if(!exists){ code=c; break; }
+    }
+    if(!code){ throw new Error('Não foi possível gerar código único. Tente novamente.'); }
+
+    // Salva no Firebase
+    tripPayload.code=code;
+    const saveRes=await fetch(baseURL+'/trip-codes/'+code+'.json',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(tripPayload)
+    });
+    if(!saveRes.ok) throw new Error('Erro ao salvar no Firebase');
+
+    // Guarda o código também na viagem original (pra rastreio)
+    t.driverCode=code;
+    saveDB();
+
+    // Monta link curto
+    const appURL=location.href.replace(/\/[^/]*$/,'/');
+    const driverURL=appURL+'FleetControl_Motorista.html?codigo='+code;
+    const waText=encodeURIComponent(`📋 Sua viagem está programada!\n\nCódigo: *${code}*\n\n${tripPayload.origin||'?'} → ${tripPayload.destination||'?'}\nData: ${fmtDate(tripPayload.date)}\nVeículo: ${tripPayload.vehiclePlate||'-'}\n\nAbra o app e digite o código:\n${appURL}FleetControl_Motorista.html`);
+
+    host.innerHTML=`<div class="overlay show" id="send-driver-overlay" onclick="if(event.target===this)closeSendDriver()" style="display:flex">
+      <div class="modal" style="max-width:520px">
+        <div class="modal-h">
+          <span class="modal-t">📤 Código da Viagem</span>
+          <button class="xbtn" onclick="closeSendDriver()">✕</button>
+        </div>
+        <div style="text-align:center;padding:20px 16px;background:linear-gradient(160deg,rgba(6,182,212,.12),rgba(16,185,129,.06));border:1px solid rgba(6,182,212,.3);border-radius:16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.6px;color:#67e8f9;text-transform:uppercase;margin-bottom:10px">Código da Viagem</div>
+          <div id="trip-code-big" style="font-size:48px;font-weight:900;letter-spacing:8px;font-family:'JetBrains Mono',monospace;background:linear-gradient(135deg,#67e8f9,#34d399);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${code}</div>
+          <div class="txs txm" style="margin-top:10px">Motorista digita esses 6 números no app dele</div>
+        </div>
+        <div class="fl-row ic" style="gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-pr" style="flex:1;min-width:140px" onclick="copyTripCode('${code}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copiar código
+          </button>
+          <a class="btn btn-sc" style="flex:1;min-width:140px;text-decoration:none" href="https://wa.me/?text=${waText}" target="_blank">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634z"/></svg>
+            Enviar no WhatsApp
+          </a>
+        </div>
+        <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.22);border-radius:11px;padding:12px 14px;font-size:12px;color:#a5b4fc;line-height:1.6">
+          💡 <b>Como o motorista vai usar:</b> abre o app dele (link aí embaixo), toca em "📥 Receber Viagem", digita o código <b>${code}</b> e pronto — a viagem aparece programada pra ele iniciar.
+        </div>
+        <div class="txs txm" style="margin-top:10px;text-align:center">
+          <a href="${driverURL}" target="_blank" style="color:#67e8f9">🔗 Ou abra direto pra ele (link com código embutido)</a>
+        </div>
       </div>
-      <div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);border-radius:11px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#a3e8ff;line-height:1.55">
-        💡 <b>Cole o link ou o código abaixo no WhatsApp do motorista.</b> Ele clica/cola e a viagem aparece no app dele já programada, pronta pra iniciar.
-      </div>
-      <div class="fsec">
-        <div class="fsec-t">🔗 Link direto (mais fácil)</div>
-        <textarea class="fc" readonly id="driver-link" rows="3" style="font-family:monospace;font-size:11.5px">${driverURL}</textarea>
-        <button class="btn btn-pr btn-sm mt2" onclick="copyText('driver-link','Link copiado!')" style="width:100%">📋 Copiar link</button>
-      </div>
-      <div class="fsec">
-        <div class="fsec-t">📝 Ou código (caso prefira)</div>
-        <textarea class="fc" readonly id="driver-code" rows="4" style="font-family:monospace;font-size:10.5px">${code}</textarea>
-        <button class="btn btn-ol btn-sm mt2" onclick="copyText('driver-code','Código copiado!')" style="width:100%">📋 Copiar código</button>
-      </div>
-      <div class="txs txm" style="margin-top:10px">
-        <b>Detalhes da viagem:</b> ${tripPayload.code} · ${tripPayload.origin} → ${tripPayload.destination} · ${fmtDate(tripPayload.date)} · ${tripPayload.vehiclePlate||'sem veículo'}
-      </div>
-    </div>
-  </div>`;
-  let host=document.getElementById('send-driver-host');
-  if(!host){ host=document.createElement('div'); host.id='send-driver-host'; document.body.appendChild(host); }
-  host.innerHTML=html;
+    </div>`;
+    showToast('✅ Código '+code+' gerado!','ok');
+  }catch(err){
+    console.error(err);
+    host.innerHTML='';
+    alert('Erro ao gerar código: '+err.message+'\n\nVerifique sua conexão e tente novamente.');
+  }
+}
+function copyTripCode(code){
+  try{
+    navigator.clipboard.writeText(code).then(()=>showToast('Código '+code+' copiado!','ok'));
+  }catch(_){
+    showToast('Código: '+code,'ok');
+  }
 }
 function closeSendDriver(){
   const h=document.getElementById('send-driver-host');
@@ -8835,11 +8960,127 @@ function importPartnerData(event){
 // ══════════ INIT ══════════
 function bootApp(){
   loadDB();
+  // Migração: garante array de admins
+  if(!Array.isArray(DB.admins)) DB.admins=[];
   updateSidebarLogo();
   updateMonthLabels();
   renderDashboard();
-  // Inicializa sync na nuvem (se já configurado)
+  // Inicializa sync na nuvem (já hardcoded)
   cloudSync.init();
+}
+
+// ════════════════════════════════════════════════════════════
+//  ADMINISTRADORES — CRUD e login multi-usuário
+// ════════════════════════════════════════════════════════════
+const ROLE_INFO={
+  gestor:{icon:'👑',label:'Gestor',color:'#a78bfa',desc:'Acesso total'},
+  socio:{icon:'🤝',label:'Sócio',color:'#34d399',desc:'Visão e edição'},
+  contabilidade:{icon:'📊',label:'Contabilidade',color:'#fbbf24',desc:'Relatórios e finanças'},
+  secretaria:{icon:'📋',label:'Secretaria',color:'#60a5fa',desc:'Cadastros e viagens'}
+};
+
+function renderAdmins(){
+  if(!Array.isArray(DB.admins)) DB.admins=[];
+  const rows=DB.admins.map(a=>{
+    const r=ROLE_INFO[a.role]||{icon:'👤',label:a.role||'?',color:'#94a3b8'};
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:${r.color}22;border:1px solid ${r.color}55;display:flex;align-items:center;justify-content:center;font-size:18px">${r.icon}</div>
+        <div><div style="font-weight:600">${a.name}</div>${a.phone?`<div class="txs txm">${fmtPhone(a.phone)}</div>`:''}</div>
+      </div></td>
+      <td><span class="badge" style="background:${r.color}22;color:${r.color};border:1px solid ${r.color}55">${r.icon} ${r.label}</span></td>
+      <td>${a.email||'—'}</td>
+      <td><span style="font-family:monospace;font-size:13px;letter-spacing:3px">${'•'.repeat((a.pin||'').length||4)}</span> <button class="btn btn-gh btn-xs" onclick="togglePinView('${a.id}')" id="pin-view-${a.id}" title="Mostrar/ocultar PIN">👁️</button></td>
+      <td>${a.active!==false?'<span class="badge g">✅ Ativo</span>':'<span class="badge gz">⏸️ Desativado</span>'}</td>
+      <td class="txs txm">${a.lastLogin?fmtDate(a.lastLogin.split('T')[0])+' '+a.lastLogin.split('T')[1]?.slice(0,5):'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-gh btn-xs" onclick="editAdmin('${a.id}')" title="Editar">✏️</button>
+        <button class="btn btn-gh btn-xs" onclick="toggleAdminActive('${a.id}')" title="${a.active!==false?'Desativar':'Ativar'}">${a.active!==false?'⏸️':'▶️'}</button>
+        <button class="btn btn-gh btn-xs" onclick="confirmDeleteAdmin('${a.id}')" title="Excluir">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('admins-tbody').innerHTML=rows||`<tr><td colspan="7"><div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum administrador cadastrado</div><div class="txm txs">Clique em "➕ Novo Administrador" pra começar</div></div></td></tr>`;
+}
+
+function togglePinView(id){
+  const a=DB.admins.find(x=>x.id===id);
+  if(!a) return;
+  const btn=document.getElementById('pin-view-'+id);
+  const span=btn.parentElement.querySelector('span');
+  if(span.textContent.includes('•')){
+    span.textContent=a.pin||'';
+    btn.textContent='🙈';
+    setTimeout(()=>{span.textContent='•'.repeat((a.pin||'').length||4); btn.textContent='👁️';},4000);
+  }
+}
+
+function openAdminModal(){
+  document.getElementById('admin-id').value='';
+  document.getElementById('admin-modal-title').textContent='Novo Administrador';
+  ['admin-name','admin-email','admin-phone','admin-pin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('admin-role').value='gestor';
+  document.getElementById('admin-active').value='true';
+  openModal('modal-admin');
+  setTimeout(()=>document.getElementById('admin-name')?.focus(),100);
+}
+function editAdmin(id){
+  const a=DB.admins.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('admin-id').value=a.id;
+  document.getElementById('admin-modal-title').textContent='Editar Administrador';
+  document.getElementById('admin-name').value=a.name||'';
+  document.getElementById('admin-role').value=a.role||'gestor';
+  document.getElementById('admin-email').value=a.email||'';
+  document.getElementById('admin-phone').value=fmtPhone(a.phone||'');
+  document.getElementById('admin-pin').value=a.pin||'';
+  document.getElementById('admin-active').value=a.active!==false?'true':'false';
+  openModal('modal-admin');
+}
+function saveAdmin(){
+  try{
+    const id=document.getElementById('admin-id').value;
+    const name=document.getElementById('admin-name').value.trim();
+    const pin=document.getElementById('admin-pin').value.replace(/\D/g,'').slice(0,6);
+    if(!name){ alert('Informe o nome'); return; }
+    if(pin.length<4){ alert('PIN precisa ter 4 a 6 dígitos'); return; }
+    // Verifica PIN duplicado
+    const dup=DB.admins.find(a=>a.pin===pin && a.id!==id);
+    if(dup){ alert(`PIN já em uso por ${dup.name}. Escolha outro.`); return; }
+    const a={
+      id:id||uid(),
+      name,
+      role:document.getElementById('admin-role').value,
+      email:document.getElementById('admin-email').value.trim(),
+      phone:document.getElementById('admin-phone').value.trim(),
+      pin,
+      active:document.getElementById('admin-active').value==='true',
+      createdAt:id?(DB.admins.find(x=>x.id===id)?.createdAt||new Date().toISOString()):new Date().toISOString()
+    };
+    if(!Array.isArray(DB.admins)) DB.admins=[];
+    if(id) DB.admins=DB.admins.map(x=>x.id===id?a:x);
+    else DB.admins.push(a);
+    saveDB();
+    closeModal('modal-admin');
+    renderAdmins();
+    showToast('✅ Administrador salvo','ok');
+  }catch(err){
+    alert('Erro: '+err.message);
+  }
+}
+function toggleAdminActive(id){
+  const a=DB.admins.find(x=>x.id===id);
+  if(!a) return;
+  a.active=!(a.active!==false);
+  saveDB();renderAdmins();
+}
+function confirmDeleteAdmin(id){
+  const a=DB.admins.find(x=>x.id===id);
+  if(!a) return;
+  if(!confirm(`Excluir administrador "${a.name}"?\n\nEle não vai conseguir mais entrar no painel.`)) return;
+  DB.admins=DB.admins.filter(x=>x.id!==id);
+  saveDB();renderAdmins();
+  showToast('Administrador removido','ok');
 }
 
 // ── PROTEÇÃO POR SENHA ──
@@ -8854,7 +9095,131 @@ function setStoredPassHash(h){ localStorage.setItem('fleetcontrol_passhash',h); 
 function setSession(){ sessionStorage.setItem('fleetcontrol_authok','1'); }
 function isLoggedThisSession(){ return sessionStorage.getItem('fleetcontrol_authok')==='1'; }
 
-function showLockOverlay(){
+async function tryAdminLockScreen(){
+  // Busca admins direto do Firebase pra cobrir o cenário "nunca logou nesse dispositivo"
+  try{
+    const r=await fetch(FIREBASE_URL_DEFAULT+'?cb='+Date.now());
+    if(r.ok){
+      const d=await r.json();
+      if(d && Array.isArray(d.admins) && d.admins.length>0){
+        return d.admins.filter(a=>a.active!==false);
+      }
+    }
+  }catch(_){}
+  // Fallback: localStorage
+  try{
+    const s=localStorage.getItem('fleetcontrol_db');
+    if(s){
+      const d=JSON.parse(s);
+      if(Array.isArray(d.admins) && d.admins.length>0){
+        return d.admins.filter(a=>a.active!==false);
+      }
+    }
+  }catch(_){}
+  return null;
+}
+
+async function showLockOverlay(){
+  // Se tem admins cadastrados, usa seletor de usuário + PIN
+  const admins=await tryAdminLockScreen();
+  if(admins && admins.length>0){
+    showAdminLockOverlay(admins);
+    return;
+  }
+  // Senão, usa o sistema antigo de senha única (compatibilidade)
+  showLegacyLockOverlay();
+}
+
+function showAdminLockOverlay(admins){
+  const cards=admins.map(a=>{
+    const r=ROLE_INFO[a.role]||{icon:'👤',label:a.role,color:'#94a3b8'};
+    return `<div class="alock-card" onclick="selectAdmin('${a.id}','${a.name.replace(/'/g,"\\'")}','${a.role}')">
+      <div class="alock-avatar" style="background:linear-gradient(135deg,${r.color},${r.color}cc);box-shadow:0 6px 18px ${r.color}55">${r.icon}</div>
+      <div class="alock-name">${a.name}</div>
+      <div class="alock-role" style="color:${r.color}">${r.label}</div>
+    </div>`;
+  }).join('');
+  document.body.insertAdjacentHTML('beforeend',`
+    <div id="lock-overlay" style="position:fixed;inset:0;z-index:9000;background:radial-gradient(900px 500px at 12% -10%,rgba(59,130,246,.18),transparent 60%),radial-gradient(700px 480px at 92% 4%,rgba(139,92,246,.15),transparent 65%),#060d1a;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Inter',system-ui,sans-serif;color:#e6ecf6;overflow-y:auto">
+      <div style="max-width:480px;width:100%;text-align:center">
+        <div style="font-size:28px;font-weight:800;letter-spacing:-.4px;background:linear-gradient(135deg,#fff,#a3b8e3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Painel Gestor</div>
+        <div style="font-size:13.5px;color:#7689a1;margin-bottom:28px">Toque no seu perfil e digite o PIN</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">${cards}</div>
+        <div style="margin-top:24px;font-size:11.5px;color:#7689a1">
+          Não tem cadastro? Peça ao gestor pra criar um pra você.
+        </div>
+      </div>
+    </div>
+    <style>
+    .alock-card{background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:18px 14px;cursor:pointer;transition:all .2s}
+    .alock-card:hover{transform:translateY(-3px);border-color:rgba(123,169,249,.4);box-shadow:0 16px 32px rgba(0,0,0,.4)}
+    .alock-card:active{transform:scale(.97)}
+    .alock-avatar{width:62px;height:62px;border-radius:16px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:30px}
+    .alock-name{font-size:14px;font-weight:700;color:#e6ecf6;margin-bottom:3px}
+    .alock-role{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    </style>
+  `);
+}
+
+async function selectAdmin(adminId, adminName, role){
+  // Substitui o card por tela de PIN
+  const ov=document.getElementById('lock-overlay');
+  if(!ov) return;
+  const r=ROLE_INFO[role]||{icon:'👤',color:'#94a3b8'};
+  ov.innerHTML=`
+    <div style="max-width:380px;width:100%;background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid rgba(148,163,184,.18);border-radius:20px;padding:32px 24px;text-align:center">
+      <div style="width:78px;height:78px;border-radius:20px;background:linear-gradient(135deg,${r.color},${r.color}cc);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 12px 32px ${r.color}66">${r.icon}</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:4px">${adminName}</div>
+      <div style="font-size:13px;color:#7689a1;margin-bottom:24px">Digite seu PIN pra entrar</div>
+      <input id="pin-input" type="text" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••"
+             style="width:100%;padding:18px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.04);color:#e6ecf6;border-radius:14px;font-size:32px;font-weight:800;letter-spacing:14px;text-align:center;outline:none;font-family:inherit"
+             oninput="this.value=this.value.replace(/\\D/g,'').slice(0,6); if(this.value.length>=4) checkPin('${adminId}',this.value)">
+      <button class="btn btn-gh" style="width:100%;margin-top:14px;padding:13px;color:#7689a1" onclick="document.getElementById('lock-overlay').remove();showLockOverlay()">← Voltar</button>
+      <div id="pin-err" style="display:none;margin-top:12px;padding:9px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;color:#fca5a5;font-size:12.5px"></div>
+    </div>`;
+  setTimeout(()=>document.getElementById('pin-input')?.focus(),100);
+}
+
+function checkPin(adminId, pin){
+  // Busca o admin atual
+  const admins=DB.admins||[];
+  let a=admins.find(x=>x.id===adminId);
+  // Se nao tem no localStorage ainda, tenta firebase (a tela foi montada com dados firebase)
+  if(!a){
+    // Pega do Firebase
+    fetch(FIREBASE_URL_DEFAULT+'?cb='+Date.now()).then(r=>r.json()).then(d=>{
+      const remote=(d?.admins||[]).find(x=>x.id===adminId);
+      if(remote) checkPinMatch(remote, pin);
+    });
+    return;
+  }
+  checkPinMatch(a, pin);
+}
+function checkPinMatch(admin, pin){
+  if(admin.pin === pin){
+    // OK! Registra último acesso
+    setSession();
+    sessionStorage.setItem('current_admin', JSON.stringify({id:admin.id,name:admin.name,role:admin.role}));
+    document.getElementById('lock-overlay')?.remove();
+    bootApp();
+    setTimeout(()=>{
+      // Atualiza lastLogin
+      try{
+        if(!Array.isArray(DB.admins)) DB.admins=[];
+        const idx=DB.admins.findIndex(x=>x.id===admin.id);
+        if(idx>=0){ DB.admins[idx].lastLogin=new Date().toISOString(); saveDB(); }
+        showToast(`👋 Bem-vindo, ${admin.name.split(' ')[0]}!`,'ok');
+      }catch(_){}
+    },800);
+  } else {
+    const err=document.getElementById('pin-err');
+    if(err){ err.textContent='PIN incorreto. Tente de novo.'; err.style.display=''; }
+    const inp=document.getElementById('pin-input');
+    if(inp){ inp.value=''; setTimeout(()=>inp.focus(),50); }
+  }
+}
+
+function showLegacyLockOverlay(){
   const has=getStoredPassHash();
   const isFirst=!has;
   const html=`
@@ -8936,7 +9301,7 @@ function logoutApp(){
 if(isLoggedThisSession()){
   bootApp();
 } else {
-  showLockOverlay();
+  showLockOverlay();   // async, mas tudo bem
 }
 </script>
 </body>

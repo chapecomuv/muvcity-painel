@@ -259,14 +259,17 @@ function saveDB(){
 // ════════════════════════════════════════════════════════════════
 //  CLOUD SYNC — Firebase RTDB (compartilhado com gestor/sócio)
 // ════════════════════════════════════════════════════════════════
+// 🔥 URL Firebase hardcoded — funciona automático sem configurar
+const FIREBASE_URL_DEFAULT = 'https://muvcity-painel-default-rtdb.firebaseio.com/db.json';
+
 const cloudSync = {
   KEY:'muvcity_sync_url',
   POLL_INTERVAL:20000,PUSH_DEBOUNCE:600,
   enabled:false,url:null,pollTimer:null,pushTimer:null,status:'idle',
   init(){
-    this.url=localStorage.getItem(this.KEY);
-    this.enabled=!!this.url;
-    if(this.enabled){ this.startPolling(); }
+    this.url=localStorage.getItem(this.KEY) || FIREBASE_URL_DEFAULT;
+    this.enabled=true;
+    this.startPolling();
     this.renderIndicator();
   },
   setURL(url){
@@ -592,60 +595,86 @@ function resetAllData(){
   render();
 }
 
-// ════════ MODAL: IMPORTAR VIAGEM ════════
+// ════════ MODAL: RECEBER VIAGEM POR CÓDIGO DE 6 DÍGITOS ════════
 function openImportModal(){
   const m=document.getElementById('overlay-host')||(()=>{const d=document.createElement('div');d.id='overlay-host';document.body.appendChild(d);return d;})();
   m.innerHTML=`
     <div class="overlay show" onclick="if(event.target===this)closeAllOverlays()">
       <div class="modal">
         <div class="modal-h">
-          <div class="modal-t">📥 Importar Viagem</div>
+          <div class="modal-t">📥 Receber Viagem</div>
           <button class="modal-x" onclick="closeAllOverlays()">✕</button>
         </div>
         <div class="banner info">
-          💡 <span>Cole abaixo o <b>código</b> que o gestor te enviou (ele aparece quando o gestor clica em <b>"Enviar pro motorista"</b> em uma viagem).</span>
+          💡 <span>O gestor te passa um <b>código de 6 dígitos</b>. Digite abaixo e a viagem aparece automaticamente.</span>
         </div>
         <div class="fg">
-          <label class="fl">Código da viagem</label>
-          <textarea class="fc" id="imp-code" placeholder="Cole aqui o código longo que o gestor enviou..." style="min-height:120px;font-family:monospace;font-size:11.5px"></textarea>
+          <label class="fl" style="text-align:center;font-size:13px">Código da viagem</label>
+          <input type="text" inputmode="numeric" maxlength="6" autocomplete="off" class="fc" id="imp-code"
+                 placeholder="000000"
+                 style="text-align:center;font-size:38px;font-weight:900;letter-spacing:14px;font-family:'JetBrains Mono',monospace;padding:18px;color:#67e8f9;background:rgba(6,182,212,.05);border-color:rgba(6,182,212,.3)"
+                 oninput="this.value=this.value.replace(/\\D/g,'').slice(0,6); if(this.value.length===6) fetchTripByCode();">
         </div>
-        <button class="btn btn-pr btn-lg" onclick="importTripFromCode()">Importar Viagem</button>
+        <button class="btn btn-pr btn-lg" id="imp-btn" onclick="fetchTripByCode()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Buscar Viagem
+        </button>
+        <div id="imp-status" style="margin-top:12px;text-align:center;font-size:12.5px;color:var(--txm);display:none"></div>
       </div>
     </div>`;
+  setTimeout(()=>document.getElementById('imp-code')?.focus(),120);
 }
-function importTripFromCode(){
+
+async function fetchTripByCode(){
+  const inp=document.getElementById('imp-code');
+  const code=(inp?.value||'').replace(/\D/g,'');
+  if(code.length!==6){ showToast('Digite os 6 dígitos','warn'); return; }
+  const status=document.getElementById('imp-status');
+  const btn=document.getElementById('imp-btn');
+  if(btn) btn.disabled=true;
+  if(status){ status.style.display=''; status.innerHTML='⏳ Buscando viagem…'; status.style.color='#67e8f9'; }
   try{
-    const raw=document.getElementById('imp-code').value.trim();
-    if(!raw){ showToast('Cole o código','warn'); return; }
-    let json;
-    try{
-      // Tenta como base64 primeiro
-      json=JSON.parse(decodeURIComponent(escape(atob(raw))));
-    }catch(_){
-      // Tenta como JSON puro
-      json=JSON.parse(raw);
+    const url=cloudSync.url||FIREBASE_URL_DEFAULT;
+    const base=url.replace('/db.json','');
+    const res=await fetch(base+'/trip-codes/'+code+'.json?cb='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const t=await res.json();
+    if(!t || !t.id){
+      throw new Error('Código não encontrado. Confirme com o gestor se está correto.');
     }
-    if(!json||json.type!=='muvcity-trip'||!json.trip){
-      throw new Error('Formato inválido');
-    }
-    const t=json.trip;
     // Verifica duplicidade
     if(DB.trips.some(x=>x.id===t.id)){
-      if(!confirm('Esta viagem já foi importada antes. Substituir?')) return;
+      if(!confirm('Esta viagem já foi recebida antes. Substituir os dados?')){
+        closeAllOverlays(); return;
+      }
       DB.trips=DB.trips.filter(x=>x.id!==t.id);
     }
-    // Garante campos
-    t.status=t.status||'programada';
-    t.expenses=t.expenses||[];
-    t.createdAt=t.createdAt||new Date().toISOString();
-    DB.trips.push(t);
+    // Cria entry no app
+    DB.trips.push({
+      id:t.id,
+      code:'#'+code,
+      date:t.date,
+      returnDate:t.returnDate,
+      origin:t.origin||'',
+      destination:t.destination||'',
+      description:t.description||'',
+      vehicleId:t.vehicleId,
+      vehiclePlate:t.vehiclePlate||'',
+      vehicleModel:t.vehicleModel||'',
+      client:t.client||'',
+      driverName:t.driverName||'',
+      status:'programada',
+      expenses:[],
+      createdAt:new Date().toISOString(),
+      _firebaseCode:code
+    });
     saveDB();
     closeAllOverlays();
-    showToast('✅ Viagem importada com sucesso!','ok');
+    showToast('✅ Viagem recebida com sucesso!','ok');
     render();
   }catch(err){
-    showToast('Código inválido. Verifique e tente de novo.','err');
-    console.error(err);
+    if(status){ status.innerHTML='❌ '+err.message; status.style.color='#fca5a5'; }
+    if(btn) btn.disabled=false;
   }
 }
 
@@ -1111,14 +1140,33 @@ function closeAllOverlays(){
 }
 
 // ════════ DETECTAR VIAGEM NA URL ════════
-function checkURLForTrip(){
+async function checkURLForTrip(){
   try{
     const params=new URLSearchParams(location.search);
+    // Novo formato: ?codigo=123456
+    const codigo=params.get('codigo');
+    if(codigo && /^\d{6}$/.test(codigo)){
+      // Aguarda o app inicializar antes de buscar
+      setTimeout(()=>{
+        const inp=document.createElement('input');
+        // Simula entrada do código
+        if(DB.driver){
+          // Já está cadastrado — abre o modal com código preenchido
+          openImportModal();
+          setTimeout(()=>{
+            const e=document.getElementById('imp-code');
+            if(e){ e.value=codigo; fetchTripByCode(); }
+          },300);
+        }
+        history.replaceState({},'',location.pathname);
+      },1000);
+      return;
+    }
+    // Formato antigo (base64) — mantém compatibilidade
     const tripCode=params.get('trip');
     if(!tripCode) return;
     const json=JSON.parse(decodeURIComponent(escape(atob(tripCode))));
     if(json && json.type==='muvcity-trip' && json.trip){
-      // Importa silenciosamente
       const t=json.trip;
       if(!DB.trips.some(x=>x.id===t.id)){
         t.status=t.status||'programada';
@@ -1127,7 +1175,6 @@ function checkURLForTrip(){
         DB.trips.push(t);
         saveDB();
         showToast('✅ Viagem recebida do gestor!','ok');
-        // Limpa URL
         history.replaceState({},'',location.pathname);
       }
     }
