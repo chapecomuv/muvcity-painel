@@ -3012,6 +3012,7 @@ function loadDB(){
     DB = s ? JSON.parse(s) : JSON.parse(JSON.stringify(INIT));
     if(!DB.varExpenses) DB.varExpenses=[];
     if(!DB.investors) DB.investors=[];
+    DB.investors.forEach(inv=>{ if(!Array.isArray(inv.payments)) inv.payments=[]; });
     if(!DB.clients) DB.clients=[];
     if(!DB.drivers) DB.drivers=[];
     if(!DB.agencyRevenue) DB.agencyRevenue=[];
