@@ -770,6 +770,51 @@ html{scroll-behavior:smooth}
 .mobile-overlay.show{display:block}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
+/* ── Sidebar Collapse (desktop) ──
+   Botão no logo recolhe a sidebar pra apenas ícones, liberando ~200px pro conteúdo.
+   Persistido em localStorage('sidebarCollapsed'). */
+.sidebar-toggle{
+  width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(148,163,184,.18);color:#cbd5f5;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  margin-left:auto;transition:all .18s
+}
+.sidebar-toggle:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-toggle svg{transition:transform .25s ease}
+.sidebar,.main{transition:width .25s ease, margin-left .25s ease}
+body.sidebar-collapsed .sidebar{width:64px}
+body.sidebar-collapsed .main{margin-left:64px}
+body.sidebar-collapsed .logo-info,
+body.sidebar-collapsed .nav-grp,
+body.sidebar-collapsed .nav-ft{display:none}
+body.sidebar-collapsed .logo{padding:14px 0 14px;border-bottom:1px solid var(--bd)}
+body.sidebar-collapsed .logo-row{flex-direction:column;gap:10px;align-items:center}
+body.sidebar-collapsed .sidebar-toggle svg{transform:rotate(180deg)}
+body.sidebar-collapsed .nav-item{
+  font-size:0;justify-content:center;padding:11px 0;margin:1px 6px;
+  border-left:none;border-radius:10px;position:relative
+}
+body.sidebar-collapsed .nav-item .nav-ic{margin:0;opacity:.95;width:20px;height:20px}
+body.sidebar-collapsed .nav-item .nav-ic svg{width:18px;height:18px}
+body.sidebar-collapsed .nav-item.active{background:rgba(59,130,246,.18);box-shadow:inset 3px 0 0 var(--pr)}
+/* Tooltip de label quando colapsada */
+body.sidebar-collapsed .nav-item[data-label]:hover::after{
+  content:attr(data-label);position:absolute;left:64px;top:50%;transform:translateY(-50%);
+  background:rgba(13,24,41,.98);color:#fff;padding:6px 11px;border-radius:8px;
+  font-size:12px;font-weight:500;white-space:nowrap;z-index:300;
+  border:1px solid rgba(148,163,184,.2);box-shadow:0 4px 12px rgba(0,0,0,.4);pointer-events:none
+}
+/* No mobile (< 880px) o toggle não aparece — usa o drawer já existente */
+@media(max-width:880px){
+  .sidebar-toggle{display:none}
+  body.sidebar-collapsed .sidebar{width:280px}
+  body.sidebar-collapsed .main{margin-left:0}
+  body.sidebar-collapsed .nav-item{font-size:13px;justify-content:flex-start;padding:8px 12px;margin:1px 8px}
+  body.sidebar-collapsed .logo-info,body.sidebar-collapsed .nav-grp,body.sidebar-collapsed .nav-ft{display:block}
+  body.sidebar-collapsed .logo{padding:20px 16px 16px}
+  body.sidebar-collapsed .logo-row{flex-direction:row;gap:11px;align-items:center}
+}
+
 @media(max-width:880px){
   .sidebar{
     transform:translateX(-100%);
@@ -823,6 +868,35 @@ html{scroll-behavior:smooth}
   .modal{padding:14px}
   /* Pra tabelas fica essencial scroll horizontal */
   .wrap{margin:0 -14px;padding:0 14px}
+}
+
+/* ── Tablet/Mobile: tabela de Viagens & Receitas ──
+   Esconde colunas menos críticas pra evitar scroll horizontal extremo.
+   Ordem: Data(1), Veículo(2), Tipo(3), Descrição(4), Receita(5), NF(6), KM(7), Despesas(8), Lucro(9), Margem(10), Ações(11) */
+@media(max-width:1100px){
+  /* Esconde Tipo, NF, KM, Margem */
+  #page-trips table th:nth-child(3),
+  #page-trips table td:nth-child(3),
+  #page-trips table th:nth-child(6),
+  #page-trips table td:nth-child(6),
+  #page-trips table th:nth-child(7),
+  #page-trips table td:nth-child(7),
+  #page-trips table th:nth-child(10),
+  #page-trips table td:nth-child(10){display:none}
+}
+@media(max-width:640px){
+  /* Em telas pequenas, esconde também Despesas e Lucro (foco em Data, Veículo, Descrição, Receita, Ações) */
+  #page-trips table th:nth-child(8),
+  #page-trips table td:nth-child(8),
+  #page-trips table th:nth-child(9),
+  #page-trips table td:nth-child(9){display:none}
+  #page-trips table{font-size:12.5px}
+}
+
+/* Indica scroll horizontal quando há mais conteúdo (sombra nas bordas) */
+.wrap{
+  background:linear-gradient(90deg,rgba(13,24,41,1) 0%,transparent 4%,transparent 96%,rgba(13,24,41,1) 100%) no-repeat;
+  background-attachment:local
 }
 
 /* Autocomplete customizado (clientes) */
@@ -957,6 +1031,9 @@ html{scroll-behavior:smooth}
 </head>
 <body>
 
+<!-- Datalist global de cidades brasileiras (populado por loadCities()) -->
+<datalist id="cities-list"></datalist>
+
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside class="sidebar">
   <div class="logo">
@@ -971,6 +1048,9 @@ html{scroll-behavior:smooth}
         <div class="logo-name" id="sidebar-company-name">FleetControl Pro</div>
         <div class="logo-tag">Gestão Financeira</div>
       </div>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/Expandir menu" aria-label="Toggle sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
   </div>
   <nav class="nav">
@@ -1761,9 +1841,9 @@ html{scroll-behavior:smooth}
     </div>
     <div class="fr c2">
       <div class="fg"><label class="fl">📍 Origem</label>
-        <input type="text" class="fc" id="trip-origin" placeholder="Ex: Chapecó - SC"></div>
+        <input type="text" class="fc" id="trip-origin" list="cities-list" autocomplete="off" placeholder="Ex: Chapecó - SC"></div>
       <div class="fg"><label class="fl">🎯 Destino</label>
-        <input type="text" class="fc" id="trip-destination" placeholder="Ex: Pinhalzinho - SC"></div>
+        <input type="text" class="fc" id="trip-destination" list="cities-list" autocomplete="off" placeholder="Ex: Pinhalzinho - SC"></div>
     </div>
     <div class="fr c2">
       <div class="fg"><label class="fl">Cliente</label>
@@ -1917,6 +1997,8 @@ html{scroll-behavior:smooth}
       <div class="fg"><label class="fl">Descrição de Outros</label>
         <input type="text" class="fc" id="trip-other-desc" placeholder="Descreva outras despesas"></div>
     </div>
+    <!-- Painel de Consumo (populado por renderTripFuelStats no editTrip) -->
+    <div id="trip-fuel-stats" style="margin-top:14px"></div>
   </div>
 
   <div class="fsec" style="background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.25)">
@@ -2177,6 +2259,18 @@ html{scroll-behavior:smooth}
     <div class="fr c2">
       <div class="fg"><label class="fl">Valor de Aquisição (R$)</label><input type="number" class="fc" id="veh-purchase-value" placeholder="0,00" step="0.01"></div>
       <div class="fg"><label class="fl">Cor do Painel</label><input type="color" class="fc" id="veh-color" value="#2563eb" style="height:40px;padding:4px"></div>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <div class="fsec-t">⛽ Consumo de Combustível</div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">Meta de Consumo (km/L)</label>
+        <input type="number" class="fc" id="veh-fuel-target" placeholder="Ex: 10" step="0.1" min="0">
+        <div class="txs txm" style="margin-top:4px">Sugestões: Sprinter ~10 · Master ~11 · T-Cross ~15. Usada como meta no app do motorista.</div>
+      </div>
+      <div class="fg"><label class="fl">Capacidade do Tanque (L) <span style="opacity:.6">opcional</span></label>
+        <input type="number" class="fc" id="veh-tank-capacity" placeholder="Ex: 75" step="1" min="0"></div>
     </div>
   </div>
 
@@ -2582,8 +2676,8 @@ html{scroll-behavior:smooth}
         <input type="text" class="fc" id="ag-client" placeholder="Nome do cliente" list="client-datalist" autocomplete="off"></div>
     </div>
     <div class="fr c2">
-      <div class="fg"><label class="fl">Origem</label><input type="text" class="fc" id="ag-origin" placeholder="Ex: Chapecó - SC"></div>
-      <div class="fg"><label class="fl">Destino</label><input type="text" class="fc" id="ag-dest" placeholder="Ex: Florianópolis - SC"></div>
+      <div class="fg"><label class="fl">Origem</label><input type="text" class="fc" id="ag-origin" list="cities-list" autocomplete="off" placeholder="Ex: Chapecó - SC"></div>
+      <div class="fg"><label class="fl">Destino</label><input type="text" class="fc" id="ag-dest" list="cities-list" autocomplete="off" placeholder="Ex: Florianópolis - SC"></div>
     </div>
     <div class="fr">
       <div class="fg"><label class="fl">Empresa/Transportadora Executora</label>
@@ -3013,6 +3107,36 @@ function loadDB(){
     if(!DB.varExpenses) DB.varExpenses=[];
     if(!DB.investors) DB.investors=[];
     DB.investors.forEach(inv=>{ if(!Array.isArray(inv.payments)) inv.payments=[]; });
+
+    // ── Migração: recalcula fuelLiters/fuelEfficiency em trips com driverExpenses antigas ──
+    // (versões anteriores não agregavam litros nem consumo do motorista — preenche retroativamente)
+    (DB.trips||[]).forEach(t=>{
+      if(!Array.isArray(t.driverExpenses) || t.driverExpenses.length===0) return;
+      const fuelStops=[];
+      let litros=0;
+      t.driverExpenses.forEach(e=>{
+        if(e.type==='combustivel'){
+          const li=parseFloat(e.liters)||0;
+          const km=parseFloat(e.kmAtPump)||0;
+          litros+=li;
+          if(km>0 && li>0) fuelStops.push({km,liters:li});
+        }
+      });
+      const r=v=>Math.round(v*100)/100;
+      if(litros>0 && !t.fuelLiters) t.fuelLiters=r(litros);
+      // Arredonda também despesas legadas com erro de ponto flutuante
+      if(t.fuelCost) t.fuelCost=r(t.fuelCost);
+      if(t.foodCost) t.foodCost=r(t.foodCost);
+      if(t.accommodationCost) t.accommodationCost=r(t.accommodationCost);
+      if(t.otherCost) t.otherCost=r(t.otherCost);
+      // Consumo (se ainda não calculado)
+      if(t.fuelEfficiency==null && fuelStops.length>=2){
+        fuelStops.sort((a,b)=>a.km-b.km);
+        const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
+        const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
+        t.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r(kmRange/litrosConsumidos):null;
+      }
+    });
     if(!DB.clients) DB.clients=[];
     if(!DB.drivers) DB.drivers=[];
     if(!DB.agencyRevenue) DB.agencyRevenue=[];
@@ -3205,8 +3329,20 @@ const cloudSync = {
           const i=DB.trips.findIndex(t=>t.id===dTrip.id);
           if(i===-1) return;
           const orig=DB.trips[i];
-          // Só atualiza se status do motorista for diferente do registrado
-          if(orig.driverLastSync && orig.driverLastSync>=(dTrip._lastChange||0)) return;
+          // Decide se pula a atualização.
+          // Caso 1 (ideal): motorista enviou _lastChange válido → compara com driverLastSync.
+          // Caso 2 (legado): payload sem _lastChange → pula só se conteúdo for idêntico ao já registrado.
+          if(dTrip._lastChange){
+            if(orig.driverLastSync && orig.driverLastSync>=dTrip._lastChange) return;
+          } else {
+            const origExpCount=(orig.driverExpenses||[]).length;
+            const dExpCount=(dTrip.expenses||[]).length;
+            const sameCount=origExpCount===dExpCount;
+            const sameStatus=(orig.driverStatus||'')===(dTrip.status||'');
+            const sameKmStart=n(orig.kmStart||0)===n(dTrip.kmStart||0);
+            const sameKmEnd=n(orig.kmEnd||0)===n(dTrip.kmEnd||0);
+            if(sameCount && sameStatus && sameKmStart && sameKmEnd) return;
+          }
           // Aplica atualização vinda do motorista
           if(dTrip.kmStart) orig.kmStart=n(dTrip.kmStart);
           if(dTrip.kmEnd) orig.kmEnd=n(dTrip.kmEnd);
@@ -3217,14 +3353,33 @@ const cloudSync = {
           if(dTrip.expenses){
             // Soma despesas categorizadas
             let f=0,fd=0,h=0,o=0,oDescs=[];
+            let litros=0;
+            const fuelStops=[];
             dTrip.expenses.forEach(e=>{
               const a=n(e.amount);
-              if(e.type==='combustivel') f+=a;
+              if(e.type==='combustivel'){
+                f+=a;
+                litros+=n(e.liters);
+                if(n(e.kmAtPump)>0) fuelStops.push({km:n(e.kmAtPump), liters:n(e.liters), date:e.date||''});
+              }
               else if(e.type==='alimentacao') fd+=a;
               else if(e.type==='hospedagem') h+=a;
               else { o+=a; if(e.description) oDescs.push(e.description); }
             });
-            orig.fuelCost=f; orig.foodCost=fd; orig.accommodationCost=h; orig.otherCost=o;
+            // Arredondamento financeiro: 2 casas (resolve erros de ponto flutuante)
+            const r2=v=>Math.round(v*100)/100;
+            orig.fuelCost=r2(f); orig.foodCost=r2(fd); orig.accommodationCost=r2(h); orig.otherCost=r2(o);
+            orig.fuelLiters=r2(litros);
+            // Consumo médio (km/L): assume que cada abastecimento completa o tanque.
+            // Pega o KM entre 1º e último abastecimento ÷ soma dos litros do 2º em diante.
+            if(fuelStops.length>=2){
+              fuelStops.sort((a,b)=>a.km-b.km);
+              const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
+              const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
+              orig.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
+            } else {
+              orig.fuelEfficiency=null;
+            }
             if(oDescs.length) orig.otherCostDesc='[motorista] '+oDescs.join('; ');
             orig.driverExpenses=dTrip.expenses;
           }
@@ -3368,6 +3523,8 @@ function n(v){
   if(s.includes(',')) return parseFloat(s.replace(/\./g,'').replace(',','.'))||0;
   return parseFloat(s)||0;
 }
+// Arredondamento financeiro: 2 casas decimais (resolve erros de ponto flutuante tipo 290.15+386.7=676.8499999999)
+function r2(v){ return Math.round((parseFloat(v)||0)*100)/100; }
 // Formata número JS (ex: 2055.34) como string pt-BR para input ("2055,34")
 function fmtMoneyInput(v){ if(v==null||v==='') return ''; return String(v).replace('.',','); }
 // Máscara de telefone (BR): (XX) X XXXX-XXXX para celular, (XX) XXXX-XXXX para fixo
@@ -3652,6 +3809,73 @@ function toggleMobileMenu(){
   sb.classList.toggle('open',opening);
   ov.classList.toggle('show',opening);
   document.body.style.overflow=opening?'hidden':'';
+}
+
+// ── Autocomplete de Cidades ──
+// Popula o <datalist id="cities-list"> com municípios brasileiros (IBGE, cached em localStorage)
+// + cidades já usadas no histórico (viagens e agenciamentos). Vai aparecendo conforme o usuário digita.
+async function loadCities(){
+  const KEY='ibge_cities_v1';
+  let cities=[];
+  // 1. Tenta carregar do cache
+  try{
+    const cached=localStorage.getItem(KEY);
+    if(cached){ cities=JSON.parse(cached); }
+  }catch(_){}
+  // 2. Se cache vazio, busca da API do IBGE (~150KB, leva ~1s na 1ª vez)
+  if(!Array.isArray(cities)||cities.length<5000){
+    try{
+      const res=await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome');
+      if(res.ok){
+        const data=await res.json();
+        cities=data.map(m=>`${m.nome} - ${m['microrregiao']?.['mesorregiao']?.['UF']?.['sigla']||''}`).filter(Boolean);
+        try{ localStorage.setItem(KEY,JSON.stringify(cities)); }catch(_){}
+      }
+    }catch(_){ /* offline: usa só histórico */ }
+  }
+  // 3. Adiciona cidades do histórico no topo (mais relevantes pro usuário)
+  const histSet=new Set();
+  (DB.trips||[]).forEach(t=>{ if(t.origin) histSet.add(t.origin.trim()); if(t.destination) histSet.add(t.destination.trim()); });
+  (DB.agencyRevenue||[]).forEach(a=>{ if(a.origin) histSet.add(a.origin.trim()); if(a.destination) histSet.add(a.destination.trim()); });
+  const hist=Array.from(histSet).filter(Boolean);
+  // Combina (histórico primeiro, depois IBGE), dedup
+  const seen=new Set();
+  const final=[];
+  hist.concat(cities).forEach(c=>{ const k=c.toLowerCase(); if(!seen.has(k)){ seen.add(k); final.push(c); } });
+  // 4. Renderiza no datalist
+  const dl=document.getElementById('cities-list');
+  if(dl){
+    dl.innerHTML=final.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">`).join('');
+  }
+}
+
+// Recolhe/expande a sidebar em desktop (libera espaço pro conteúdo).
+// Estado persistido em localStorage.
+function toggleSidebar(){
+  const collapsed=!document.body.classList.contains('sidebar-collapsed');
+  document.body.classList.toggle('sidebar-collapsed', collapsed);
+  try{ localStorage.setItem('sidebarCollapsed', collapsed?'1':'0'); }catch(_){}
+}
+// Restaura estado salvo + popula data-label em cada nav-item para tooltip quando recolhido
+function initSidebarState(){
+  try{
+    let userPref=localStorage.getItem('sidebarCollapsed');
+    // Em tablets (881-1100px), recolhe automaticamente se o usuário não escolheu explicitamente
+    if(userPref==null && window.innerWidth>=881 && window.innerWidth<=1100){
+      userPref='1';
+    }
+    if(userPref==='1' && window.innerWidth>880){
+      document.body.classList.add('sidebar-collapsed');
+    }
+  }catch(_){}
+  document.querySelectorAll('.sidebar .nav-item').forEach(el=>{
+    if(!el.dataset.label){
+      // Pega o texto removendo o ícone SVG
+      const clone=el.cloneNode(true);
+      clone.querySelectorAll('.nav-ic').forEach(n=>n.remove());
+      el.dataset.label=clone.textContent.trim();
+    }
+  });
 }
 function closeMobileMenu(){
   const sb=document.querySelector('.sidebar');
@@ -4009,13 +4233,16 @@ function tripTypeBadge(type){
 }
 
 function renderTrips(){
-  // Populate vehicle filter
+  // Populate vehicle filter — preserva seleção atual ao re-renderizar
   const vf=document.getElementById('trip-veh-filter');
+  const prevValue=vf?.value||'all';
   if(vf){
     vf.innerHTML='<option value="all">Todos os veículos</option>'+
       DB.vehicles.map(v=>`<option value="${v.id}">${v.plate} — ${v.model}</option>`).join('');
+    // Restaura a seleção se o veículo ainda existir
+    if(Array.from(vf.options).some(o=>o.value===prevValue)) vf.value=prevValue;
   }
-  const vFilter=document.getElementById('trip-veh-filter')?.value||'all';
+  const vFilter=vf?.value||'all';
   const trips=DB.trips.filter(t=>inMonth(t.date||t.departureDate,currentYear,currentMonth)&&(vFilter==='all'||t.vehicleId===vFilter))
     .sort((a,b)=>(b.date||b.departureDate||'').localeCompare(a.date||a.departureDate||''));
 
@@ -5468,7 +5695,78 @@ function openTripModal(vId){
   ['calc-revenue','calc-expenses','calc-profit'].forEach(id=>document.getElementById(id).textContent=R(0));
   document.getElementById('calc-margin').textContent='0%';
   const kmRow=document.getElementById('calc-km-row'); if(kmRow) kmRow.style.display='none';
+  const fuelStatsEl=document.getElementById('trip-fuel-stats'); if(fuelStatsEl){ fuelStatsEl.innerHTML=''; fuelStatsEl.style.display='none'; }
   openModal('modal-trip');
+}
+
+// Calcula consumo médio (km/L) a partir dos abastecimentos do motorista.
+// Retorna { kmL, kmRange, litros, stops } ou null se não houver dados suficientes.
+function calcFuelEfficiency(trip){
+  const stops=(trip.driverExpenses||[])
+    .filter(e=>e.type==='combustivel' && n(e.kmAtPump)>0 && n(e.liters)>0)
+    .map(e=>({km:n(e.kmAtPump), liters:n(e.liters), date:e.date||'', amount:n(e.amount)}))
+    .sort((a,b)=>a.km-b.km);
+  if(stops.length<2) return { kmL:null, stops, kmRange:0, litros:0 };
+  const kmRange=stops[stops.length-1].km - stops[0].km;
+  const litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
+  const kmL=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
+  return { kmL, stops, kmRange, litros:litrosConsumidos };
+}
+
+function renderTripFuelStats(t){
+  const el=document.getElementById('trip-fuel-stats');
+  if(!el) return;
+  const veh=DB.vehicles.find(v=>v.id===t.vehicleId);
+  const target=n(veh?.fuelTargetKmPerL)||null;
+  const fe=calcFuelEfficiency(t);
+  // Se não há abastecimentos suficientes E nem meta cadastrada, esconde o bloco
+  if(!fe.kmL && !target && (!fe.stops||fe.stops.length===0)){ el.innerHTML=''; el.style.display='none'; return; }
+  el.style.display='';
+  // Cor do indicador comparado com a meta
+  let kmLColor='var(--txm)', kmLBadge='';
+  if(fe.kmL && target){
+    if(fe.kmL>=target){ kmLColor='#10b981'; kmLBadge='<span style="background:rgba(16,185,129,.18);color:#10b981;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px">✅ ACIMA DA META</span>'; }
+    else if(fe.kmL>=target*0.9){ kmLColor='#f59e0b'; kmLBadge='<span style="background:rgba(245,158,11,.18);color:#f59e0b;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px">⚠️ PERTO DA META</span>'; }
+    else { kmLColor='#ef4444'; kmLBadge='<span style="background:rgba(239,68,68,.18);color:#ef4444;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px">🔴 ABAIXO DA META</span>'; }
+  }
+  const isFinalized=(t.driverStatus==='finalizada');
+  const mediaLabel=isFinalized?'Média Final':'Média Atual';
+  const stopsHtml=fe.stops.length?`<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--txm);font-weight:600">📍 Ver ${fe.stops.length} abastecimento(s) registrado(s)</summary>
+    <div style="margin-top:8px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:12px">
+      ${fe.stops.map((s,i)=>{
+        const prev=i>0?fe.stops[i-1]:null;
+        const trecho=prev?(s.km-prev.km):0;
+        const consumoTrecho=(prev && s.liters>0)?r2(trecho/s.liters):null;
+        return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(148,163,184,.08)">
+          <span><b>${i+1}.</b> KM ${s.km.toLocaleString('pt-BR')} · ${s.liters}L · ${R(s.amount)}</span>
+          <span class="txm">${consumoTrecho?`${trecho} km nesse trecho · <b style="color:#67e8f9">${consumoTrecho} km/L</b>`:'(base)'}</span>
+        </div>`;
+      }).join('')}
+    </div></details>`:'';
+  el.innerHTML=`
+    <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.4px;color:#60a5fa;text-transform:uppercase;margin-bottom:10px">⛽ Consumo de Combustível</div>
+      <div class="g4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+        <div class="vst" style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px">
+          <div class="vst-l" style="font-size:11px;color:var(--txm);text-transform:uppercase;letter-spacing:.3px">🎯 Meta</div>
+          <div class="vst-v" style="font-size:18px;font-weight:800;color:${target?'#a78bfa':'var(--txm)'}">${target?target+' km/L':'Não definida'}</div>
+        </div>
+        <div class="vst" style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px">
+          <div class="vst-l" style="font-size:11px;color:var(--txm);text-transform:uppercase;letter-spacing:.3px">📊 ${mediaLabel}</div>
+          <div class="vst-v" style="font-size:18px;font-weight:800;color:${kmLColor}">${fe.kmL?fe.kmL+' km/L':'—'}${kmLBadge}</div>
+        </div>
+        <div class="vst" style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px">
+          <div class="vst-l" style="font-size:11px;color:var(--txm);text-transform:uppercase;letter-spacing:.3px">📏 KM nos Abast.</div>
+          <div class="vst-v" style="font-size:18px;font-weight:800">${fe.kmRange?fe.kmRange.toLocaleString('pt-BR')+' km':'—'}</div>
+        </div>
+        <div class="vst" style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px">
+          <div class="vst-l" style="font-size:11px;color:var(--txm);text-transform:uppercase;letter-spacing:.3px">⛽ Litros (cálc.)</div>
+          <div class="vst-v" style="font-size:18px;font-weight:800">${fe.litros?fe.litros+' L':'—'}</div>
+        </div>
+      </div>
+      ${!fe.kmL?`<div class="txs txm" style="margin-top:8px">💡 Para calcular o consumo, o motorista precisa registrar pelo menos <b>2 abastecimentos</b> com KM do hodômetro.</div>`:''}
+      ${stopsHtml}
+    </div>`;
 }
 
 function editTrip(id){
@@ -5501,14 +5799,15 @@ function editTrip(id){
     // Se já há kmDriven salvo, protege contra sobrescrita pelo calcKM()
     kmTotalEl.dataset.manual=t.kmDriven?'1':'0';
   }
-  document.getElementById('trip-fuel').value=t.fuelCost||'';
-  document.getElementById('trip-liters').value=t.fuelLiters||'';
-  document.getElementById('trip-toll').value=t.tollCost||'';
-  document.getElementById('trip-maint').value=t.maintenanceCost||'';
-  document.getElementById('trip-hotel').value=t.accommodationCost||'';
-  document.getElementById('trip-food').value=t.foodCost||'';
-  document.getElementById('trip-driver').value=t.driverCost||'';
-  document.getElementById('trip-other').value=t.otherCost||'';
+  // Display: arredonda valores legados que vieram do Firebase com erro de ponto flutuante
+  document.getElementById('trip-fuel').value=t.fuelCost?r2(t.fuelCost):'';
+  document.getElementById('trip-liters').value=t.fuelLiters?r2(t.fuelLiters):'';
+  document.getElementById('trip-toll').value=t.tollCost?r2(t.tollCost):'';
+  document.getElementById('trip-maint').value=t.maintenanceCost?r2(t.maintenanceCost):'';
+  document.getElementById('trip-hotel').value=t.accommodationCost?r2(t.accommodationCost):'';
+  document.getElementById('trip-food').value=t.foodCost?r2(t.foodCost):'';
+  document.getElementById('trip-driver').value=t.driverCost?r2(t.driverCost):'';
+  document.getElementById('trip-other').value=t.otherCost?r2(t.otherCost):'';
   document.getElementById('trip-other-desc').value=t.otherCostDesc||'';
   document.getElementById('trip-notes').value=t.notes||'';
   // Driver payment fields
@@ -5529,6 +5828,7 @@ function editTrip(id){
   }
   toggleNF();calcKM();calcTripProfit();
   loadPaymentPlanToModal(t.paymentPlan||null);
+  renderTripFuelStats(t);
   openModal('modal-trip');
 }
 
@@ -5879,23 +6179,23 @@ function saveTrip(){
     description:_description,    // mantém pra retrocompatibilidade
     client:document.getElementById('trip-client').value,
     driverName:document.getElementById('trip-driver-name').value||'',
-    grossRevenue:n(document.getElementById('trip-revenue').value),
-    hasInvoice:hasNF,invoiceValue:nfVal,taxRate,taxAmount:taxAmt,
+    grossRevenue:r2(n(document.getElementById('trip-revenue').value)),
+    hasInvoice:hasNF,invoiceValue:r2(nfVal),taxRate,taxAmount:r2(taxAmt),
     kmStart:n(document.getElementById('trip-km-start').value),
     kmEnd:n(document.getElementById('trip-km-end').value),
     kmDriven:n(document.getElementById('trip-km-total').value),
     rentalDays:n(document.getElementById('rental-days')?.value)||null,
-    rentalDailyValue:n(document.getElementById('rental-daily-value')?.value)||null,
-    fuelCost:n(document.getElementById('trip-fuel').value),
-    fuelLiters:n(document.getElementById('trip-liters').value),
-    tollCost:n(document.getElementById('trip-toll').value),
-    maintenanceCost:n(document.getElementById('trip-maint').value),
-    accommodationCost:n(document.getElementById('trip-hotel').value),
-    foodCost:n(document.getElementById('trip-food').value),
-    driverCost:n(document.getElementById('trip-driver').value),
-    driverDailyRate:n(document.getElementById('trip-driver-daily-rate').value)||null,
+    rentalDailyValue:r2(n(document.getElementById('rental-daily-value')?.value))||null,
+    fuelCost:r2(n(document.getElementById('trip-fuel').value)),
+    fuelLiters:r2(n(document.getElementById('trip-liters').value)),
+    tollCost:r2(n(document.getElementById('trip-toll').value)),
+    maintenanceCost:r2(n(document.getElementById('trip-maint').value)),
+    accommodationCost:r2(n(document.getElementById('trip-hotel').value)),
+    foodCost:r2(n(document.getElementById('trip-food').value)),
+    driverCost:r2(n(document.getElementById('trip-driver').value)),
+    driverDailyRate:r2(n(document.getElementById('trip-driver-daily-rate').value))||null,
     driverDays:parseInt(document.getElementById('trip-driver-days').value)||null,
-    otherCost:n(document.getElementById('trip-other').value),
+    otherCost:r2(n(document.getElementById('trip-other').value)),
     otherCostDesc:document.getElementById('trip-other-desc').value,
     notes:document.getElementById('trip-notes').value,
     paymentPlan:(()=>{
@@ -6318,6 +6618,7 @@ function openVehicleModal(){
   document.getElementById('veh-id').value='';
   document.getElementById('veh-modal-title').textContent='Novo Veículo';
   ['veh-brand','veh-model','veh-plate','veh-year','veh-km','veh-purchase-value',
+   'veh-fuel-target','veh-tank-capacity',
    'veh-oil-date','veh-oil-km','veh-tire-date','veh-tire-km','veh-ac-date','veh-ac-km']
     .forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
   document.getElementById('veh-purchase-date').value=new Date().toISOString().split('T')[0];
@@ -6338,6 +6639,9 @@ function editVehicle(id){
   document.getElementById('veh-purchase-date').value=v.purchaseDate||'';
   document.getElementById('veh-purchase-value').value=v.purchaseValue||'';
   document.getElementById('veh-color').value=v.color||'#2563eb';
+  // Fuel target & tank
+  document.getElementById('veh-fuel-target').value=v.fuelTargetKmPerL||'';
+  document.getElementById('veh-tank-capacity').value=v.tankCapacityL||'';
   // Maintenance fields
   document.getElementById('veh-oil-date').value=v.lastOilChange?.date||'';
   document.getElementById('veh-oil-km').value=v.lastOilChange?.km??'';
@@ -6364,6 +6668,8 @@ function saveVehicle(){
     purchaseDate:document.getElementById('veh-purchase-date').value,
     purchaseValue:n(document.getElementById('veh-purchase-value').value),
     color:document.getElementById('veh-color').value,active:true,
+    fuelTargetKmPerL:n(document.getElementById('veh-fuel-target').value)||null,
+    tankCapacityL:n(document.getElementById('veh-tank-capacity').value)||null,
     cashReserve:existing.cashReserve||0,
     cashReserveHistory:existing.cashReserveHistory||[],
     lastOilChange:{
@@ -8966,6 +9272,8 @@ function bootApp(){
   updateSidebarLogo();
   updateMonthLabels();
   renderDashboard();
+  initSidebarState();
+  loadCities();   // popula datalist global de cidades (IBGE + histórico)
   // Inicializa sync na nuvem (já hardcoded)
   cloudSync.init();
 }

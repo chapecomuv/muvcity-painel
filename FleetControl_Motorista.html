@@ -328,6 +328,8 @@ const cloudSync = {
           vehicleId:t.vehicleId,
           vehiclePlate:veh?.plate||'',
           vehicleModel:[veh?.brand,veh?.model].filter(Boolean).join(' '),
+          fuelTargetKmPerL:parseFloat(veh?.fuelTargetKmPerL)||null,
+          tankCapacityL:parseFloat(veh?.tankCapacityL)||null,
           client:t.client||'',
           driverName:t.driverName||'',
           status:t.driverStatus||'programada',
@@ -342,7 +344,12 @@ const cloudSync = {
           // Atualiza só se for programada (não sobrescreve em andamento/finalizada)
           DB.trips[ex]={...DB.trips[ex], origin:enriched.origin, destination:enriched.destination,
             vehiclePlate:enriched.vehiclePlate, vehicleModel:enriched.vehicleModel,
+            fuelTargetKmPerL:enriched.fuelTargetKmPerL, tankCapacityL:enriched.tankCapacityL,
             client:enriched.client, date:enriched.date};
+        } else {
+          // Trip já em andamento/finalizada: garante que meta de combustível esteja atualizada
+          if(enriched.fuelTargetKmPerL!=null) DB.trips[ex].fuelTargetKmPerL=enriched.fuelTargetKmPerL;
+          if(enriched.tankCapacityL!=null) DB.trips[ex].tankCapacityL=enriched.tankCapacityL;
         }
       });
       if(newCount>0){
@@ -487,14 +494,20 @@ function saveDriver(){
 // ════════ TELA: HOME (lista de viagens) ════════
 function renderHome(root){
   const driver=DB.driver;
-  const trips=DB.trips.slice().sort((a,b)=>{
-    // ordem: em andamento → programadas → finalizadas
-    const order={andamento:0,programada:1,finalizada:2};
-    return (order[a.status]||9) - (order[b.status]||9) || (b.createdAt||'').localeCompare(a.createdAt||'');
-  });
+  // Em andamento sempre no topo; o resto é filtrável (Todas / Agendadas / Finalizadas).
+  const filterMode = window._tripFilter || 'all';
+  const sortByDateDesc=(a,b)=>(b.date||'').localeCompare(a.date||'');
+  const andamentoList=DB.trips.filter(t=>t.status==='andamento')
+    .sort((a,b)=>(b.startedAt||b.date||'').localeCompare(a.startedAt||a.date||''));
+  let othersList=DB.trips.filter(t=>t.status!=='andamento');
+  if(filterMode==='programada') othersList=othersList.filter(t=>t.status==='programada');
+  else if(filterMode==='finalizada') othersList=othersList.filter(t=>t.status==='finalizada');
+  othersList.sort(sortByDateDesc);
+  const trips=[...andamentoList, ...othersList];
   const totalToday = DB.trips.reduce((s,t)=>s+(t.expenses||[]).reduce((a,e)=>a+n(e.amount),0),0);
-  const inProgress = DB.trips.filter(t=>t.status==='andamento').length;
+  const inProgress = andamentoList.length;
   const finished = DB.trips.filter(t=>t.status==='finalizada').length;
+  const programmedCount = DB.trips.filter(t=>t.status==='programada').length;
 
   let tripsHtml;
   if(!trips.length){
@@ -547,6 +560,20 @@ function renderHome(root){
       </div>
 
       <div class="section-title">Suas viagens</div>
+      <div style="display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap">
+        ${[
+          {key:'all',label:'Todas',count:DB.trips.length},
+          {key:'programada',label:'⏳ Agendadas',count:programmedCount},
+          {key:'finalizada',label:'✅ Finalizadas',count:finished}
+        ].map(f=>{
+          const active=filterMode===f.key;
+          const bg=active?'rgba(99,102,241,.18)':'rgba(255,255,255,.04)';
+          const bd=active?'rgba(99,102,241,.5)':'rgba(148,163,184,.15)';
+          const cl=active?'#a5b4fc':'#cbd5f5';
+          return `<button onclick="setTripFilter('${f.key}')" style="background:${bg};border:1px solid ${bd};color:${cl};padding:7px 13px;border-radius:18px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px">${f.label}<span style="opacity:.7;font-weight:600">${f.count}</span></button>`;
+        }).join('')}
+      </div>
+      ${inProgress>0?`<div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#67e8f9;text-transform:uppercase;margin:4px 0 8px">🟢 EM ANDAMENTO</div>`:''}
       ${tripsHtml}
     </div>
 
@@ -555,6 +582,11 @@ function renderHome(root){
       Importar nova viagem
     </button>
   `;
+}
+
+function setTripFilter(mode){
+  window._tripFilter=mode;
+  render();
 }
 
 function openProfileMenu(){
@@ -692,6 +724,58 @@ function backToHome(){
   window.scrollTo(0,0);
 }
 
+// Card de Meta de Consumo (km/L) — visível ao motorista para incentivo durante e após a viagem.
+function renderFuelMetaCard(trip){
+  const target=parseFloat(trip.fuelTargetKmPerL)||null;
+  const stops=(trip.expenses||[])
+    .filter(e=>e.type==='combustivel' && n(e.kmAtPump)>0 && n(e.liters)>0)
+    .map(e=>({km:n(e.kmAtPump), liters:n(e.liters)}))
+    .sort((a,b)=>a.km-b.km);
+  // Não exibe se não tem meta nem nenhum abastecimento (motorista programada já não chega aqui)
+  if(!target && stops.length===0) return '';
+  const r2=v=>Math.round(v*100)/100;
+  let kmL=null, kmRange=0, litrosConsumidos=0;
+  if(stops.length>=2){
+    kmRange=stops[stops.length-1].km-stops[0].km;
+    litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
+    if(kmRange>0 && litrosConsumidos>0) kmL=r2(kmRange/litrosConsumidos);
+  }
+  const isFinalized=trip.status==='finalizada';
+  const mediaLabel=isFinalized?'🏁 Média Final':'📊 Média Atual';
+  // Determina cor/badge baseado na comparação com a meta
+  let mediaColor='#94a3b8', badge='', barPct=0, barColor='#64748b';
+  if(kmL && target){
+    barPct=Math.min(100,Math.max(0,(kmL/target)*100));
+    if(kmL>=target){ mediaColor='#10b981'; badge='🏆 ACIMA DA META'; barColor='#10b981'; }
+    else if(kmL>=target*0.9){ mediaColor='#f59e0b'; badge='⚠️ PERTO'; barColor='#f59e0b'; }
+    else { mediaColor='#ef4444'; badge='🔴 ABAIXO'; barColor='#ef4444'; }
+  } else if(kmL){ mediaColor='#67e8f9'; }
+  const aguardaSegundo=stops.length===1?`<div style="font-size:11.5px;color:var(--txm);margin-top:8px;font-style:italic">⛽ Aguardando o 2º abastecimento para calcular o consumo.</div>`:'';
+  const semAbast=stops.length===0?`<div style="font-size:11.5px;color:var(--txm);margin-top:8px;font-style:italic">⛽ Registre abastecimentos com KM e litros para calcular o consumo.</div>`:'';
+  return `<div style="background:linear-gradient(135deg,rgba(99,102,241,.12) 0%,rgba(168,85,247,.08) 100%);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:16px;margin:14px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:12.5px;font-weight:800;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase">⛽ Consumo de Combustível</div>
+      ${badge?`<span style="background:${barColor}22;color:${barColor};padding:3px 9px;border-radius:12px;font-size:11px;font-weight:800;letter-spacing:.3px">${badge}</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:${kmL&&target?12:0}px">
+      <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px">
+        <div style="font-size:10.5px;color:var(--txm);text-transform:uppercase;letter-spacing:.3px;font-weight:700">🎯 Meta</div>
+        <div style="font-size:22px;font-weight:800;color:${target?'#a78bfa':'#64748b'};margin-top:2px">${target?target.toFixed(1)+' km/L':'—'}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px">
+        <div style="font-size:10.5px;color:var(--txm);text-transform:uppercase;letter-spacing:.3px;font-weight:700">${mediaLabel}</div>
+        <div style="font-size:22px;font-weight:800;color:${mediaColor};margin-top:2px">${kmL?kmL.toFixed(2)+' km/L':'—'}</div>
+      </div>
+    </div>
+    ${kmL&&target?`<div style="background:rgba(255,255,255,.06);border-radius:8px;height:10px;overflow:hidden;position:relative">
+      <div style="background:linear-gradient(90deg,${barColor},${barColor}cc);width:${barPct.toFixed(0)}%;height:100%;border-radius:8px;transition:width .5s ease"></div>
+      <div style="position:absolute;right:8px;top:-3px;font-size:10.5px;font-weight:800;color:${barColor};line-height:16px">${barPct.toFixed(0)}%</div>
+    </div>`:''}
+    ${aguardaSegundo}${semAbast}
+    ${stops.length>=2?`<div style="font-size:11px;color:var(--txm);margin-top:10px;display:flex;justify-content:space-between"><span>${kmRange.toLocaleString('pt-BR')} km percorridos</span><span>${litrosConsumidos.toFixed(2)}L consumidos</span></div>`:''}
+  </div>`;
+}
+
 function renderTripScreen(root, trip){
   const expenses=trip.expenses||[];
   const totalExp=expenses.reduce((s,e)=>s+n(e.amount),0);
@@ -792,6 +876,8 @@ function renderTripScreen(root, trip){
         <div class="big-kpi-s">${(trip.kmStart||0).toLocaleString('pt-BR')} → ${(trip.kmEnd||0).toLocaleString('pt-BR')} km</div>
       </div>`:''}
 
+      ${trip.status!=='programada'?renderFuelMetaCard(trip):''}
+
       ${mainAction}
 
       ${trip.status!=='programada'?`
@@ -884,6 +970,7 @@ function startTrip(tripId){
       label:'Abastecimento inicial'
     });
   }
+  trip._lastChange=Date.now();
   saveDB();
   closeAllOverlays();
   showToast('🚀 Viagem iniciada! Boa viagem!','ok');
@@ -1021,6 +1108,7 @@ function saveLanc(tripId, type){
   }
   trip.expenses=trip.expenses||[];
   trip.expenses.push(lanc);
+  trip._lastChange=Date.now();
   saveDB();
   closeAllOverlays();
   showToast('💾 Lançamento salvo!','ok');
@@ -1093,6 +1181,7 @@ function finishTrip(tripId){
     label:'Abastecimento final (tanque cheio)',
     isFinalFuel:true
   });
+  trip._lastChange=Date.now();
   saveDB();
   closeAllOverlays();
   showToast('🏁 Viagem finalizada! Não esqueça de enviar pro gestor.','ok');
