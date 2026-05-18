@@ -734,11 +734,18 @@ function renderFuelMetaCard(trip){
   // Não exibe se não tem meta nem nenhum abastecimento (motorista programada já não chega aqui)
   if(!target && stops.length===0) return '';
   const r2=v=>Math.round(v*100)/100;
-  let kmL=null, kmRange=0, litrosConsumidos=0;
+  let kmL=null, kmRange=0, litrosConsumidos=0, calcSource='';
+  const kmStart=n(trip.kmStart);
   if(stops.length>=2){
+    // Cálculo padrão: entre 1º e último abastecimento, somando litros do 2º em diante
     kmRange=stops[stops.length-1].km-stops[0].km;
     litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-    if(kmRange>0 && litrosConsumidos>0) kmL=r2(kmRange/litrosConsumidos);
+    if(kmRange>0 && litrosConsumidos>0){ kmL=r2(kmRange/litrosConsumidos); calcSource='entre abastecimentos'; }
+  } else if(stops.length===1 && kmStart>0 && stops[0].km>kmStart){
+    // Cálculo parcial: usa o KM inicial da viagem (assume tanque cheio no início)
+    kmRange=stops[0].km-kmStart;
+    litrosConsumidos=stops[0].liters;
+    if(kmRange>0 && litrosConsumidos>0){ kmL=r2(kmRange/litrosConsumidos); calcSource='desde o KM inicial'; }
   }
   const isFinalized=trip.status==='finalizada';
   const mediaLabel=isFinalized?'🏁 Média Final':'📊 Média Atual';
@@ -750,8 +757,10 @@ function renderFuelMetaCard(trip){
     else if(kmL>=target*0.9){ mediaColor='#f59e0b'; badge='⚠️ PERTO'; barColor='#f59e0b'; }
     else { mediaColor='#ef4444'; badge='🔴 ABAIXO'; barColor='#ef4444'; }
   } else if(kmL){ mediaColor='#67e8f9'; }
-  const aguardaSegundo=stops.length===1?`<div style="font-size:11.5px;color:var(--txm);margin-top:8px;font-style:italic">⛽ Aguardando o 2º abastecimento para calcular o consumo.</div>`:'';
+  // Aviso só se NÃO conseguiu calcular (sem kmStart ou stops.length===0)
+  const aguardaSegundo=(stops.length===1 && !kmL)?`<div style="font-size:11.5px;color:var(--txm);margin-top:8px;font-style:italic">⛽ Aguardando o 2º abastecimento (ou KM inicial da viagem) para calcular o consumo.</div>`:'';
   const semAbast=stops.length===0?`<div style="font-size:11.5px;color:var(--txm);margin-top:8px;font-style:italic">⛽ Registre abastecimentos com KM e litros para calcular o consumo.</div>`:'';
+  const calcInfo=(kmL && calcSource==='desde o KM inicial')?`<div style="font-size:10.5px;color:#67e8f9;margin-top:6px;font-style:italic">ℹ️ Cálculo parcial (assumindo tanque cheio no início da viagem). Após o 2º abastecimento o cálculo fica preciso.</div>`:'';
   return `<div style="background:linear-gradient(135deg,rgba(99,102,241,.12) 0%,rgba(168,85,247,.08) 100%);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:16px;margin:14px 0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="font-size:12.5px;font-weight:800;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase">⛽ Consumo de Combustível</div>
@@ -771,8 +780,8 @@ function renderFuelMetaCard(trip){
       <div style="background:linear-gradient(90deg,${barColor},${barColor}cc);width:${barPct.toFixed(0)}%;height:100%;border-radius:8px;transition:width .5s ease"></div>
       <div style="position:absolute;right:8px;top:-3px;font-size:10.5px;font-weight:800;color:${barColor};line-height:16px">${barPct.toFixed(0)}%</div>
     </div>`:''}
-    ${aguardaSegundo}${semAbast}
-    ${stops.length>=2?`<div style="font-size:11px;color:var(--txm);margin-top:10px;display:flex;justify-content:space-between"><span>${kmRange.toLocaleString('pt-BR')} km percorridos</span><span>${litrosConsumidos.toFixed(2)}L consumidos</span></div>`:''}
+    ${aguardaSegundo}${semAbast}${calcInfo}
+    ${kmL?`<div style="font-size:11px;color:var(--txm);margin-top:10px;display:flex;justify-content:space-between"><span>${kmRange.toLocaleString('pt-BR')} km percorridos</span><span>${litrosConsumidos.toFixed(2)}L consumidos</span></div>`:''}
   </div>`;
 }
 

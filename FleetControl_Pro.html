@@ -3129,12 +3129,18 @@ function loadDB(){
       if(t.foodCost) t.foodCost=r(t.foodCost);
       if(t.accommodationCost) t.accommodationCost=r(t.accommodationCost);
       if(t.otherCost) t.otherCost=r(t.otherCost);
-      // Consumo (se ainda não calculado)
-      if(t.fuelEfficiency==null && fuelStops.length>=2){
-        fuelStops.sort((a,b)=>a.km-b.km);
-        const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
-        const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-        t.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r(kmRange/litrosConsumidos):null;
+      // Consumo (se ainda não calculado) — aceita 2+ abastecimentos OU 1 + kmStart
+      if(t.fuelEfficiency==null){
+        const kmStartT=parseFloat(t.kmStart)||0;
+        if(fuelStops.length>=2){
+          fuelStops.sort((a,b)=>a.km-b.km);
+          const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
+          const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
+          t.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r(kmRange/litrosConsumidos):null;
+        } else if(fuelStops.length===1 && kmStartT>0 && fuelStops[0].km>kmStartT){
+          const kmRange=fuelStops[0].km-kmStartT;
+          t.fuelEfficiency=(kmRange>0 && fuelStops[0].liters>0)?r(kmRange/fuelStops[0].liters):null;
+        }
       }
     });
     if(!DB.clients) DB.clients=[];
@@ -3371,12 +3377,17 @@ const cloudSync = {
             orig.fuelCost=r2(f); orig.foodCost=r2(fd); orig.accommodationCost=r2(h); orig.otherCost=r2(o);
             orig.fuelLiters=r2(litros);
             // Consumo médio (km/L): assume que cada abastecimento completa o tanque.
-            // Pega o KM entre 1º e último abastecimento ÷ soma dos litros do 2º em diante.
+            // Caso 1: 2+ abastecimentos → KM entre 1º e último ÷ soma dos litros do 2º em diante.
+            // Caso 2: 1 abastecimento + kmStart → cálculo parcial assumindo tanque cheio na largada.
+            const kmStartTrip=n(orig.kmStart);
             if(fuelStops.length>=2){
               fuelStops.sort((a,b)=>a.km-b.km);
               const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
               const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
               orig.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
+            } else if(fuelStops.length===1 && kmStartTrip>0 && fuelStops[0].km>kmStartTrip){
+              const kmRange=fuelStops[0].km-kmStartTrip;
+              orig.fuelEfficiency=(kmRange>0 && fuelStops[0].liters>0)?r2(kmRange/fuelStops[0].liters):null;
             } else {
               orig.fuelEfficiency=null;
             }
@@ -5700,17 +5711,27 @@ function openTripModal(vId){
 }
 
 // Calcula consumo médio (km/L) a partir dos abastecimentos do motorista.
-// Retorna { kmL, kmRange, litros, stops } ou null se não houver dados suficientes.
+// Retorna { kmL, kmRange, litros, stops, partial } — partial=true se calculado a partir de 1 abastecimento + kmStart.
 function calcFuelEfficiency(trip){
   const stops=(trip.driverExpenses||[])
     .filter(e=>e.type==='combustivel' && n(e.kmAtPump)>0 && n(e.liters)>0)
     .map(e=>({km:n(e.kmAtPump), liters:n(e.liters), date:e.date||'', amount:n(e.amount)}))
     .sort((a,b)=>a.km-b.km);
-  if(stops.length<2) return { kmL:null, stops, kmRange:0, litros:0 };
-  const kmRange=stops[stops.length-1].km - stops[0].km;
-  const litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-  const kmL=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
-  return { kmL, stops, kmRange, litros:litrosConsumidos };
+  const kmStart=n(trip.kmStart);
+  if(stops.length>=2){
+    const kmRange=stops[stops.length-1].km - stops[0].km;
+    const litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
+    const kmL=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
+    return { kmL, stops, kmRange, litros:litrosConsumidos, partial:false };
+  }
+  if(stops.length===1 && kmStart>0 && stops[0].km>kmStart){
+    // Cálculo parcial: usa KM inicial como base (assume tanque cheio na largada)
+    const kmRange=stops[0].km - kmStart;
+    const litros=stops[0].liters;
+    const kmL=(kmRange>0 && litros>0)?r2(kmRange/litros):null;
+    return { kmL, stops, kmRange, litros, partial:true };
+  }
+  return { kmL:null, stops, kmRange:0, litros:0, partial:false };
 }
 
 function renderTripFuelStats(t){
@@ -5764,7 +5785,8 @@ function renderTripFuelStats(t){
           <div class="vst-v" style="font-size:18px;font-weight:800">${fe.litros?fe.litros+' L':'—'}</div>
         </div>
       </div>
-      ${!fe.kmL?`<div class="txs txm" style="margin-top:8px">💡 Para calcular o consumo, o motorista precisa registrar pelo menos <b>2 abastecimentos</b> com KM do hodômetro.</div>`:''}
+      ${!fe.kmL?`<div class="txs txm" style="margin-top:8px">💡 Para calcular o consumo, registre pelo menos <b>1 abastecimento</b> (com o KM inicial preenchido) ou <b>2 abastecimentos</b> com KM do hodômetro.</div>`:''}
+      ${fe.partial?`<div class="txs" style="margin-top:8px;color:#67e8f9">ℹ️ Cálculo parcial — usando o KM inicial da viagem como base. Após o 2º abastecimento o cálculo fica preciso.</div>`:''}
       ${stopsHtml}
     </div>`;
 }
