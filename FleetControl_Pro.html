@@ -2640,9 +2640,10 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
 <div class="overlay" id="modal-owner-payment">
 <div class="modal modal-sm">
   <div class="modal-h">
-    <span class="modal-t">Registrar Pagamento ao Vendedor</span>
+    <span class="modal-t" id="ownpay-title">Registrar Pagamento ao Vendedor</span>
     <button class="xbtn" onclick="closeModal('modal-owner-payment')">✕</button>
   </div>
+  <input type="hidden" id="ownpay-index" value="">
   <div class="fr c2">
     <div class="fg"><label class="fl">Data</label>
       <input type="date" class="fc" id="ownpay-date"></div>
@@ -2655,7 +2656,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
   </div>
   <div class="fl-row ic jb mt4">
     <button class="btn btn-gh" onclick="closeModal('modal-owner-payment')">Cancelar</button>
-    <button class="btn btn-sc" onclick="saveOwnerPayment()">✅ Registrar Pagamento</button>
+    <button class="btn btn-sc" id="ownpay-save-btn" onclick="saveOwnerPayment()">✅ Registrar Pagamento</button>
   </div>
 </div>
 </div>
@@ -4767,15 +4768,32 @@ function renderCommitments(){
   // Owner detail
   const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
   if(fc){
+    const pct=fc.totalDebt>0?Math.round((n(fc.paidTotal)/n(fc.totalDebt))*100):0;
+    // Lista de pagamentos com editar/excluir (mais recente primeiro)
+    const pays=(fc.payments||[]).map((p,i)=>({...p,_i:i}))
+      .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const paysHtml = pays.length ? pays.map(p=>`
+      <div class="fl-row ic jb" style="padding:8px 10px;border:1px solid var(--bd);border-radius:9px;margin-bottom:6px;background:rgba(255,255,255,.02)">
+        <div style="min-width:0">
+          <div class="fb tsc">${R(p.amount)}</div>
+          <div class="txs txm">${p.date?fmtDate(p.date):'sem data'}${p.notes?' · '+p.notes:''}</div>
+        </div>
+        <div style="white-space:nowrap;flex-shrink:0">
+          <button class="btn btn-gh btn-xs" onclick="editOwnerPayment(${p._i})" title="Editar">✏️</button>
+          <button class="btn btn-gh btn-xs" onclick="deleteOwnerPayment(${p._i})" title="Excluir">🗑️</button>
+        </div>
+      </div>`).join('') : '<div class="txs txm txc" style="padding:8px 0">Nenhum pagamento registrado ainda</div>';
     document.getElementById('owner-payment-detail').innerHTML=`
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div class="vst"><div class="vst-l">Valor Total</div><div class="vst-v tpr">${R(fc.totalDebt)}</div></div>
         <div class="vst"><div class="vst-l">Total Pago</div><div class="vst-v tsc">${R(fc.paidTotal)}</div></div>
-        <div class="vst"><div class="vst-l">Saldo Restante</div><div class="vst-v tdr">${R(fc.totalDebt-fc.paidTotal)}</div></div>
+        <div class="vst"><div class="vst-l">Saldo Restante</div><div class="vst-v tdr">${R(n(fc.totalDebt)-n(fc.paidTotal))}</div></div>
         <div class="vst"><div class="vst-l">Pagamentos</div><div class="vst-v">${(fc.payments||[]).length}x</div></div>
       </div>
-      <div class="prg"><div class="prg-f" style="width:${Math.round((fc.paidTotal/fc.totalDebt)*100)}%;background:var(--sc)"></div></div>
-      <div class="txs txm mt1">${Math.round((fc.paidTotal/fc.totalDebt)*100)}% quitado</div>`;
+      <div class="prg"><div class="prg-f" style="width:${pct}%;background:var(--sc)"></div></div>
+      <div class="txs txm mt1 mb3">${pct}% quitado</div>
+      <div class="fsec-t" style="margin:10px 0 8px">📋 Pagamentos realizados</div>
+      ${paysHtml}`;
   }
 }
 
@@ -5410,9 +5428,14 @@ function renderMonthlyReport(el){
           <div class="exec-line">
             <span>${catLabel(k)}</span><span class="fb tdr">${R(cats[k])}</span>
           </div>`).join('')}
-        <div class="exec-line">
-          <span>🏦 Despesas Fixas</span><span class="fb tdr">${R(t.fixedTotal)}</span>
-        </div>
+        ${t.fixedTotal>0?`
+          <div class="exec-line" style="font-weight:700;border-top:1px solid var(--bd);margin-top:4px;padding-top:8px">
+            <span>🏦 Despesas Fixas</span><span class="fb tdr">${R(t.fixedTotal)}</span>
+          </div>
+          ${Object.entries(t.fixedByName||{}).sort((a,b)=>b[1]-a[1]).map(([nome,val])=>`
+            <div class="exec-line" style="padding:3px 0 3px 18px;font-size:12.5px"><span class="txm">↳ ${nome}</span><span class="tdr">${R(val)}</span></div>
+          `).join('')}
+        `:''}
         ${t.sharedTotal>0?`<div class="exec-line">
           <span>🤝 Compartilhadas</span><span class="fb tdr">${R(t.sharedTotal)}</span>
         </div>`:''}
@@ -7068,10 +7091,40 @@ function saveInvPayment(){
 }
 
 function openOwnerPaymentModal(){
+  document.getElementById('ownpay-index').value='';   // '' = novo pagamento
+  document.getElementById('ownpay-title').textContent='Registrar Pagamento ao Vendedor';
+  document.getElementById('ownpay-save-btn').textContent='✅ Registrar Pagamento';
   document.getElementById('ownpay-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('ownpay-amount').value='';
   document.getElementById('ownpay-notes').value='';
   openModal('modal-owner-payment');
+}
+
+// Abre o modal para EDITAR um pagamento existente (por índice no array payments)
+function editOwnerPayment(index){
+  const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
+  if(!fc||!fc.payments||!fc.payments[index])return;
+  const p=fc.payments[index];
+  document.getElementById('ownpay-index').value=String(index);
+  document.getElementById('ownpay-title').textContent='Editar Pagamento ao Vendedor';
+  document.getElementById('ownpay-save-btn').textContent='💾 Salvar Alteração';
+  document.getElementById('ownpay-date').value=p.date||'';
+  document.getElementById('ownpay-amount').value=fmtMoneyInput(p.amount);
+  document.getElementById('ownpay-notes').value=p.notes||'';
+  openModal('modal-owner-payment');
+}
+
+function deleteOwnerPayment(index){
+  const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
+  if(!fc||!fc.payments||!fc.payments[index])return;
+  const p=fc.payments[index];
+  if(!confirm(`Excluir o pagamento de ${R(p.amount)}${p.date?' ('+fmtDate(p.date)+')':''}?\n\nO saldo devedor será recalculado.`)) return;
+  fc.payments.splice(index,1);
+  // Recalcula totais a partir da lista real (à prova de erros)
+  fc.paidTotal=fc.payments.reduce((s,x)=>s+n(x.amount),0);
+  fc.paidInstallments=fc.payments.length;
+  saveDB();renderCurrentPage();
+  showToast('Pagamento excluído. Saldo recalculado.','ok');
 }
 
 function saveOwnerPayment(){
@@ -7079,14 +7132,26 @@ function saveOwnerPayment(){
   if(!fc)return;
   if(!fc.payments)fc.payments=[];
   const amt=n(document.getElementById('ownpay-amount').value);
-  fc.payments.push({
+  if(amt<=0){ showToast('Informe um valor válido','warn'); return; }
+  const idxRaw=document.getElementById('ownpay-index').value;
+  const entry={
     date:document.getElementById('ownpay-date').value,
     amount:amt,
     notes:document.getElementById('ownpay-notes').value
-  });
-  fc.paidTotal=(fc.paidTotal||0)+amt;
-  fc.paidInstallments=(fc.paidInstallments||0)+1;
+  };
+  if(idxRaw!==''){
+    // Edição de pagamento existente
+    const idx=parseInt(idxRaw);
+    if(fc.payments[idx]) fc.payments[idx]=entry;
+  } else {
+    // Novo pagamento
+    fc.payments.push(entry);
+  }
+  // Recalcula totais sempre a partir da lista real (evita divergência)
+  fc.paidTotal=fc.payments.reduce((s,x)=>s+n(x.amount),0);
+  fc.paidInstallments=fc.payments.length;
   saveDB();closeModal('modal-owner-payment');renderCurrentPage();
+  showToast('💾 Pagamento salvo. Saldo atualizado.','ok');
 }
 
 function confirmDelete(type,id){

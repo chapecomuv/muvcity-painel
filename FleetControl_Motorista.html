@@ -250,6 +250,33 @@ function loadDB(){
   }catch(_){ DB={driver:null,trips:[]}; }
   if(!DB.driver) DB.driver=null;
   if(!Array.isArray(DB.trips)) DB.trips=[];
+  autoFinalizeOldTrips();
+}
+
+// Marca como "finalizada" automaticamente toda viagem com data anterior a hoje
+// que ainda esteja como "programada". As de hoje e futuras ficam intactas.
+// Útil pra limpar viagens antigas que nunca foram processadas no fluxo do motorista.
+function autoFinalizeOldTrips(){
+  if(!Array.isArray(DB.trips) || DB.trips.length===0) return;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let changed = false;
+  DB.trips.forEach(t=>{
+    if(t.status !== 'programada') return;
+    if(!t.date) return;
+    const tripDate = new Date(t.date+'T00:00:00');
+    if(isNaN(tripDate.getTime())) return;
+    if(tripDate < today){
+      t.status = 'finalizada';
+      t.autoFinalized = true;   // flag p/ distinguir de finalizações manuais
+      t._lastChange = Date.now();
+      changed = true;
+    }
+  });
+  if(changed){
+    try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(_){}
+    if(typeof cloudSync==='object' && cloudSync.enabled) cloudSync.scheduledPush();
+  }
 }
 function saveDB(){
   localStorage.setItem(KEY, JSON.stringify(DB));
@@ -304,17 +331,26 @@ const cloudSync = {
   async pull(){
     if(!this.enabled||!this.url||!DB.driver) return;
     try{
-      const phone=(DB.driver?.phone||'').replace(/\D/g,'');
-      if(!phone) return;
-      // Busca o DB principal e procura viagens com driverPhone correspondente
+      // Busca o DB principal
       const res=await fetch(this.url.replace('/db.json','/db.json?cb='+Date.now()));
       if(!res.ok) throw new Error('HTTP '+res.status);
       const main=await res.json();
-      if(!main||!main.trips) { this.setStatus('ok'); return; }
-      const myTrips=(main.trips||[]).filter(t=>{
-        const tp=(t.driverPhone||'').replace(/\D/g,'');
-        return (tp && tp===phone) || (t.driverName && DB.driver.name && t.driverName.toLowerCase().includes(DB.driver.name.toLowerCase().split(' ')[0]));
-      });
+      if(!main){ this.setStatus('ok'); return; }
+      // Captura metas dos veículos (pra exibir Meta de Consumo mesmo em viagens importadas)
+      if(Array.isArray(main.vehicles)){
+        DB.vehicleMeta={};
+        main.vehicles.forEach(v=>{
+          DB.vehicleMeta[v.id]={
+            fuelTargetKmPerL:parseFloat(v.fuelTargetKmPerL)||null,
+            tankCapacityL:parseFloat(v.tankCapacityL)||null,
+            plate:v.plate||'', model:[v.brand,v.model].filter(Boolean).join(' ')
+          };
+        });
+        try{ localStorage.setItem(KEY,JSON.stringify(DB)); }catch(_){}
+      }
+      if(!main.trips){ this.setStatus('ok'); return; }
+      // Filtra só as viagens designadas a este motorista (match por nome completo OU telefone)
+      const myTrips=(main.trips||[]).filter(t=>isMyTrip(t));
       let newCount=0;
       myTrips.forEach(t=>{
         const veh=(main.vehicles||[]).find(v=>v.id===t.vehicleId);
@@ -332,6 +368,7 @@ const cloudSync = {
           tankCapacityL:parseFloat(veh?.tankCapacityL)||null,
           client:t.client||'',
           driverName:t.driverName||'',
+          driverPhone:t.driverPhone||'',
           status:t.driverStatus||'programada',
           expenses:t.driverExpenses||[],
           kmStart:t.kmStart||null, kmEnd:t.kmEnd||null,
@@ -357,6 +394,8 @@ const cloudSync = {
         showToast('☁️ '+newCount+' viagem(ns) recebida(s) do gestor','ok');
         render();
       }
+      // Após pull, aplica auto-finalize em trips antigas recém-trazidas
+      autoFinalizeOldTrips();
       this.setStatus('ok');
     }catch(e){console.warn('[sync] pull',e); this.setStatus('error');}
   },
@@ -449,6 +488,32 @@ function render(){
 }
 
 // ════════ TELA: BOAS-VINDAS / CADASTRO INICIAL ════════
+// Busca a lista de motoristas cadastrados pelo gestor (e guarda metas dos veículos).
+let _driversRoster = [];
+async function fetchDriversRoster(){
+  try{
+    const url = (cloudSync.url || FIREBASE_URL_DEFAULT);
+    const res = await fetch(url + '?cb=' + Date.now());
+    if(!res.ok) return [];
+    const data = await res.json();
+    // Guarda metas dos veículos (usado pra exibir Meta de Consumo mesmo em viagens importadas)
+    if(data && Array.isArray(data.vehicles)){
+      DB.vehicleMeta = {};
+      data.vehicles.forEach(v=>{
+        DB.vehicleMeta[v.id] = {
+          fuelTargetKmPerL: parseFloat(v.fuelTargetKmPerL)||null,
+          tankCapacityL: parseFloat(v.tankCapacityL)||null,
+          plate: v.plate||'',
+          model: [v.brand,v.model].filter(Boolean).join(' ')
+        };
+      });
+      try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(_){}
+    }
+    const drivers = (data && Array.isArray(data.drivers)) ? data.drivers : [];
+    return drivers.filter(d=>d && d.active!==false && d.name).map(d=>({ name:d.name, phone:d.phone||'', cnh:d.cnh||'', doc:d.doc||'' }));
+  }catch(_){ return []; }
+}
+
 function renderWelcome(root){
   root.innerHTML=`
     <div class="welcome">
@@ -457,65 +522,123 @@ function renderWelcome(root){
       </div>
       <h1>Bem-vindo, motorista!</h1>
       <p>Aqui você inicia suas viagens, lança despesas no caminho e finaliza com o KM final.<br><br>Antes de começar, identifique-se:</p>
-      <div class="card" style="text-align:left">
-        <div class="fg">
-          <label class="fl">Seu nome completo</label>
-          <input type="text" class="fc" id="w-name" placeholder="Ex: Tarick Becker" autocomplete="name">
-        </div>
-        <div class="fg">
-          <label class="fl">Seu WhatsApp</label>
-          <input type="text" class="fc" id="w-phone" placeholder="(00) 9 0000-0000" oninput="maskPhone(this)" autocomplete="tel">
-        </div>
-        <div class="fg" style="margin-bottom:0">
-          <label class="fl">CNH (opcional)</label>
-          <input type="text" class="fc" id="w-cnh" placeholder="Número da CNH">
-        </div>
+      <div class="card" style="text-align:left" id="welcome-card">
+        <div style="text-align:center;padding:20px;color:var(--txm);font-size:13px">⏳ Carregando lista de motoristas…</div>
       </div>
-      <button class="btn btn-pr btn-lg" style="margin-top:18px" onclick="saveDriver()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Confirmar e Entrar
-      </button>
     </div>`;
-  setTimeout(()=>document.getElementById('w-name')?.focus(),100);
+  // Busca a lista e renderiza o formulário (campo de texto: CPF ou nome — valida contra cadastro)
+  fetchDriversRoster().then(roster=>{
+    _driversRoster = roster;
+    const card=document.getElementById('welcome-card');
+    if(!card) return;
+    card.innerHTML=`
+      <div class="fg" style="margin-bottom:6px">
+        <label class="fl">Digite seu CPF ou nome completo</label>
+        <input type="text" class="fc" id="w-login" placeholder="000.000.000-00 ou seu nome" autocomplete="off"
+               style="font-size:16px" onkeydown="if(event.key==='Enter')tryLogin()">
+      </div>
+      <div id="w-login-err" style="display:none;font-size:12.5px;color:#fca5a5;margin:4px 2px 0"></div>
+      <button class="btn btn-pr btn-lg" style="margin-top:14px" onclick="tryLogin()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Entrar
+      </button>
+      <div class="banner info" style="margin-top:14px;font-size:12px">🔒 <span>Você só entra se já estiver cadastrado pelo gestor. Assim cada motorista vê <b>apenas as próprias viagens</b>. Não está cadastrado? Fale com o gestor.</span></div>`;
+    setTimeout(()=>document.getElementById('w-login')?.focus(),100);
+  });
 }
-function saveDriver(){
-  const name=document.getElementById('w-name').value.trim();
-  const phone=document.getElementById('w-phone').value.trim();
-  const cnh=document.getElementById('w-cnh').value.trim();
-  if(!name){ showToast('Informe seu nome','warn'); return; }
-  DB.driver = { name, phone, cnh, createdAt:new Date().toISOString() };
+// Valida o que o motorista digitou (CPF ou nome) contra a lista de cadastrados.
+function tryLogin(){
+  const raw=(document.getElementById('w-login')?.value||'').trim();
+  const err=document.getElementById('w-login-err');
+  const showErr=(msg)=>{ if(err){ err.style.display=''; err.textContent='⚠️ '+msg; } };
+  if(!raw){ showErr('Digite seu CPF ou nome completo.'); return; }
+  if(!_driversRoster || _driversRoster.length===0){
+    showErr('Não consegui carregar a lista de motoristas. Verifique sua internet e tente de novo.');
+    return;
+  }
+  const rawDigits=raw.replace(/\D/g,'');
+  const rawName=normalizeName(raw);
+  // 1) tenta por CPF (se digitou números suficientes)
+  let match=null;
+  if(rawDigits.length>=11){
+    match=_driversRoster.find(d=>(d.doc||'').replace(/\D/g,'')===rawDigits);
+  }
+  // 2) senão, tenta por nome completo exato
+  if(!match){
+    match=_driversRoster.find(d=>normalizeName(d.name)===rawName);
+  }
+  if(!match){
+    showErr('Não encontramos esse CPF/nome no cadastro. Confirme com o gestor se você foi cadastrado.');
+    return;
+  }
+  DB.driver = { name:match.name, phone:match.phone||'', cnh:match.cnh||'', doc:match.doc||'', createdAt:new Date().toISOString() };
   saveDB();
-  showToast('Bem-vindo, '+name.split(' ')[0]+'!','ok');
-  // Após cadastrar, verifica se há viagem na URL
+  showToast('Bem-vindo, '+match.name.split(' ')[0]+'!','ok');
   checkURLForTrip();
   render();
 }
 
 // ════════ TELA: HOME (lista de viagens) ════════
+// Normaliza nome pra comparação: minúsculo, sem acento, espaços colapsados
+function normalizeName(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+}
+// Decide se a viagem é do motorista logado.
+// Match por telefone (exato) OU nome completo normalizado. Viagens sem motorista designado NÃO aparecem.
+function isMyTrip(trip){
+  if(!DB.driver) return false;
+  const myName = normalizeName(DB.driver.name);
+  const myPhone = (DB.driver.phone||'').replace(/\D/g,'');
+  const tName = normalizeName(trip.driverName);
+  const tPhone = (trip.driverPhone||'').replace(/\D/g,'');
+  if(myPhone && tPhone) return myPhone===tPhone;   // se ambos têm telefone, decide por ele
+  if(tName && myName) return tName===myName;         // senão, nome completo idêntico
+  return false;   // sem identificação → não mostra (evita vazar viagem de outro)
+}
+
 function renderHome(root){
   const driver=DB.driver;
-  // Em andamento sempre no topo; o resto é filtrável (Todas / Agendadas / Finalizadas).
-  const filterMode = window._tripFilter || 'all';
   const sortByDateDesc=(a,b)=>(b.date||'').localeCompare(a.date||'');
-  const andamentoList=DB.trips.filter(t=>t.status==='andamento')
+  // Filtra só as viagens designadas a este motorista
+  const myTrips = DB.trips.filter(isMyTrip);
+  // Separa por status
+  const andamentoList=myTrips.filter(t=>t.status==='andamento')
     .sort((a,b)=>(b.startedAt||b.date||'').localeCompare(a.startedAt||a.date||''));
-  let othersList=DB.trips.filter(t=>t.status!=='andamento');
-  if(filterMode==='programada') othersList=othersList.filter(t=>t.status==='programada');
-  else if(filterMode==='finalizada') othersList=othersList.filter(t=>t.status==='finalizada');
-  othersList.sort(sortByDateDesc);
-  const trips=[...andamentoList, ...othersList];
-  const totalToday = DB.trips.reduce((s,t)=>s+(t.expenses||[]).reduce((a,e)=>a+n(e.amount),0),0);
+  const programadaList=myTrips.filter(t=>t.status==='programada').sort(sortByDateDesc);
+  const finalizadaList=myTrips.filter(t=>t.status==='finalizada').sort(sortByDateDesc);
   const inProgress = andamentoList.length;
-  const finished = DB.trips.filter(t=>t.status==='finalizada').length;
-  const programmedCount = DB.trips.filter(t=>t.status==='programada').length;
+  const finished = finalizadaList.length;
+  const programmedCount = programadaList.length;
+  const totalToday = myTrips.reduce((s,t)=>s+(t.expenses||[]).reduce((a,e)=>a+n(e.amount),0),0);
+
+  // Default inteligente ao abrir: em andamento; se não houver, agendadas; senão, todas.
+  let filterMode = window._tripFilter;
+  if(!filterMode){
+    filterMode = inProgress>0 ? 'andamento' : (programmedCount>0 ? 'programada' : 'all');
+  }
+
+  // Filtros EXCLUSIVOS: cada um mostra apenas o seu grupo. 'all' mostra tudo (andamento no topo).
+  let trips;
+  if(filterMode==='andamento') trips = andamentoList;
+  else if(filterMode==='programada') trips = programadaList;
+  else if(filterMode==='finalizada') trips = finalizadaList;
+  else trips = [...andamentoList, ...programadaList, ...finalizadaList];
 
   let tripsHtml;
   if(!trips.length){
+    // Mensagem contextual conforme o filtro ativo
+    const emptyMap = {
+      andamento: { ic:'🚦', tx:'Nenhuma viagem em andamento', sub:'Quando você iniciar uma viagem, ela aparece aqui.' },
+      programada:{ ic:'📭', tx:'Nenhuma viagem agendada', sub:'O gestor envia novas viagens pra você. Aguarde ou peça pra ele.' },
+      finalizada:{ ic:'✅', tx:'Nenhuma viagem finalizada', sub:'Suas viagens concluídas vão aparecer aqui.' },
+      all:       { ic:'🚐', tx:'Nenhuma viagem ainda', sub:'O gestor envia o link da viagem por WhatsApp. Cole o código ou peça pra ele te enviar.' }
+    };
+    const e = emptyMap[filterMode] || emptyMap.all;
     tripsHtml=`<div class="empty">
-      <div class="empty-ic">🚐</div>
-      <div class="empty-tx">Nenhuma viagem ainda</div>
-      <div class="empty-sub">O gestor envia o link da viagem por WhatsApp.<br>Cole o código abaixo ou peça pra ele te enviar.</div>
-      <button class="btn btn-pr" onclick="openImportModal()">📥 Importar viagem</button>
+      <div class="empty-ic">${e.ic}</div>
+      <div class="empty-tx">${e.tx}</div>
+      <div class="empty-sub">${e.sub}</div>
+      ${filterMode==='all'?`<button class="btn btn-pr" onclick="openImportModal()">📥 Importar viagem</button>`:''}
     </div>`;
   } else {
     tripsHtml=trips.map(t=>{
@@ -562,9 +685,10 @@ function renderHome(root){
       <div class="section-title">Suas viagens</div>
       <div style="display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap">
         ${[
-          {key:'all',label:'Todas',count:DB.trips.length},
+          {key:'andamento',label:'🟢 Em andamento',count:inProgress},
           {key:'programada',label:'⏳ Agendadas',count:programmedCount},
-          {key:'finalizada',label:'✅ Finalizadas',count:finished}
+          {key:'finalizada',label:'✅ Finalizadas',count:finished},
+          {key:'all',label:'📋 Todas',count:myTrips.length}
         ].map(f=>{
           const active=filterMode===f.key;
           const bg=active?'rgba(99,102,241,.18)':'rgba(255,255,255,.04)';
@@ -573,7 +697,6 @@ function renderHome(root){
           return `<button onclick="setTripFilter('${f.key}')" style="background:${bg};border:1px solid ${bd};color:${cl};padding:7px 13px;border-radius:18px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px">${f.label}<span style="opacity:.7;font-weight:600">${f.count}</span></button>`;
         }).join('')}
       </div>
-      ${inProgress>0?`<div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#67e8f9;text-transform:uppercase;margin:4px 0 8px">🟢 EM ANDAMENTO</div>`:''}
       ${tripsHtml}
     </div>
 
@@ -607,6 +730,7 @@ function openProfileMenu(){
           💡 <span><b>Como funciona:</b> o gestor cria a viagem e te envia um link/código. Você importa, inicia a viagem (KM + abastecimento), faz lançamentos durante o caminho, e finaliza no destino enviando tudo de volta pro gestor.</span>
         </div>
         <button class="btn btn-ghost" style="margin-top:8px" onclick="editDriverProfile()">✏️ Editar meus dados</button>
+        <button class="btn btn-ghost" style="margin-top:8px;color:#fbbf24" onclick="logout()">🚪 Sair / Trocar de motorista</button>
         <button class="btn btn-ghost" style="margin-top:8px;color:#fca5a5" onclick="resetAllData()">🗑️ Apagar tudo (zerar)</button>
         <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--txm)">MuvCity Motorista · v1.0</div>
       </div>
@@ -616,6 +740,18 @@ function editDriverProfile(){
   closeAllOverlays();
   DB.driver=null;
   saveDB();
+  render();
+}
+// Sair: volta pra tela de identificação. Limpa o cadastro e as viagens DESTE aparelho
+// (ficam salvas na nuvem e voltam quando o motorista entrar de novo). Evita vazar dados
+// pro próximo motorista que usar o mesmo celular.
+function logout(){
+  if(!confirm('Deseja sair?\n\nVocê volta para a tela de identificação. Suas viagens continuam salvas na nuvem e reaparecem quando você entrar de novo.')) return;
+  localStorage.removeItem(KEY);
+  DB={driver:null,trips:[]};
+  if(typeof _driversRoster!=='undefined') _driversRoster=[];
+  closeAllOverlays();
+  showToast('Você saiu. Até logo! 👋','ok');
   render();
 }
 function resetAllData(){
@@ -726,7 +862,11 @@ function backToHome(){
 
 // Card de Meta de Consumo (km/L) — visível ao motorista para incentivo durante e após a viagem.
 function renderFuelMetaCard(trip){
-  const target=parseFloat(trip.fuelTargetKmPerL)||null;
+  // Meta vem da trip; se faltar (ex: viagem importada por código), busca pela tabela de veículos sincronizada
+  let target=parseFloat(trip.fuelTargetKmPerL)||null;
+  if(!target && trip.vehicleId && DB.vehicleMeta && DB.vehicleMeta[trip.vehicleId]){
+    target=parseFloat(DB.vehicleMeta[trip.vehicleId].fuelTargetKmPerL)||null;
+  }
   const stops=(trip.expenses||[])
     .filter(e=>e.type==='combustivel' && n(e.kmAtPump)>0 && n(e.liters)>0)
     .map(e=>({km:n(e.kmAtPump), liters:n(e.liters)}))
@@ -788,7 +928,20 @@ function renderFuelMetaCard(trip){
 function renderTripScreen(root, trip){
   const expenses=trip.expenses||[];
   const totalExp=expenses.reduce((s,e)=>s+n(e.amount),0);
-  const kmRun = (trip.kmEnd && trip.kmStart) ? (n(trip.kmEnd)-n(trip.kmStart)) : 0;
+  // KM rodado: se finalizada usa kmEnd; se em andamento, calcula parcial a partir do maior kmAtPump dos abastecimentos
+  let kmRun = 0;
+  let kmRunPartial = false;
+  if(n(trip.kmEnd)>0 && n(trip.kmStart)>0){
+    kmRun = n(trip.kmEnd) - n(trip.kmStart);
+  } else if(n(trip.kmStart)>0){
+    const maxAtPump = expenses
+      .filter(e=>e.type==='combustivel' && n(e.kmAtPump)>0)
+      .reduce((max,e)=>Math.max(max, n(e.kmAtPump)), 0);
+    if(maxAtPump > n(trip.kmStart)){
+      kmRun = maxAtPump - n(trip.kmStart);
+      kmRunPartial = true;
+    }
+  }
 
   const expCatMap={
     alimentacao:{i:'🍽️',l:'Alimentação',c:'#10b981'},
@@ -863,7 +1016,7 @@ function renderTripScreen(root, trip){
 
       ${trip.status!=='programada'?`
         <div class="quick-stats">
-          <div class="qs"><div class="qs-l">KM rodado</div><div class="qs-v">${kmRun?kmRun.toLocaleString('pt-BR')+' km':'—'}</div></div>
+          <div class="qs"><div class="qs-l">KM rodado${kmRunPartial?' <span style="font-size:9px;color:#67e8f9">(parcial)</span>':''}</div><div class="qs-v" style="${kmRunPartial?'color:#67e8f9':''}">${kmRun?kmRun.toLocaleString('pt-BR')+' km':'—'}</div></div>
           <div class="qs"><div class="qs-l">Lançamentos</div><div class="qs-v">${expenses.length}</div></div>
           <div class="qs"><div class="qs-l">Total Gasto</div><div class="qs-v" style="color:#fca5a5;font-size:13.5px">${R(totalExp)}</div></div>
         </div>
