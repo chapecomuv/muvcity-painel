@@ -6351,6 +6351,27 @@ function saveTrip(){
     if(v&&trip.kmEnd>v.currentKm) v.currentKm=trip.kmEnd;
   }
 
+  // 🛡️ Se a viagem tem driverExpenses (lançamentos do motorista), RECALCULA agregados
+  // a partir deles — ignora o que está no formulário. Os lançamentos são a fonte de verdade.
+  // Evita que cache desatualizado do gestor sobrescreva fuelCost/foodCost/etc com valores antigos.
+  if(id){
+    const existing = DB.trips.find(t=>t.id===id);
+    if(existing && Array.isArray(existing.driverExpenses) && existing.driverExpenses.length>0){
+      let _fuel=0,_food=0,_hosp=0,_other=0,_liters=0;
+      existing.driverExpenses.forEach(e=>{
+        const a=n(e.amount);
+        if(e.type==='combustivel'){ _fuel+=a; _liters+=n(e.liters); }
+        else if(e.type==='alimentacao') _food+=a;
+        else if(e.type==='hospedagem') _hosp+=a;
+        else _other+=a;
+      });
+      trip.fuelCost = r2(_fuel);
+      trip.foodCost = r2(_food);
+      trip.accommodationCost = r2(_hosp);
+      trip.otherCost = r2(_other);
+      trip.fuelLiters = r2(_liters);
+    }
+  }
   // 🛡️ MERGE em vez de substituir — preserva campos que o formulário não tem
   // (driverExpenses, fuelEfficiency, driverStatus, driverLastSync, pickupTime,
   // passengers, itinerary, clientPhone, etc). Antes era `t.id===id?trip:t` e
