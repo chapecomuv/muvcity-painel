@@ -1891,6 +1891,18 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         <div class="txs txm" style="margin-top:3px">Cadastre motoristas na aba <strong>Motoristas</strong></div>
       </div>
     </div>
+
+    <!-- Detalhes do embarque (vão pro app do motorista + mensagem WhatsApp) -->
+    <div class="fr c4">
+      <div class="fg"><label class="fl">🕐 Horário de embarque</label>
+        <input type="time" class="fc" id="trip-pickup-time"></div>
+      <div class="fg"><label class="fl">👥 Qtde passageiros</label>
+        <input type="number" class="fc" id="trip-passengers" placeholder="0" min="1" step="1"></div>
+      <div class="fg"><label class="fl">📞 Contato do cliente <span style="opacity:.6">(WhatsApp)</span></label>
+        <input type="text" class="fc" id="trip-client-phone" placeholder="(00) 9 0000-0000" oninput="maskPhone(this)"></div>
+      <div class="fg"><label class="fl">🚏 Paradas no caminho <span style="opacity:.6">(opcional)</span></label>
+        <input type="text" class="fc" id="trip-itinerary" placeholder="Ex: passar em Pinhalzinho"></div>
+    </div>
   </div>
 
   <!-- Driver payment section — appears when driver is selected -->
@@ -5703,6 +5715,7 @@ function openTripModal(vId){
   const _ppb=document.getElementById('trip-payment-plan-builder'); if(_ppb){_ppb.innerHTML='';_ppb._customCount=2;}
   document.getElementById('trip-payment-summary').textContent='';
   ['trip-return-date','trip-origin','trip-destination','trip-client','trip-revenue',
+   'trip-pickup-time','trip-passengers','trip-client-phone','trip-itinerary',
    'trip-nf-value','trip-tax-rate','trip-tax-amount','trip-km-start','trip-km-end',
    'trip-km-total','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
    'trip-food','trip-driver','trip-other','trip-other-desc','trip-notes',
@@ -5829,6 +5842,19 @@ function editTrip(id){
   document.getElementById('trip-origin').value=t.origin||'';
   document.getElementById('trip-destination').value=t.destination||'';
   document.getElementById('trip-client').value=t.client||'';
+  // Detalhes do embarque
+  const _pt=document.getElementById('trip-pickup-time'); if(_pt) _pt.value=t.pickupTime||'';
+  const _pa=document.getElementById('trip-passengers'); if(_pa) _pa.value=t.passengers||'';
+  const _cp=document.getElementById('trip-client-phone'); if(_cp){
+    // Pré-preenche com phone do cliente cadastrado se ainda vazio
+    let phone=t.clientPhone||'';
+    if(!phone && t.client){
+      const cli=(DB.clients||[]).find(c=>(c.name||'').trim().toLowerCase()===t.client.trim().toLowerCase());
+      if(cli) phone=cli.phone||'';
+    }
+    _cp.value=phone;
+  }
+  const _it=document.getElementById('trip-itinerary'); if(_it) _it.value=t.itinerary||'';
   document.getElementById('trip-revenue').value=t.grossRevenue||'';
   document.getElementById('trip-nf').value=t.hasInvoice?'sim':'nao';
   const _nfEl=document.getElementById('trip-nf-value');
@@ -5977,6 +6003,12 @@ async function sendTripToDriver(tripId){
   if(!t){ alert('Viagem não encontrada'); return; }
   // Gera código de 6 dígitos único e salva no Firebase em /trip-codes/<código>
   const veh=getVehicle(t.vehicleId);
+  // Phone do cliente: usa o salvo na trip ou faz lookup pelo nome no DB.clients
+  let clientPhone=t.clientPhone||'';
+  if(!clientPhone && t.client){
+    const cli=(DB.clients||[]).find(c=>(c.name||'').trim().toLowerCase()===t.client.trim().toLowerCase());
+    if(cli) clientPhone=cli.phone||'';
+  }
   const tripPayload={
     id:t.id,
     date:t.date||t.departureDate,
@@ -5988,6 +6020,10 @@ async function sendTripToDriver(tripId){
     vehiclePlate:veh.plate||'',
     vehicleModel:[veh.brand,veh.model].filter(Boolean).join(' '),
     client:t.client||'',
+    clientPhone,
+    pickupTime:t.pickupTime||'',
+    passengers:t.passengers||null,
+    itinerary:t.itinerary||'',
     driverName:t.driverName||'',
     driverPhone:t.driverPhone||'',
     type:t.type||'avulso',
@@ -6029,7 +6065,23 @@ async function sendTripToDriver(tripId){
     // Monta link curto
     const appURL=location.href.replace(/\/[^/]*$/,'/');
     const driverURL=appURL+'FleetControl_Motorista.html?codigo='+code;
-    const waText=encodeURIComponent(`📋 Sua viagem está programada!\n\nCódigo: *${code}*\n\n${tripPayload.origin||'?'} → ${tripPayload.destination||'?'}\nData: ${fmtDate(tripPayload.date)}\nVeículo: ${tripPayload.vehiclePlate||'-'}\n\nAbra o app e digite o código:\n${appURL}FleetControl_Motorista.html`);
+    // Monta a mensagem completa com todos os detalhes da viagem
+    const lines = [];
+    lines.push('📋 *Sua viagem está programada!*');
+    lines.push('');
+    lines.push('Código: *'+code+'*');
+    lines.push('');
+    lines.push('🛣️ '+(tripPayload.origin||'?')+' → '+(tripPayload.destination||'?'));
+    if(tripPayload.itinerary) lines.push('🚏 Paradas: '+tripPayload.itinerary);
+    lines.push('📅 Data: '+fmtDate(tripPayload.date)+(tripPayload.returnDate?' (volta '+fmtDate(tripPayload.returnDate)+')':''));
+    if(tripPayload.pickupTime) lines.push('🕐 Embarque: '+tripPayload.pickupTime);
+    lines.push('🚐 Veículo: '+(tripPayload.vehiclePlate||'-')+(tripPayload.vehicleModel?' · '+tripPayload.vehicleModel:''));
+    if(tripPayload.passengers) lines.push('👥 Passageiros: '+tripPayload.passengers);
+    if(tripPayload.client) lines.push('👤 Cliente: '+tripPayload.client+(tripPayload.clientPhone?' ('+tripPayload.clientPhone+')':''));
+    lines.push('');
+    lines.push('Abra o app e digite o código:');
+    lines.push(appURL+'FleetControl_Motorista.html');
+    const waText=encodeURIComponent(lines.join('\n'));
 
     host.innerHTML=`<div class="overlay show" id="send-driver-overlay" onclick="if(event.target===this)closeSendDriver()" style="display:flex">
       <div class="modal" style="max-width:520px">
@@ -6224,6 +6276,10 @@ function saveTrip(){
     description:_description,    // mantém pra retrocompatibilidade
     client:document.getElementById('trip-client').value,
     driverName:document.getElementById('trip-driver-name').value||'',
+    pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
+    passengers:parseInt(document.getElementById('trip-passengers')?.value)||null,
+    clientPhone:(document.getElementById('trip-client-phone')?.value||'').trim(),
+    itinerary:(document.getElementById('trip-itinerary')?.value||'').trim(),
     grossRevenue:r2(n(document.getElementById('trip-revenue').value)),
     hasInvoice:hasNF,invoiceValue:r2(nfVal),taxRate,taxAmount:r2(taxAmt),
     kmStart:n(document.getElementById('trip-km-start').value),

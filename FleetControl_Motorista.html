@@ -320,6 +320,25 @@ const cloudSync = {
     if(!this.enabled||!this.url||!DB.driver) return;
     this.setStatus('syncing');
     try{
+      // 🛡️ PROTEÇÃO ANTI-ZERAÇÃO: se o local tem 0 trips mas o Firebase tem trips com conteúdo, ABORTA.
+      // Isso evita que um logout/limpeza acidental do localStorage sobrescreva os dados na nuvem.
+      const localTrips=Array.isArray(DB.trips)?DB.trips.length:0;
+      const localHasContent=(DB.trips||[]).some(t=>t&&((t.expenses&&t.expenses.length)||t.kmStart||t.kmEnd||t.status==='andamento'||t.status==='finalizada'));
+      if(localTrips===0 || !localHasContent){
+        try{
+          const cur=await fetch(this.driverPath()+'?cb='+Date.now());
+          if(cur.ok){
+            const remote=await cur.json();
+            const remoteTrips=(remote&&Array.isArray(remote.trips))?remote.trips:[];
+            const remoteHasContent=remoteTrips.some(t=>t&&((t.expenses&&t.expenses.length)||t.kmStart||t.kmEnd||t.status==='andamento'||t.status==='finalizada'));
+            if(remoteHasContent && !localHasContent){
+              console.warn('[sync] push ABORTADO: local vazio, nuvem tem dados. Evitando sobrescrita.');
+              this.setStatus('ok');
+              return;
+            }
+          }
+        }catch(_){}
+      }
       const ts=Date.now();
       const payload={...DB,_meta:{lastWrite:ts,updatedAt:new Date().toISOString()}};
       const res=await fetch(this.driverPath(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -367,6 +386,10 @@ const cloudSync = {
           fuelTargetKmPerL:parseFloat(veh?.fuelTargetKmPerL)||null,
           tankCapacityL:parseFloat(veh?.tankCapacityL)||null,
           client:t.client||'',
+          clientPhone:t.clientPhone||'',
+          pickupTime:t.pickupTime||'',
+          passengers:t.passengers||null,
+          itinerary:t.itinerary||'',
           driverName:t.driverName||'',
           driverPhone:t.driverPhone||'',
           status:t.driverStatus||'programada',
@@ -394,6 +417,48 @@ const cloudSync = {
         showToast('☁️ '+newCount+' viagem(ns) recebida(s) do gestor','ok');
         render();
       }
+
+      // ═══ RESTAURAÇÃO DO PATH DO MOTORISTA (/drivers/<phone>) ═══
+      // Traz de volta trips com expenses/km/status salvos pelo próprio motorista em outros dispositivos
+      // (ou neste mesmo após logout/login). Last-write-wins por _lastChange.
+      let restoredCount = 0;
+      try{
+        const rdRes = await fetch(this.driverPath()+'?cb='+Date.now());
+        if(rdRes.ok){
+          const remoteDriver = await rdRes.json();
+          const remoteTrips = (remoteDriver && Array.isArray(remoteDriver.trips)) ? remoteDriver.trips : [];
+          remoteTrips.forEach(rt=>{
+            if(!rt || !rt.id) return;
+            const idx = DB.trips.findIndex(t=>t.id===rt.id);
+            if(idx === -1){
+              // Trip remota que não existe local → adiciona (recupera dados perdidos)
+              DB.trips.push(rt);
+              restoredCount++;
+            } else {
+              // Existe local → merge last-write-wins por _lastChange; se sem timestamp, escolhe quem tem mais conteúdo
+              const localLC = parseInt(DB.trips[idx]._lastChange)||0;
+              const remoteLC = parseInt(rt._lastChange)||0;
+              if(remoteLC > localLC){
+                DB.trips[idx] = rt;
+                restoredCount++;
+              } else if(remoteLC === 0 && localLC === 0){
+                const localScore = (DB.trips[idx].expenses||[]).length + (DB.trips[idx].kmEnd?1:0) + (DB.trips[idx].status==='finalizada'?2:0);
+                const remoteScore = (rt.expenses||[]).length + (rt.kmEnd?1:0) + (rt.status==='finalizada'?2:0);
+                if(remoteScore > localScore){
+                  DB.trips[idx] = rt;
+                  restoredCount++;
+                }
+              }
+            }
+          });
+          if(restoredCount > 0){
+            localStorage.setItem(KEY,JSON.stringify(DB));
+            showToast('🔄 '+restoredCount+' viagem(ns) restaurada(s) da nuvem','ok');
+            render();
+          }
+        }
+      }catch(_){ /* offline ou path vazio é OK */ }
+
       // Após pull, aplica auto-finalize em trips antigas recém-trazidas
       autoFinalizeOldTrips();
       this.setStatus('ok');
@@ -547,7 +612,7 @@ function renderWelcome(root){
   });
 }
 // Valida o que o motorista digitou (CPF ou nome) contra a lista de cadastrados.
-function tryLogin(){
+async function tryLogin(){
   const raw=(document.getElementById('w-login')?.value||'').trim();
   const err=document.getElementById('w-login-err');
   const showErr=(msg)=>{ if(err){ err.style.display=''; err.textContent='⚠️ '+msg; } };
@@ -571,8 +636,16 @@ function tryLogin(){
     showErr('Não encontramos esse CPF/nome no cadastro. Confirme com o gestor se você foi cadastrado.');
     return;
   }
+  // Define o driver — IMPORTANTE: não chama saveDB ainda (evita push imediato com trips vazias).
   DB.driver = { name:match.name, phone:match.phone||'', cnh:match.cnh||'', doc:match.doc||'', createdAt:new Date().toISOString() };
-  saveDB();
+  try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(_){}
+  // Feedback visual + bloqueia novo login enquanto sincroniza
+  showErr(''); if(err) err.style.display='none';
+  const btn=document.querySelector('#welcome-card .btn-pr'); if(btn){ btn.disabled=true; btn.textContent='🔄 Restaurando suas viagens…'; }
+  // PULL ANTES de qualquer push — restaura trips da nuvem (path /drivers/<phone> + /db principal)
+  if(typeof cloudSync==='object' && cloudSync.enabled){
+    try{ await cloudSync.pull(); }catch(_){}
+  }
   showToast('Bem-vindo, '+match.name.split(' ')[0]+'!','ok');
   checkURLForTrip();
   render();
@@ -830,7 +903,12 @@ async function fetchTripByCode(){
       vehiclePlate:t.vehiclePlate||'',
       vehicleModel:t.vehicleModel||'',
       client:t.client||'',
+      clientPhone:t.clientPhone||'',
+      pickupTime:t.pickupTime||'',
+      passengers:t.passengers||null,
+      itinerary:t.itinerary||'',
       driverName:t.driverName||'',
+      driverPhone:t.driverPhone||'',
       status:'programada',
       expenses:[],
       createdAt:new Date().toISOString(),
@@ -1013,6 +1091,18 @@ function renderTripScreen(root, trip){
         </div>
         ${trip.description?`<div style="font-size:12.5px;color:var(--txm);margin-top:8px;font-style:italic">${trip.description}</div>`:''}
       </div>
+
+      <!-- 🆕 Detalhes do embarque (vindos do gestor) -->
+      ${(trip.pickupTime||trip.itinerary||trip.passengers||trip.clientPhone)?`
+      <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(99,102,241,.04));border:1px solid rgba(167,139,250,.25)">
+        <div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase;margin-bottom:10px">📋 Informações do embarque</div>
+        ${trip.pickupTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕐 Horário de embarque</span><b style="color:#fff">${trip.pickupTime}</b></div>`:''}
+        ${trip.itinerary?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px;gap:10px"><span class="txm" style="flex-shrink:0">🚏 Paradas</span><b style="color:#fff;text-align:right">${trip.itinerary}</b></div>`:''}
+        ${trip.passengers?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">👥 Passageiros</span><b style="color:#fff">${trip.passengers}</b></div>`:''}
+        ${trip.clientPhone?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px"><span class="txm">📞 Contato do cliente</span>
+          <a href="https://wa.me/55${(trip.clientPhone||'').replace(/\\D/g,'')}" target="_blank" style="background:rgba(34,197,94,.18);color:#34d399;padding:5px 12px;border-radius:8px;font-weight:700;text-decoration:none;font-size:12.5px">💬 ${trip.clientPhone}</a>
+        </div>`:''}
+      </div>`:''}
 
       ${trip.status!=='programada'?`
         <div class="quick-stats">
