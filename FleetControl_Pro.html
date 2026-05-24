@@ -3294,6 +3294,40 @@ const cloudSync = {
     if(!this.enabled||!this.url) return;
     this.setStatus('syncing');
     try{
+      // 🛡️ MERGE ANTES DE PUT — busca o remoto e preserva campos que o local pode estar perdendo
+      // Especialmente: driverExpenses, driverLastSync, fuelEfficiency, driverStatus, finishedAt,
+      // startedAt, _firebaseCode, autoFinalized — campos que o motorista alimenta e que o gestor
+      // pode não ter no DB local atualizado. Evita sobrescrever trabalho do motorista.
+      try{
+        const remoteRes = await fetch(this.url.replace('/db.json','/db.json?cb='+Date.now()));
+        if(remoteRes.ok){
+          const remote = await remoteRes.json();
+          const remoteTrips = (remote && Array.isArray(remote.trips)) ? remote.trips : [];
+          const protectedFields = ['driverExpenses','driverLastSync','fuelEfficiency','driverStatus',
+                                    'finishedAt','startedAt','_firebaseCode','autoFinalized',
+                                    'driverCode','driverPhone'];
+          (DB.trips||[]).forEach((local,idx)=>{
+            if(!local||!local.id) return;
+            const rem = remoteTrips.find(r=>r&&r.id===local.id);
+            if(!rem) return;
+            // Para cada campo protegido: se remoto tem valor e local não tem (ou tem menos), preserva
+            protectedFields.forEach(k=>{
+              const rv = rem[k], lv = local[k];
+              if(rv===undefined || rv===null || rv==='') return;
+              if(Array.isArray(rv)){
+                // driverExpenses: se remoto tem mais itens que local, preserva remoto
+                if(!Array.isArray(lv) || lv.length<rv.length){ local[k]=rv; }
+              } else if(typeof rv==='number'){
+                if(!lv || lv===0) local[k]=rv;   // local zerou/perdeu o valor
+                else if(k==='driverLastSync' && rv>lv) local[k]=rv;   // last-write-wins
+              } else {
+                if(!lv) local[k]=rv;   // local vazio → preserva remoto
+              }
+            });
+          });
+        }
+      }catch(_){ /* offline ou erro de rede: prossegue mesmo assim */ }
+
       const ts=Date.now();
       const payload={...DB, _meta:{lastWrite:ts, lastWriter:'gestor', device:navigator.userAgent.slice(0,40)}};
       const res=await fetch(this.url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -6317,7 +6351,11 @@ function saveTrip(){
     if(v&&trip.kmEnd>v.currentKm) v.currentKm=trip.kmEnd;
   }
 
-  if(id) DB.trips=DB.trips.map(t=>t.id===id?trip:t);
+  // 🛡️ MERGE em vez de substituir — preserva campos que o formulário não tem
+  // (driverExpenses, fuelEfficiency, driverStatus, driverLastSync, pickupTime,
+  // passengers, itinerary, clientPhone, etc). Antes era `t.id===id?trip:t` e
+  // apagava esses campos toda vez que o gestor salvasse uma viagem editada.
+  if(id) DB.trips=DB.trips.map(t=>t.id===id?{...t,...trip}:t);
   else DB.trips.push(trip);
   saveDB();closeModal('modal-trip');renderCurrentPage();
 }
