@@ -2773,25 +2773,26 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       <input type="text" class="fc" id="se-name" placeholder="Ex: Aluguel de Garagem"></div>
   </div>
   <div class="fr c2">
+    <div class="fg"><label class="fl">Tipo</label>
+      <select class="fc" id="se-type" onchange="toggleSharedType()">
+        <option value="recurring">🔁 Recorrente (todo mês)</option>
+        <option value="single">📌 Avulsa (uma vez só)</option>
+      </select>
+    </div>
     <div class="fg"><label class="fl">Categoria</label>
       <select class="fc" id="se-category">
         <option value="aluguel">🏢 Aluguel</option>
         <option value="seguranca">🔒 Segurança/Alarme</option>
         <option value="utilidades">💧 Utilidades (água/luz)</option>
         <option value="comunicacao">📡 Comunicação</option>
+        <option value="cartorio">📜 Cartório</option>
         <option value="outros">📦 Outros</option>
       </select>
     </div>
-    <div class="fg"><label class="fl">Valor Mensal (R$)</label>
-      <input type="number" class="fc" id="se-amount" placeholder="0,00" step="0.01"></div>
   </div>
   <div class="fr c2">
-    <div class="fg"><label class="fl">Divisão</label>
-      <select class="fc" id="se-split" onchange="toggleVehicleSelection()">
-        <option value="all">➗ Igual — todos os veículos</option>
-        <option value="selected">✅ Igual — somente veículos selecionados</option>
-      </select>
-    </div>
+    <div class="fg"><label class="fl" id="se-amount-label">Valor Mensal (R$)</label>
+      <input type="number" class="fc" id="se-amount" placeholder="0,00" step="0.01"></div>
     <div class="fg"><label class="fl">Status</label>
       <select class="fc" id="se-active">
         <option value="true">Ativo</option>
@@ -2799,8 +2800,17 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       </select>
     </div>
   </div>
+  <div class="fr">
+    <div class="fg"><label class="fl">Divisão</label>
+      <select class="fc" id="se-split" onchange="toggleVehicleSelection()">
+        <option value="all">➗ Igual — todos os veículos</option>
+        <option value="selected">✅ Igual — somente veículos selecionados</option>
+      </select>
+    </div>
+  </div>
 
-  <div class="fr c3">
+  <!-- Campos da despesa RECORRENTE (mensal) -->
+  <div class="fr c3" id="se-recurring-fields">
     <div class="fg">
       <label class="fl">📅 Dia de Vencimento</label>
       <input type="number" class="fc" id="se-due-day" placeholder="Ex: 10" min="1" max="31">
@@ -2812,6 +2822,15 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
     <div class="fg" style="display:flex;align-items:flex-end">
       <div class="txs txm" style="font-style:italic;padding-bottom:4px">Deixe em branco se já está ativo desde sempre</div>
+    </div>
+  </div>
+
+  <!-- Campos da despesa AVULSA (uma vez) -->
+  <div class="fr" id="se-single-fields" style="display:none">
+    <div class="fg">
+      <label class="fl">📌 Data da Despesa</label>
+      <input type="date" class="fc" id="se-single-date">
+      <div class="txs txm mt1">A despesa será computada apenas no mês desta data</div>
     </div>
   </div>
 
@@ -3113,13 +3132,38 @@ let dashboardPeriod = 'month';   // 'month' | '3m' | '6m' | 'ytd' | 'all'
 let charts = {};
 
 // ══════════ STORAGE ══════════
+// 🛡️ Garante que todas as estruturas críticas do DB existem.
+// Chamada tanto no loadDB (boot) quanto após o cloudSync.pull substituir DB.
+// Sem isso, um pull com DB parcial vindo do Firebase causa "Cannot read properties of undefined".
+function ensureDBShape(){
+  if(!DB || typeof DB!=='object') DB={};
+  if(!Array.isArray(DB.trips))             DB.trips=[];
+  if(!Array.isArray(DB.varExpenses))       DB.varExpenses=[];
+  if(!Array.isArray(DB.fixedCommitments))  DB.fixedCommitments=[];
+  if(!Array.isArray(DB.investors))         DB.investors=[];
+  DB.investors.forEach(inv=>{ if(!Array.isArray(inv.payments)) inv.payments=[]; });
+  if(!Array.isArray(DB.clients))           DB.clients=[];
+  if(!Array.isArray(DB.drivers))           DB.drivers=[];
+  if(!Array.isArray(DB.agencyRevenue))     DB.agencyRevenue=[];
+  if(!Array.isArray(DB.vehicles))          DB.vehicles=[];
+  if(!Array.isArray(DB.sharedExpenses))    DB.sharedExpenses=[];
+  if(!Array.isArray(DB.admins))            DB.admins=[];
+  if(!DB.settings || typeof DB.settings!=='object') DB.settings={};
+  if(!DB.customCategories || typeof DB.customCategories!=='object'){
+    DB.customCategories={revenueTypes:[],expenseCategories:[],fixedExpenseCategories:[],builtinOverrides:{},maintenanceSubs:[]};
+  } else {
+    if(!Array.isArray(DB.customCategories.revenueTypes)) DB.customCategories.revenueTypes=[];
+    if(!Array.isArray(DB.customCategories.expenseCategories)) DB.customCategories.expenseCategories=[];
+    if(!Array.isArray(DB.customCategories.fixedExpenseCategories)) DB.customCategories.fixedExpenseCategories=[];
+    if(!DB.customCategories.builtinOverrides || typeof DB.customCategories.builtinOverrides!=='object') DB.customCategories.builtinOverrides={};
+    if(!Array.isArray(DB.customCategories.maintenanceSubs)) DB.customCategories.maintenanceSubs=[];
+  }
+}
 function loadDB(){
   try{
     const s = localStorage.getItem('fleetcontrol_db');
     DB = s ? JSON.parse(s) : JSON.parse(JSON.stringify(INIT));
-    if(!DB.varExpenses) DB.varExpenses=[];
-    if(!DB.investors) DB.investors=[];
-    DB.investors.forEach(inv=>{ if(!Array.isArray(inv.payments)) inv.payments=[]; });
+    ensureDBShape();
 
     // ── Migração: recalcula fuelLiters/fuelEfficiency em trips com driverExpenses antigas ──
     // (versões anteriores não agregavam litros nem consumo do motorista — preenche retroativamente)
@@ -3352,7 +3396,8 @@ const cloudSync = {
         if(cloudTs>localTs){
           const {_meta,...db}=data;
           DB=db;
-          localStorage.setItem('fleetcontrol_db',JSON.stringify(db));
+          ensureDBShape();   // 🛡️ garante arrays/objetos críticos antes de qualquer render
+          localStorage.setItem('fleetcontrol_db',JSON.stringify(DB));
           localStorage.setItem('muvcity_lastWrite',String(cloudTs));
           try{ renderCurrentPage(); updateSidebarLogo(); }catch(_){}
           if(typeof showToast==='function') showToast('☁️ Atualizações recebidas','ok');
@@ -3769,8 +3814,15 @@ function getMonthlyTotals(y,m,vFilter){
   let sharedExp=0;
   (DB.sharedExpenses||[]).forEach(se=>{
     if(!se.active)return;
-    // Se tem startMonth e este mês é antes, ignora
-    if(se.startMonth && _sharedKey<se.startMonth) return;
+    // Despesa AVULSA: conta SÓ no mês da data lançada
+    if(se.seType==='single'){
+      if(!se.singleDate) return;
+      const seK=se.singleDate.substring(0,7);   // 'YYYY-MM'
+      if(seK!==_sharedKey) return;
+    } else {
+      // Despesa RECORRENTE (default): respeita startMonth
+      if(se.startMonth && _sharedKey<se.startMonth) return;
+    }
     const paid=(se.payments||[]).find(p=>p.monthKey===_sharedKey);
     const amount=paid?n(paid.amount):n(se.baseAmount);
     if(amount<=0) return;
@@ -4879,9 +4931,12 @@ function getInvMonthlyHistory(inv, numMonths){
 
 function renderInvestors(){
   const el=document.getElementById('inv-grid');
+  if(!el) return;
   const mnEl=document.getElementById('mnav-investors');
   if(mnEl) mnEl.textContent=monthName(currentYear,currentMonth);
 
+  // 🛡️ Defense in depth: garante array antes de chamar .length/.map
+  if(!Array.isArray(DB.investors)) DB.investors=[];
   if(!DB.investors.length){
     el.innerHTML='<div class="empty"><div class="empty-ic">🤝</div><div class="empty-tx">Nenhum investidor cadastrado</div></div>';return;
   }
@@ -5161,7 +5216,13 @@ function calcDetailedTotals(period, vFilter){
     const _key=seMonthKey(y,m);
     (DB.sharedExpenses||[]).forEach(se=>{
       if(!se.active) return;
-      if(se.startMonth && _key<se.startMonth) return;
+      // Despesa AVULSA: só conta no mês da data
+      if(se.seType==='single'){
+        if(!se.singleDate) return;
+        if(se.singleDate.substring(0,7) !== _key) return;
+      } else {
+        if(se.startMonth && _key<se.startMonth) return;
+      }
       const paid=(se.payments||[]).find(p=>p.monthKey===_key);
       const amount = paid ? n(paid.amount) : n(se.baseAmount);
       if(amount<=0) return;
@@ -8625,15 +8686,26 @@ function toggleVehicleSelection(){
   updateSplitPreview();
 }
 
+// Alterna entre tipo recorrente e avulsa
+function toggleSharedType(){
+  const type=document.getElementById('se-type').value;
+  const isSingle=type==='single';
+  document.getElementById('se-recurring-fields').style.display=isSingle?'none':'';
+  document.getElementById('se-single-fields').style.display=isSingle?'':'none';
+  document.getElementById('se-amount-label').textContent=isSingle?'Valor Total (R$)':'Valor Mensal (R$)';
+}
+
 function openSharedModal(){
   document.getElementById('se-id').value='';
   document.getElementById('shared-modal-title').textContent='Nova Despesa Compartilhada';
-  ['se-name','se-amount','se-notes','se-due-day','se-start-month'].forEach(id=>document.getElementById(id).value='');
+  ['se-name','se-amount','se-notes','se-due-day','se-start-month','se-single-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('se-type').value='recurring';
   document.getElementById('se-category').value='outros';
   document.getElementById('se-split').value='all';
   document.getElementById('se-active').value='true';
   document.getElementById('se-vehicle-selection').style.display='none';
   populateVehicleCheckboxes([]);
+  toggleSharedType();
   openModal('modal-shared');
 }
 
@@ -8645,6 +8717,9 @@ function editShared(id){
   document.getElementById('se-name').value=se.name||'';
   document.getElementById('se-amount').value=se.baseAmount||'';
   document.getElementById('se-category').value=se.category||'outros';
+  // Tipo: respeita seType salvo; despesas antigas (sem campo) são recorrentes
+  document.getElementById('se-type').value=se.seType==='single'?'single':'recurring';
+  document.getElementById('se-single-date').value=se.singleDate||'';
   // Normalize old 'equal' to 'all'
   const split=se.splitType==='equal'?'all':se.splitType||'all';
   document.getElementById('se-split').value=split;
@@ -8655,11 +8730,13 @@ function editShared(id){
   // Populate checkboxes
   populateVehicleCheckboxes(se.selectedVehicleIds||[]);
   document.getElementById('se-vehicle-selection').style.display=split==='selected'?'':'none';
+  toggleSharedType();
   openModal('modal-shared');
 }
 
 function saveShared(){
   const id=document.getElementById('se-id').value;
+  const type=document.getElementById('se-type').value;
   const split=document.getElementById('se-split').value;
   // Collect selected vehicle IDs
   const checkedBoxes=document.querySelectorAll('input[name="se-vehicle-cb"]:checked');
@@ -8667,22 +8744,29 @@ function saveShared(){
   if(split==='selected'&&selectedVehicleIds.length===0){
     alert('Selecione ao menos um veículo para dividir a despesa!');return;
   }
+  // Validação específica: despesa avulsa requer data
+  const singleDate=document.getElementById('se-single-date').value||'';
+  if(type==='single' && !singleDate){
+    alert('Despesa avulsa precisa de uma data. Preencha a "Data da Despesa".');return;
+  }
   const existing=(DB.sharedExpenses||[]).find(x=>x.id===id);
   const se={
     id:id||uid(),
     name:document.getElementById('se-name').value,
     category:document.getElementById('se-category').value,
+    seType:type,                                  // 'recurring' | 'single'
+    singleDate: type==='single' ? singleDate : null,
     baseAmount:n(document.getElementById('se-amount').value),
     splitType:split,
     selectedVehicleIds,
     active:document.getElementById('se-active').value==='true',
-    dueDay:parseInt(document.getElementById('se-due-day').value)||null,
-    startMonth:document.getElementById('se-start-month').value||null,
+    dueDay: type==='recurring' ? (parseInt(document.getElementById('se-due-day').value)||null) : null,
+    startMonth: type==='recurring' ? (document.getElementById('se-start-month').value||null) : null,
     payments:existing?.payments||[],
     notes:document.getElementById('se-notes').value
   };
   if(!DB.sharedExpenses) DB.sharedExpenses=[];
-  if(id) DB.sharedExpenses=DB.sharedExpenses.map(x=>x.id===id?se:x);
+  if(id) DB.sharedExpenses=DB.sharedExpenses.map(x=>x.id===id?{...x,...se}:x);
   else DB.sharedExpenses.push(se);
   saveDB();closeModal('modal-shared');renderCurrentPage();
 }

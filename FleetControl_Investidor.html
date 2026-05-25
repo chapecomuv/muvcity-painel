@@ -303,7 +303,13 @@ function calcMonthlyVehicleProfit(db, y, m, vehicleId){
   const sKey = monthKey(y,m);
   (db.sharedExpenses||[]).forEach(se=>{
     if(!se.active) return;
-    if(se.startMonth && sKey<se.startMonth) return;
+    // Despesa AVULSA: só conta no mês da data
+    if(se.seType==='single'){
+      if(!se.singleDate) return;
+      if(se.singleDate.substring(0,7) !== sKey) return;
+    } else {
+      if(se.startMonth && sKey<se.startMonth) return;
+    }
     const paid = (se.payments||[]).find(p=>p.monthKey===sKey);
     const amount = paid ? n(paid.amount) : n(se.baseAmount);
     if(amount<=0) return;
