@@ -2621,18 +2621,21 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <button class="xbtn" onclick="closeModal('modal-shared-payment')">✕</button>
   </div>
   <input type="hidden" id="sepay-id">
-  <input type="hidden" id="sepay-month-key">
   <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.22);border-radius:10px;padding:12px 14px;margin-bottom:14px">
     <div class="txs txm">Despesa</div>
     <div style="font-size:15px;font-weight:600" id="sepay-name">—</div>
-    <div class="txs txm mt1">Mês de referência</div>
-    <div style="font-size:13px;font-weight:600;color:#a5b4fc" id="sepay-month-label">—</div>
   </div>
   <div class="fr c2">
-    <div class="fg"><label class="fl">Valor REAL deste mês (R$)</label>
+    <div class="fg"><label class="fl">Valor REAL pago (R$)</label>
       <input type="text" inputmode="decimal" class="fc" id="sepay-amount" placeholder="0,00"></div>
     <div class="fg"><label class="fl">Data do Pagamento</label>
-      <input type="date" class="fc" id="sepay-date"></div>
+      <input type="date" class="fc" id="sepay-date" onchange="syncSepayMonthFromDate()"></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><label class="fl">📅 Mês de referência <span style="opacity:.7">(ex: pago em 05/jun mas referente a mai)</span></label>
+      <input type="month" class="fc" id="sepay-month-key">
+      <div class="txs txm mt1">Esse é o mês em que a despesa entra no cálculo (competência). Por padrão, é o mês da data do pagamento.</div>
+    </div>
   </div>
   <div class="fr">
     <div class="fg"><label class="fl">Observação (opcional)</label>
@@ -8800,19 +8803,36 @@ function getSharedDueStatus(se){
   return 'pending';
 }
 
+// Quando o usuário muda a Data do Pagamento, sincroniza o Mês de Referência
+// (só se ele ainda não tiver editado manualmente o mês — heurística simples)
+function syncSepayMonthFromDate(){
+  const date=document.getElementById('sepay-date').value;
+  if(!date) return;
+  // Sempre sincroniza com a data, exceto se a despesa for recorrente E o usuário tiver
+  // ajustado manualmente. Pra simplificar: sempre atualiza pra refletir a data.
+  document.getElementById('sepay-month-key').value=date.substring(0,7);
+}
+
 function markSharedPaid(id){
   // Abre o modal pra lançar o valor REAL do mês (especialmente útil pra água, luz)
   const se=(DB.sharedExpenses||[]).find(x=>x.id===id);
   if(!se) return;
   if(!se.payments) se.payments=[];
-  const key=seMonthKey(currentYear,currentMonth);
+  // 🛡️ Mês de referência padrão:
+  // - Avulsa (single): usa o mês da singleDate (sempre)
+  // - Recorrente: usa o mês atualmente selecionado no navegador (currentMonth)
+  let key;
+  if(se.seType==='single' && se.singleDate){
+    key = se.singleDate.substring(0,7);
+  } else {
+    key = seMonthKey(currentYear,currentMonth);
+  }
   if(se.payments.some(p=>p.monthKey===key)){
     alert('Este mês já foi marcado como pago. Para alterar, desfaça primeiro.');return;
   }
   document.getElementById('sepay-id').value=id;
   document.getElementById('sepay-month-key').value=key;
   document.getElementById('sepay-name').textContent=se.name;
-  document.getElementById('sepay-month-label').textContent=monthName(currentYear,currentMonth);
   // Sugere o baseAmount como valor inicial (user pode trocar)
   document.getElementById('sepay-amount').value=fmtMoneyInput(se.baseAmount||'');
   document.getElementById('sepay-date').value=new Date().toISOString().split('T')[0];
@@ -8825,7 +8845,7 @@ function markSharedPaid(id){
 function saveSharedPayment(){
   try{
     const id=document.getElementById('sepay-id').value;
-    const key=document.getElementById('sepay-month-key').value;
+    let key=document.getElementById('sepay-month-key').value;
     const se=(DB.sharedExpenses||[]).find(x=>x.id===id);
     if(!se) return;
     if(!se.payments) se.payments=[];
@@ -8833,11 +8853,19 @@ function saveSharedPayment(){
     const date=document.getElementById('sepay-date').value || new Date().toISOString().split('T')[0];
     const notes=document.getElementById('sepay-notes').value||'';
     if(amount<=0){ alert('Informe o valor real pago neste mês.'); return; }
+    // 🛡️ Avulsa: força o monthKey = mês da singleDate (não pode ser outro)
+    if(se.seType==='single' && se.singleDate){
+      key = se.singleDate.substring(0,7);
+    }
+    // Fallback: se ainda vazio, usa o mês da data do pagamento
+    if(!key && date) key = date.substring(0,7);
+    if(!key){ alert('Informe a data do pagamento ou o mês de referência.'); return; }
     // Substitui se já existe
     se.payments=se.payments.filter(p=>p.monthKey!==key);
     se.payments.push({monthKey:key,date,amount,notes});
     saveDB();
-    showToast(`💧 ${se.name} — ${monthName(currentYear,currentMonth)} lançado: ${R(amount)}`,'ok');
+    const [yk,mk]=key.split('-').map(Number);
+    showToast(`💧 ${se.name} — ${monthName(yk,mk-1)} lançado: ${R(amount)}`,'ok');
     closeModal('modal-shared-payment');
     renderCurrentPage();
   }catch(err){
