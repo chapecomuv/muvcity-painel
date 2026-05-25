@@ -8779,7 +8779,10 @@ function toggleShared(id){
   if(se){ se.active=!se.active; saveDB(); renderCurrentPage(); }
 }
 
-function seMonthKey(y,m){ return `${y}-${String(m).padStart(2,'0')}`; }
+// 🛡️ Corrige off-by-one: receivers passam m em formato JS (0-indexed, jan=0..dez=11).
+// O monthKey gravado/comparado é 1-indexed humano (jan="01"..dez="12") pra bater com
+// startMonth salvo pelo <input type="month"> e com payments[].monthKey.
+function seMonthKey(y,m){ return `${y}-${String((m|0)+1).padStart(2,'0')}`; }
 
 function isSharedStarted(se, y, m){
   if(!se.startMonth) return true; // no restriction = always active
