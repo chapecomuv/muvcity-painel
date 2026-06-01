@@ -1983,6 +1983,24 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
   </div>
 
+  <!-- Status da viagem (gestor pode finalizar manualmente) -->
+  <div class="fsec" id="trip-status-section" style="display:none">
+    <div class="fsec-t">📋 Status da Viagem</div>
+    <div id="trip-status-display" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div class="txs txm">Estado atual:</div>
+        <div id="trip-status-label" style="font-size:15px;font-weight:700;margin-top:2px">—</div>
+        <div class="txs txm mt1" id="trip-status-sub"></div>
+      </div>
+      <button type="button" id="trip-finalize-btn" class="btn btn-sc" onclick="finalizeTripByManager()" style="display:none">
+        🏁 Marcar como Finalizada
+      </button>
+      <button type="button" id="trip-reopen-btn" class="btn btn-gh" onclick="reopenTripByManager()" style="display:none">
+        ↩️ Reabrir viagem
+      </button>
+    </div>
+  </div>
+
   <div class="fsec">
     <div class="fsec-t">⛽ Despesas da Viagem</div>
     <div class="fr c4">
@@ -5841,6 +5859,7 @@ function openTripModal(vId){
   document.getElementById('calc-margin').textContent='0%';
   const kmRow=document.getElementById('calc-km-row'); if(kmRow) kmRow.style.display='none';
   const fuelStatsEl=document.getElementById('trip-fuel-stats'); if(fuelStatsEl){ fuelStatsEl.innerHTML=''; fuelStatsEl.style.display='none'; }
+  const stSec=document.getElementById('trip-status-section'); if(stSec) stSec.style.display='none';
   openModal('modal-trip');
 }
 
@@ -5925,6 +5944,89 @@ function renderTripFuelStats(t){
     </div>`;
 }
 
+// Atualiza a seção "Status da Viagem" no modal de Editar com base na trip atual.
+// Visível apenas para trips com motorista designado (ou que já tenham status do motorista).
+function refreshTripStatusSection(t){
+  const sec=document.getElementById('trip-status-section');
+  const label=document.getElementById('trip-status-label');
+  const sub=document.getElementById('trip-status-sub');
+  const btnFin=document.getElementById('trip-finalize-btn');
+  const btnReopen=document.getElementById('trip-reopen-btn');
+  if(!sec||!t) return;
+  const temMotorista=!!(t.driverName && t.driverName.trim());
+  const status=t.driverStatus||'';
+  // Mostra a seção se há motorista designado OU se há algum status já registrado
+  if(!temMotorista && !status){ sec.style.display='none'; return; }
+  sec.style.display='';
+  if(status==='finalizada'){
+    const quem = t.managerFinalized ? 'finalizada pelo gestor' : 'finalizada pelo motorista';
+    label.innerHTML='✅ Finalizada';
+    label.style.color='#10b981';
+    sub.textContent = (t.finishedAt?'Em '+fmtDate(t.finishedAt.substring(0,10))+' · ':'') + quem;
+    btnFin.style.display='none';
+    btnReopen.style.display='';
+  } else if(status==='andamento'){
+    label.innerHTML='🟢 Em Andamento';
+    label.style.color='#67e8f9';
+    sub.textContent = (t.startedAt?'Iniciada em '+fmtDate(t.startedAt.substring(0,10)):'Iniciada pelo motorista');
+    btnFin.style.display='';
+    btnFin.textContent='🏁 Marcar como Finalizada';
+    btnReopen.style.display='none';
+  } else {
+    label.innerHTML='⏳ Programada';
+    label.style.color='#fbbf24';
+    sub.textContent='Motorista ainda não iniciou a viagem no app';
+    btnFin.style.display='';
+    btnFin.textContent='🏁 Marcar como Finalizada (pular andamento)';
+    btnReopen.style.display='none';
+  }
+}
+
+// Marca a viagem como finalizada pelo gestor. Usa os valores atuais do formulário (KM,
+// despesas, etc.) já preenchidos pelo gestor. NÃO mexe em driverExpenses (a 4ª camada
+// de proteção continua válida — agregados recalculam a partir deles).
+function finalizeTripByManager(){
+  const id=document.getElementById('trip-id').value;
+  if(!id){ alert('Salve a viagem antes de finalizar.'); return; }
+  const t=DB.trips.find(x=>x.id===id);
+  if(!t) return;
+  const kmEnd=n(document.getElementById('trip-km-end').value);
+  const kmStart=n(document.getElementById('trip-km-start').value);
+  if(kmEnd<=0){
+    alert('Preencha o KM Final antes de finalizar a viagem.');
+    document.getElementById('trip-km-end').focus();
+    return;
+  }
+  if(kmStart>0 && kmEnd<kmStart){
+    alert('KM Final não pode ser menor que o KM Inicial!');
+    return;
+  }
+  if(!confirm(`Marcar esta viagem como FINALIZADA?\n\nKM rodado: ${(kmEnd-kmStart).toLocaleString('pt-BR')} km\n\nIsso só altera o STATUS — não toca em lançamentos do motorista nem em outros campos.`)) return;
+  t.driverStatus='finalizada';
+  t.finishedAt=new Date().toISOString();
+  t.managerFinalized=true;
+  // KM driven, se ainda não calculado
+  if(kmStart>0 && kmEnd>0) t.kmDriven=kmEnd-kmStart;
+  saveDB();
+  showToast('🏁 Viagem marcada como finalizada','ok');
+  refreshTripStatusSection(t);
+}
+
+// Reabre uma viagem finalizada (gestor) — útil pra corrigir uma finalização equivocada.
+function reopenTripByManager(){
+  const id=document.getElementById('trip-id').value;
+  if(!id) return;
+  const t=DB.trips.find(x=>x.id===id);
+  if(!t) return;
+  if(!confirm('Reabrir esta viagem? Ela volta pro status "Em Andamento". A finalização atual será apagada.')) return;
+  t.driverStatus='andamento';
+  delete t.finishedAt;
+  delete t.managerFinalized;
+  saveDB();
+  showToast('↩️ Viagem reaberta','ok');
+  refreshTripStatusSection(t);
+}
+
 function editTrip(id){
   const t=DB.trips.find(t=>t.id===id);
   if(!t)return;
@@ -5998,6 +6100,7 @@ function editTrip(id){
   toggleNF();calcKM();calcTripProfit();
   loadPaymentPlanToModal(t.paymentPlan||null);
   renderTripFuelStats(t);
+  refreshTripStatusSection(t);
   openModal('modal-trip');
 }
 
