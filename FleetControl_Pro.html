@@ -1998,15 +1998,19 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
 
     <!-- Detalhes do embarque (vão pro app do motorista + mensagem WhatsApp) -->
-    <div class="fr c4">
+    <div class="fr c3">
       <div class="fg"><label class="fl">🕐 Horário de embarque</label>
         <input type="time" class="fc" id="trip-pickup-time"></div>
       <div class="fg"><label class="fl">👥 Qtde passageiros</label>
         <input type="number" class="fc" id="trip-passengers" placeholder="0" min="1" step="1"></div>
       <div class="fg"><label class="fl">📞 Contato do cliente <span style="opacity:.6">(WhatsApp)</span></label>
         <input type="text" class="fc" id="trip-client-phone" placeholder="(00) 9 0000-0000" oninput="maskPhone(this)"></div>
-      <div class="fg"><label class="fl">🚏 Paradas no caminho <span style="opacity:.6">(opcional)</span></label>
-        <input type="text" class="fc" id="trip-itinerary" placeholder="Ex: passar em Pinhalzinho"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">📝 Detalhes pro motorista <span style="opacity:.6">(observações, paradas, locais exatos)</span></label>
+        <textarea class="fc" id="trip-itinerary" rows="3" placeholder="Ex:&#10;• Embarque em frente ao Posto Shell (Av. Brasil 123)&#10;• Parada em Pinhalzinho pra pegar mais 2 passageiros&#10;• Destino: Hotel Plaza, R. das Flores 45"></textarea>
+        <div class="txs txm mt1">Aparece pro motorista no app e vai na mensagem do WhatsApp</div>
+      </div>
     </div>
   </div>
 
@@ -6533,12 +6537,17 @@ async function sendTripToDriver(tripId){
     lines.push('Código: *'+code+'*');
     lines.push('');
     lines.push('🛣️ '+(tripPayload.origin||'?')+' → '+(tripPayload.destination||'?'));
-    if(tripPayload.itinerary) lines.push('🚏 Paradas: '+tripPayload.itinerary);
     lines.push('📅 Data: '+fmtDate(tripPayload.date)+(tripPayload.returnDate?' (volta '+fmtDate(tripPayload.returnDate)+')':''));
     if(tripPayload.pickupTime) lines.push('🕐 Embarque: '+tripPayload.pickupTime);
     lines.push('🚐 Veículo: '+(tripPayload.vehiclePlate||'-')+(tripPayload.vehicleModel?' · '+tripPayload.vehicleModel:''));
     if(tripPayload.passengers) lines.push('👥 Passageiros: '+tripPayload.passengers);
     if(tripPayload.client) lines.push('👤 Cliente: '+tripPayload.client+(tripPayload.clientPhone?' ('+tripPayload.clientPhone+')':''));
+    // Detalhes/observações (textarea pode ter quebras de linha — preserva)
+    if(tripPayload.itinerary){
+      lines.push('');
+      lines.push('📝 *Detalhes:*');
+      String(tripPayload.itinerary).split(/\r?\n/).filter(l=>l.trim()).forEach(l=>lines.push(l));
+    }
     lines.push('');
     lines.push('Abra o app e digite o código:');
     lines.push(appURL+'FleetControl_Motorista.html');

@@ -1097,7 +1097,10 @@ function renderTripScreen(root, trip){
       <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(99,102,241,.04));border:1px solid rgba(167,139,250,.25)">
         <div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase;margin-bottom:10px">📋 Informações do embarque</div>
         ${trip.pickupTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕐 Horário de embarque</span><b style="color:#fff">${trip.pickupTime}</b></div>`:''}
-        ${trip.itinerary?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px;gap:10px"><span class="txm" style="flex-shrink:0">🚏 Paradas</span><b style="color:#fff;text-align:right">${trip.itinerary}</b></div>`:''}
+        ${trip.itinerary?`<div style="padding:8px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
+          <div class="txm" style="margin-bottom:6px;font-weight:700">📝 Detalhes da viagem</div>
+          <div style="color:#fff;white-space:pre-wrap;line-height:1.55;background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px">${(trip.itinerary||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>`:''}
         ${trip.passengers?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">👥 Passageiros</span><b style="color:#fff">${trip.passengers}</b></div>`:''}
         ${trip.clientPhone?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px"><span class="txm">📞 Contato do cliente</span>
           <a href="https://wa.me/55${(trip.clientPhone||'').replace(/\\D/g,'')}" target="_blank" style="background:rgba(34,197,94,.18);color:#34d399;padding:5px 12px;border-radius:8px;font-weight:700;text-decoration:none;font-size:12.5px">💬 ${trip.clientPhone}</a>
