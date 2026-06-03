@@ -518,6 +518,20 @@ function n(v){
   return parseFloat(s)||0;
 }
 function fmtDate(d){ if(!d)return'—'; const p=String(d).split('T')[0].split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+// Escapa HTML e transforma URLs http(s) em links clicáveis. Só aceita http:// e https://
+// — bloqueia javascript:, data:, file: pra evitar XSS.
+function linkifyText(s){
+  const escaped = String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return escaped.replace(/https?:\/\/[^\s<>"']+/gi, (url) => {
+    // Remove pontuação final que normalmente não faz parte da URL
+    const trail = url.match(/[.,;:!?)\]}]+$/);
+    const cleanUrl = trail ? url.slice(0, -trail[0].length) : url;
+    const tail = trail ? trail[0] : '';
+    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color:#67e8f9;text-decoration:underline;word-break:break-all">${cleanUrl}</a>${tail}`;
+  });
+}
 function fmtPhone(raw){
   const d=String(raw||'').replace(/\D/g,'').slice(0,11);
   if(d.length<=2) return d.length?'('+d:'';
@@ -1099,7 +1113,7 @@ function renderTripScreen(root, trip){
         ${trip.pickupTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕐 Horário de embarque</span><b style="color:#fff">${trip.pickupTime}</b></div>`:''}
         ${trip.itinerary?`<div style="padding:8px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
           <div class="txm" style="margin-bottom:6px;font-weight:700">📝 Detalhes da viagem</div>
-          <div style="color:#fff;white-space:pre-wrap;line-height:1.55;background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px">${(trip.itinerary||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+          <div style="color:#fff;white-space:pre-wrap;line-height:1.55;background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;word-break:break-word">${linkifyText(trip.itinerary||'')}</div>
         </div>`:''}
         ${trip.passengers?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">👥 Passageiros</span><b style="color:#fff">${trip.passengers}</b></div>`:''}
         ${trip.clientPhone?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px"><span class="txm">📞 Contato do cliente</span>
