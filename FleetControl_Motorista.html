@@ -976,11 +976,15 @@ function renderFuelMetaCard(trip){
     .filter(e=>e.type==='combustivel' && n(e.kmAtPump)>0 && n(e.liters)>0)
     .map(e=>({km:n(e.kmAtPump), liters:n(e.liters)}))
     .sort((a,b)=>a.km-b.km);
-  // Não exibe se não tem meta nem nenhum abastecimento (motorista programada já não chega aqui)
-  if(!target && stops.length===0) return '';
+  // Fallback de litros lançados pelo gestor (pra exibir mesmo sem abastecimentos individuais)
+  const fuelLitersTotal=n(trip.fuelLiters);
+  const kmStart=n(trip.kmStart);
+  const kmEnd=n(trip.kmEnd);
+  const kmDriven=n(trip.kmDriven)|| (kmEnd>kmStart ? kmEnd-kmStart : 0);
+  // Não exibe se não tem meta, nem abastecimentos, nem fuelLiters agregado
+  if(!target && stops.length===0 && fuelLitersTotal<=0) return '';
   const r2=v=>Math.round(v*100)/100;
   let kmL=null, kmRange=0, litrosConsumidos=0, calcSource='';
-  const kmStart=n(trip.kmStart);
   if(stops.length>=2){
     // Cálculo padrão: entre 1º e último abastecimento, somando litros do 2º em diante
     kmRange=stops[stops.length-1].km-stops[0].km;
@@ -991,6 +995,13 @@ function renderFuelMetaCard(trip){
     kmRange=stops[0].km-kmStart;
     litrosConsumidos=stops[0].liters;
     if(kmRange>0 && litrosConsumidos>0){ kmL=r2(kmRange/litrosConsumidos); calcSource='desde o KM inicial'; }
+  } else if(fuelLitersTotal>0 && kmDriven>0){
+    // 🛡️ Fallback agregado: gestor lançou litros totais e KM no modal sem que o motorista
+    // tenha registrado abastecimentos individuais com kmAtPump. Usa o cálculo geral.
+    kmRange=kmDriven;
+    litrosConsumidos=fuelLitersTotal;
+    kmL=r2(kmDriven/fuelLitersTotal);
+    calcSource='geral da viagem';
   }
   const isFinalized=trip.status==='finalizada';
   const mediaLabel=isFinalized?'🏁 Média Final':'📊 Média Atual';

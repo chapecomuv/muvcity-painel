@@ -2080,6 +2080,17 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
 
   <div class="fsec">
     <div class="fsec-t">🛣️ Quilometragem</div>
+    <div class="fr c2">
+      <div class="fg">
+        <label class="fl">📐 KM Estimada <span style="opacity:.6">(antes da viagem)</span></label>
+        <input type="number" class="fc" id="trip-km-estimated" placeholder="Ex: 800" min="0" step="1" oninput="calcKM()">
+        <div class="txs txm mt1">Estimativa pra planejar antes de rodar — não substitui o KM real</div>
+      </div>
+      <div class="fg" id="trip-km-estimated-vs" style="display:none">
+        <label class="fl">📊 Real vs. Estimado</label>
+        <div class="fc" style="display:flex;align-items:center;font-weight:700;font-size:16px" id="trip-km-vs-display">—</div>
+      </div>
+    </div>
     <div class="fr c3">
       <div class="fg"><label class="fl">KM Inicial</label>
         <input type="number" class="fc" id="trip-km-start" placeholder="0" oninput="calcKM()"></div>
@@ -3116,6 +3127,23 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <button class="xbtn" onclick="closeModal('modal-driver')">✕</button>
   </div>
   <input type="hidden" id="driver-id">
+  <!-- Foto de perfil do motorista -->
+  <div class="fr" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div id="driver-photo-preview" style="width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(167,139,250,.1));border:2px solid rgba(148,163,184,.25);display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--txm);overflow:hidden;flex-shrink:0">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div style="flex:1">
+        <label class="fl">📸 Foto do motorista <span style="opacity:.6">(opcional)</span></label>
+        <input type="file" id="driver-photo-input" accept="image/*" onchange="onDriverPhotoSelected(event)" style="display:none">
+        <div class="fl-row ic" style="gap:8px;margin-top:4px">
+          <button type="button" class="btn btn-gh btn-sm" onclick="document.getElementById('driver-photo-input').click()">📂 Escolher foto</button>
+          <button type="button" class="btn btn-gh btn-sm" id="driver-photo-clear" onclick="clearDriverPhoto()" style="display:none;color:#fca5a5">🗑️ Remover</button>
+        </div>
+        <div class="txs txm mt1" style="font-style:italic">Quadrada de preferência (sera redimensionada pra 200×200, salva como base64)</div>
+      </div>
+    </div>
+  </div>
   <div class="fr c2">
     <div class="fg"><label class="fl">Nome Completo</label>
       <input type="text" class="fc" id="driver-name" placeholder="Nome do motorista"></div>
@@ -3317,6 +3345,7 @@ function loadDB(){
       if(t.accommodationCost) t.accommodationCost=r(t.accommodationCost);
       if(t.otherCost) t.otherCost=r(t.otherCost);
       // Consumo (se ainda não calculado) — aceita 2+ abastecimentos OU 1 + kmStart
+      // OU fallback de agregados (fuelLiters + kmDriven, preenchidos pelo gestor no modal)
       if(t.fuelEfficiency==null){
         const kmStartT=parseFloat(t.kmStart)||0;
         if(fuelStops.length>=2){
@@ -3327,6 +3356,14 @@ function loadDB(){
         } else if(fuelStops.length===1 && kmStartT>0 && fuelStops[0].km>kmStartT){
           const kmRange=fuelStops[0].km-kmStartT;
           t.fuelEfficiency=(kmRange>0 && fuelStops[0].liters>0)?r(kmRange/fuelStops[0].liters):null;
+        } else {
+          // Fallback agregado: usa fuelLiters total + kmDriven (ou kmEnd-kmStart)
+          const fLiters=parseFloat(t.fuelLiters)||0;
+          const kmEndT=parseFloat(t.kmEnd)||0;
+          const kmDrivenT=parseFloat(t.kmDriven)|| (kmEndT>kmStartT ? kmEndT-kmStartT : 0);
+          if(fLiters>0 && kmDrivenT>0){
+            t.fuelEfficiency=r(kmDrivenT/fLiters);
+          }
         }
       }
     });
@@ -6097,7 +6134,7 @@ function openTripModal(vId){
   ['trip-return-date','trip-origin','trip-destination','trip-client','trip-revenue',
    'trip-pickup-time','trip-passengers','trip-client-phone','trip-itinerary',
    'trip-nf-value','trip-tax-rate','trip-tax-amount','trip-km-start','trip-km-end',
-   'trip-km-total','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
+   'trip-km-total','trip-km-estimated','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
    'trip-food','trip-driver','trip-other','trip-other-desc','trip-notes',
    'trip-driver-daily-rate','trip-driver-days','trip-driver-total']
     .forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';if(el.dataset)el.dataset.manual='0';} });
@@ -6139,16 +6176,24 @@ function calcFuelEfficiency(trip){
     const kmRange=stops[stops.length-1].km - stops[0].km;
     const litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
     const kmL=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
-    return { kmL, stops, kmRange, litros:litrosConsumidos, partial:false };
+    return { kmL, stops, kmRange, litros:litrosConsumidos, partial:false, source:'stops' };
   }
   if(stops.length===1 && kmStart>0 && stops[0].km>kmStart){
     // Cálculo parcial: usa KM inicial como base (assume tanque cheio na largada)
     const kmRange=stops[0].km - kmStart;
     const litros=stops[0].liters;
     const kmL=(kmRange>0 && litros>0)?r2(kmRange/litros):null;
-    return { kmL, stops, kmRange, litros, partial:true };
+    return { kmL, stops, kmRange, litros, partial:true, source:'stops' };
   }
-  return { kmL:null, stops, kmRange:0, litros:0, partial:false };
+  // 🛡️ Fallback: sem abastecimentos individuais com KM/litros, mas o gestor pode ter
+  // preenchido kmEnd e fuelLiters no modal. Usa o cálculo geral da viagem.
+  const kmEnd=n(trip.kmEnd);
+  const fuelLiters=n(trip.fuelLiters);
+  const kmDriven=n(trip.kmDriven)|| (kmEnd>kmStart ? kmEnd-kmStart : 0);
+  if(kmDriven>0 && fuelLiters>0){
+    return { kmL:r2(kmDriven/fuelLiters), stops, kmRange:kmDriven, litros:fuelLiters, partial:false, source:'aggregate' };
+  }
+  return { kmL:null, stops, kmRange:0, litros:0, partial:false, source:null };
 }
 
 function renderTripFuelStats(t){
@@ -6328,6 +6373,7 @@ function editTrip(id){
   document.getElementById('trip-tax-rate').value=t.taxRate||'';
   document.getElementById('trip-km-start').value=t.kmStart||'';
   document.getElementById('trip-km-end').value=t.kmEnd||'';
+  const _ke=document.getElementById('trip-km-estimated'); if(_ke) _ke.value=t.kmEstimated||'';
   const kmTotalEl=document.getElementById('trip-km-total');
   if(kmTotalEl){
     kmTotalEl.value=t.kmDriven||'';
@@ -6435,10 +6481,29 @@ function toggleNF(){
 function calcKM(){
   const totalEl=document.getElementById('trip-km-total');
   // Se o usuário digitou manualmente, não sobrescrever
-  if(totalEl.dataset.manual==='1') return;
-  const s=n(document.getElementById('trip-km-start').value);
-  const e=n(document.getElementById('trip-km-end').value);
-  if(s||e) totalEl.value=e>s?e-s:0;
+  if(totalEl.dataset.manual!=='1'){
+    const s=n(document.getElementById('trip-km-start').value);
+    const e=n(document.getElementById('trip-km-end').value);
+    if(s||e) totalEl.value=e>s?e-s:0;
+  }
+  // Atualiza comparação "Real vs Estimado" se aplicável
+  const real=n(totalEl.value);
+  const est=n(document.getElementById('trip-km-estimated')?.value);
+  const wrap=document.getElementById('trip-km-estimated-vs');
+  const disp=document.getElementById('trip-km-vs-display');
+  if(wrap && disp){
+    if(real>0 && est>0){
+      wrap.style.display='';
+      const diff=real-est;
+      const pct=(diff/est)*100;
+      const color = Math.abs(pct)<=5 ? '#10b981' : (pct>0 ? '#ef4444' : '#f59e0b');
+      const sign = diff>=0?'+':'';
+      disp.style.color=color;
+      disp.innerHTML=`${real.toLocaleString('pt-BR')} km <span style="font-size:12.5px;opacity:.75;margin-left:6px">(${sign}${diff.toLocaleString('pt-BR')} km · ${sign}${pct.toFixed(1)}%)</span>`;
+    } else {
+      wrap.style.display='none';
+    }
+  }
 }
 
 // ── Auto-preenchimento Valor NF ↔ Valor Cobrado ──
@@ -6755,6 +6820,7 @@ function saveTrip(){
     kmStart:n(document.getElementById('trip-km-start').value),
     kmEnd:n(document.getElementById('trip-km-end').value),
     kmDriven:n(document.getElementById('trip-km-total').value),
+    kmEstimated:n(document.getElementById('trip-km-estimated')?.value)||null,
     rentalDays:n(document.getElementById('rental-days')?.value)||null,
     rentalDailyValue:r2(n(document.getElementById('rental-daily-value')?.value))||null,
     fuelCost:r2(n(document.getElementById('trip-fuel').value)),
@@ -9776,6 +9842,52 @@ function renderDrivers(){
       <div class="txm txs">Clique em "Novo Motorista" para cadastrar</div></div></td></tr>`;
 }
 
+// Estado temporário da foto sendo cadastrada (base64). É persistido no save.
+let _driverPhotoBase64 = '';
+
+function _setDriverPhotoUI(b64){
+  _driverPhotoBase64 = b64 || '';
+  const prev=document.getElementById('driver-photo-preview');
+  const clr=document.getElementById('driver-photo-clear');
+  if(prev){
+    if(b64){
+      prev.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      prev.innerHTML=`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    }
+  }
+  if(clr) clr.style.display = b64 ? '' : 'none';
+}
+
+function clearDriverPhoto(){
+  _setDriverPhotoUI('');
+  const inp=document.getElementById('driver-photo-input'); if(inp) inp.value='';
+}
+
+// Redimensiona a foto pra 200×200 (cover, centralizada) e salva como JPEG base64.
+// Economia de espaço no Firebase + carregamento mais rápido.
+function onDriverPhotoSelected(ev){
+  const file=ev.target.files?.[0];
+  if(!file) return;
+  if(file.size > 10*1024*1024){ alert('Foto muito grande. Use uma de até 10MB.'); return; }
+  const img=new Image();
+  const reader=new FileReader();
+  reader.onload=()=>{ img.src=reader.result; };
+  img.onload=()=>{
+    const size=200;
+    const canvas=document.createElement('canvas');
+    canvas.width=size; canvas.height=size;
+    const ctx=canvas.getContext('2d');
+    // Crop centralizado pra quadrado, depois resize
+    const min=Math.min(img.width,img.height);
+    const sx=(img.width-min)/2, sy=(img.height-min)/2;
+    ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+    const b64=canvas.toDataURL('image/jpeg', 0.82);
+    _setDriverPhotoUI(b64);
+  };
+  reader.readAsDataURL(file);
+}
+
 function openDriverModal(){
   document.getElementById('driver-id').value='';
   document.getElementById('driver-modal-title').textContent='Novo Motorista';
@@ -9783,6 +9895,8 @@ function openDriverModal(){
     .forEach(id=>document.getElementById(id).value='');
   document.getElementById('driver-type').value='fixo';
   document.getElementById('driver-active').value='true';
+  _setDriverPhotoUI('');
+  const inp=document.getElementById('driver-photo-input'); if(inp) inp.value='';
   openModal('modal-driver');
 }
 
@@ -9800,6 +9914,8 @@ function editDriver(id){
   document.getElementById('driver-daily-rate').value=d.dailyRate||'';
   document.getElementById('driver-pix').value=d.pix||'';
   document.getElementById('driver-notes').value=d.notes||'';
+  _setDriverPhotoUI(d.photo||'');
+  const inp=document.getElementById('driver-photo-input'); if(inp) inp.value='';
   openModal('modal-driver');
 }
 
@@ -9816,9 +9932,10 @@ function saveDriver(){
     active:document.getElementById('driver-active').value==='true',
     dailyRate:n(document.getElementById('driver-daily-rate').value)||null,
     pix:document.getElementById('driver-pix').value,
-    notes:document.getElementById('driver-notes').value
+    notes:document.getElementById('driver-notes').value,
+    photo: _driverPhotoBase64 || null
   };
-  if(id) DB.drivers=DB.drivers.map(x=>x.id===id?d:x);
+  if(id) DB.drivers=DB.drivers.map(x=>x.id===id?{...x,...d}:x);
   else DB.drivers.push(d);
   saveDB();closeModal('modal-driver');renderCurrentPage();
 }
