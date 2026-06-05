@@ -368,10 +368,14 @@ const cloudSync = {
         try{ localStorage.setItem(KEY,JSON.stringify(DB)); }catch(_){}
       }
       if(!main.trips){ this.setStatus('ok'); return; }
-      // Filtra só as viagens designadas a este motorista (match por nome completo OU telefone)
-      const myTrips=(main.trips||[]).filter(t=>isMyTrip(t));
+      // 🛡️ Pega trips designadas a este motorista (pra adicionar novas) +
+      // trips que JÁ EXISTEM localmente (pra atualizar driverName/etc, mesmo que
+      // o gestor tenha migrado pra outro motorista — assim a trip "desaparece"
+      // do app dele via filtro isMyTrip de exibição em renderHome).
+      const localIds=new Set((DB.trips||[]).map(x=>x.id));
+      const tripsToProcess=(main.trips||[]).filter(t=>isMyTrip(t) || localIds.has(t.id));
       let newCount=0;
-      myTrips.forEach(t=>{
+      tripsToProcess.forEach(t=>{
         const veh=(main.vehicles||[]).find(v=>v.id===t.vehicleId);
         const enriched={
           id:t.id,
@@ -400,16 +404,25 @@ const cloudSync = {
         };
         const ex=DB.trips.findIndex(x=>x.id===t.id);
         if(ex===-1){ DB.trips.push(enriched); newCount++; }
-        else if(DB.trips[ex].status==='programada' && enriched.status==='programada'){
-          // Atualiza só se for programada (não sobrescreve em andamento/finalizada)
-          DB.trips[ex]={...DB.trips[ex], origin:enriched.origin, destination:enriched.destination,
-            vehiclePlate:enriched.vehiclePlate, vehicleModel:enriched.vehicleModel,
-            fuelTargetKmPerL:enriched.fuelTargetKmPerL, tankCapacityL:enriched.tankCapacityL,
-            client:enriched.client, date:enriched.date};
-        } else {
-          // Trip já em andamento/finalizada: garante que meta de combustível esteja atualizada
-          if(enriched.fuelTargetKmPerL!=null) DB.trips[ex].fuelTargetKmPerL=enriched.fuelTargetKmPerL;
-          if(enriched.tankCapacityL!=null) DB.trips[ex].tankCapacityL=enriched.tankCapacityL;
+        else {
+          // 🛡️ Trip já existe localmente — atualiza SEMPRE os campos administrativos
+          // (que o gestor pode editar a qualquer momento) sem tocar nos campos do
+          // motorista (status/expenses/kmEnd/startedAt/finishedAt/_lastChange).
+          // Resolve: gestor corrige KM Inicial e a edição chega no app do motorista;
+          // gestor troca o motorista designado e a trip migra; gestor altera detalhes,
+          // observações, horário etc e o motorista vê atualizado.
+          const local=DB.trips[ex];
+          const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
+            'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverPhone',
+            'date','returnDate','pickupTime','passengers','clientPhone','itinerary'];
+          adminFields.forEach(k=>{
+            if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
+          });
+          // kmStart é caso especial: só atualiza se a viagem AINDA não foi finalizada.
+          // (em viagem já finalizada, kmStart é histórico e não deve mudar.)
+          if(local.status!=='finalizada' && enriched.kmStart!=null){
+            local.kmStart=enriched.kmStart;
+          }
         }
       });
       if(newCount>0){
