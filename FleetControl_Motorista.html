@@ -253,30 +253,15 @@ function loadDB(){
   autoFinalizeOldTrips();
 }
 
-// Marca como "finalizada" automaticamente toda viagem com data anterior a hoje
-// que ainda esteja como "programada". As de hoje e futuras ficam intactas.
-// Útil pra limpar viagens antigas que nunca foram processadas no fluxo do motorista.
+// ⚠️ DESATIVADA em 2026-06-05 após bug grave: viagens cuja data ficou anterior a hoje
+// (ex: viagem do dia anterior que ainda não foi iniciada, viagem migrada de outro motorista,
+//  viagem de vários dias que começou ontem) estavam sendo marcadas como FINALIZADAS
+// automaticamente, bloqueando o motorista de iniciar/lançar.
+// Solução: viagens só viram "finalizada" quando o motorista (ou gestor) explicitamente
+// finalizar. Nada de auto-finalização por data.
 function autoFinalizeOldTrips(){
-  if(!Array.isArray(DB.trips) || DB.trips.length===0) return;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  let changed = false;
-  DB.trips.forEach(t=>{
-    if(t.status !== 'programada') return;
-    if(!t.date) return;
-    const tripDate = new Date(t.date+'T00:00:00');
-    if(isNaN(tripDate.getTime())) return;
-    if(tripDate < today){
-      t.status = 'finalizada';
-      t.autoFinalized = true;   // flag p/ distinguir de finalizações manuais
-      t._lastChange = Date.now();
-      changed = true;
-    }
-  });
-  if(changed){
-    try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(_){}
-    if(typeof cloudSync==='object' && cloudSync.enabled) cloudSync.scheduledPush();
-  }
+  // No-op intencional. Mantida assinatura pra não quebrar callers existentes.
+  return;
 }
 function saveDB(){
   localStorage.setItem(KEY, JSON.stringify(DB));
@@ -422,6 +407,27 @@ const cloudSync = {
           // (em viagem já finalizada, kmStart é histórico e não deve mudar.)
           if(local.status!=='finalizada' && enriched.kmStart!=null){
             local.kmStart=enriched.kmStart;
+          }
+          // 🔄 STATUS: aceita mudanças autoritárias do gestor (reabrir ou finalizar).
+          // Cenário 1: gestor reabre viagem (driverStatus: finalizada → andamento)
+          //            → motorista volta pra "em andamento" e pode lançar de novo
+          // Cenário 2: gestor finaliza viagem (driverStatus: andamento → finalizada)
+          //            → motorista vê como finalizada
+          // GUARDA: nunca regredir de andamento/finalizada → programada (evita race
+          //         em que o push do motorista ainda não chegou ao /main do gestor).
+          if(enriched.status && enriched.status!==local.status){
+            const ok=!(enriched.status==='programada' &&
+                       (local.status==='andamento'||local.status==='finalizada'));
+            if(ok){
+              local.status=enriched.status;
+              if(enriched.status==='andamento'){
+                // Reabertura: limpa marcador de finalização anterior
+                delete local.finishedAt;
+              } else if(enriched.status==='finalizada' && enriched.finishedAt){
+                local.finishedAt=enriched.finishedAt;
+              }
+              local._lastChange=Date.now(); // força push pra alinhar o /drivers
+            }
           }
         }
       });
