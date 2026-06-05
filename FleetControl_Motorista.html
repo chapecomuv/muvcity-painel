@@ -448,6 +448,15 @@ const cloudSync = {
           const remoteTrips = (remoteDriver && Array.isArray(remoteDriver.trips)) ? remoteDriver.trips : [];
           remoteTrips.forEach(rt=>{
             if(!rt || !rt.id) return;
+            // 🧹 SANITIZAÇÃO: limpa lixo do bug autoFinalizeOldTrips antes de qualquer
+            // comparação. Viagens marcadas com autoFinalized=true foram finalizadas
+            // automaticamente por engano — reverte pro status "programada" e tira
+            // o marcador. O /main do gestor é a fonte autoritária do status real.
+            if(rt.autoFinalized === true){
+              rt = {...rt, status:'programada'};
+              delete rt.autoFinalized;
+              delete rt.finishedAt;
+            }
             const idx = DB.trips.findIndex(t=>t.id===rt.id);
             if(idx === -1){
               // Trip remota que não existe local → adiciona (recupera dados perdidos)
@@ -457,9 +466,22 @@ const cloudSync = {
               // Existe local → merge last-write-wins por _lastChange; se sem timestamp, escolhe quem tem mais conteúdo
               const localLC = parseInt(DB.trips[idx]._lastChange)||0;
               const remoteLC = parseInt(rt._lastChange)||0;
-              if(remoteLC > localLC){
+              // 🛡️ GUARDA: nunca regride status real (andamento/finalizada) pra programada.
+              // Se o pull do /main acabou de definir um status "ativo" e o /drivers tem
+              // remanescente antigo "programada", mantém o local.
+              const localStatus = DB.trips[idx].status;
+              const remoteStatus = rt.status;
+              const wouldRegress = (localStatus==='andamento' || localStatus==='finalizada')
+                                   && remoteStatus==='programada';
+              if(remoteLC > localLC && !wouldRegress){
                 DB.trips[idx] = rt;
                 restoredCount++;
+              } else if(remoteLC > localLC && wouldRegress){
+                // Merge campos do motorista mas preserva status local autoritativo
+                ['expenses','kmStart','kmEnd','startedAt'].forEach(k=>{
+                  if(rt[k]!==undefined && rt[k]!==null) DB.trips[idx][k]=rt[k];
+                });
+                DB.trips[idx]._lastChange=Date.now();
               } else if(remoteLC === 0 && localLC === 0){
                 const localScore = (DB.trips[idx].expenses||[]).length + (DB.trips[idx].kmEnd?1:0) + (DB.trips[idx].status==='finalizada'?2:0);
                 const remoteScore = (rt.expenses||[]).length + (rt.kmEnd?1:0) + (rt.status==='finalizada'?2:0);
