@@ -441,6 +441,12 @@ const cloudSync = {
       // Traz de volta trips com expenses/km/status salvos pelo próprio motorista em outros dispositivos
       // (ou neste mesmo após logout/login). Last-write-wins por _lastChange.
       let restoredCount = 0;
+      // Índice das trips do /main (gestor é a fonte autoritária de driverName/driverPhone)
+      const mainTripById = new Map(
+        (main.trips||[]).filter(t=>t&&t.id).map(t=>[t.id, t])
+      );
+      const _myName = normalizeName(DB.driver?.name||'');
+      const _myPhone = (DB.driver?.phone||'').replace(/\D/g,'');
       try{
         const rdRes = await fetch(this.driverPath()+'?cb='+Date.now());
         if(rdRes.ok){
@@ -456,6 +462,34 @@ const cloudSync = {
               rt = {...rt, status:'programada'};
               delete rt.autoFinalized;
               delete rt.finishedAt;
+            }
+            // 🛡️ AUTORIDADE DO GESTOR: se a trip também existe no /main, verifica se ainda
+            // é deste motorista. Se o gestor a migrou pra outro motorista, NÃO restaura
+            // (evita que cache antigo do /drivers faça aparecer viagem que já não é mais minha).
+            // E também sobrescreve driverName/driverPhone com a versão do /main, sempre.
+            const mainT = mainTripById.get(rt.id);
+            if(mainT){
+              const _mainName = normalizeName(mainT.driverName);
+              const _mainPhone = (mainT.driverPhone||'').replace(/\D/g,'');
+              const _stillMine =
+                (_myPhone && _mainPhone) ? (_myPhone===_mainPhone) :
+                (_myName && _mainName)   ? (_myName===_mainName)   : false;
+              if(!_stillMine){
+                // Trip migrou de motorista — remove do local também se estava aqui
+                const _idxRm = DB.trips.findIndex(t=>t.id===rt.id);
+                if(_idxRm !== -1){
+                  DB.trips.splice(_idxRm, 1);
+                  restoredCount++; // conta como "atualização recebida"
+                }
+                return; // não restaura do /drivers
+              }
+              // Sobrescreve a identificação do motorista com a fonte autoritária
+              rt = {...rt, driverName: mainT.driverName, driverPhone: mainT.driverPhone||rt.driverPhone};
+            } else {
+              // Trip não existe mais no /main → provavelmente apagada pelo gestor.
+              // Não adiciona se também não tiver localmente; se já estiver local, mantém pra não perder.
+              const _idxOrph = DB.trips.findIndex(t=>t.id===rt.id);
+              if(_idxOrph === -1) return;
             }
             const idx = DB.trips.findIndex(t=>t.id===rt.id);
             if(idx === -1){
