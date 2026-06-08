@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#0d1829">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -4448,7 +4451,8 @@ function renderFleet(){
     </div>`;
   }
 
-  let html=banner+DB.vehicles.map(v=>{
+  // Ordem alfabética por placa
+  let html=banner+DB.vehicles.slice().sort((a,b)=>(a.plate||'').localeCompare(b.plate||'','pt-BR',{sensitivity:'base'})).map(v=>{
     const t=getMonthlyTotals(currentYear,currentMonth,v.id);
     const sign=t.netProfit>=0?'tsc':'tdr';
     const chips=renderMaintenanceChips(v);
@@ -6594,12 +6598,9 @@ async function sendTripToDriver(tripId){
 
     // Monta link curto
     const appURL=location.href.replace(/\/[^/]*$/,'/');
-    const driverURL=appURL+'FleetControl_Motorista.html?codigo='+code;
-    // Monta a mensagem completa com todos os detalhes da viagem
+    // Monta a mensagem completa com todos os detalhes da viagem (pra WhatsApp)
     const lines = [];
     lines.push('📋 *Sua viagem está programada!*');
-    lines.push('');
-    lines.push('Código: *'+code+'*');
     lines.push('');
     lines.push('🛣️ '+(tripPayload.origin||'?')+' → '+(tripPayload.destination||'?'));
     lines.push('📅 Data: '+fmtDate(tripPayload.date)+(tripPayload.returnDate?' (volta '+fmtDate(tripPayload.returnDate)+')':''));
@@ -6614,40 +6615,38 @@ async function sendTripToDriver(tripId){
       String(tripPayload.itinerary).split(/\r?\n/).filter(l=>l.trim()).forEach(l=>lines.push(l));
     }
     lines.push('');
-    lines.push('Abra o app e digite o código:');
+    lines.push('Abra o app pra começar:');
     lines.push(appURL+'FleetControl_Motorista.html');
-    const waText=encodeURIComponent(lines.join('\n'));
+    const msgText=lines.join('\n');
+    const waText=encodeURIComponent(msgText);
 
     host.innerHTML=`<div class="overlay show" id="send-driver-overlay" onclick="if(event.target===this)closeSendDriver()" style="display:flex">
       <div class="modal" style="max-width:520px">
         <div class="modal-h">
-          <span class="modal-t">📤 Código da Viagem</span>
+          <span class="modal-t">📤 Avisar Motorista</span>
           <button class="xbtn" onclick="closeSendDriver()">✕</button>
         </div>
-        <div style="text-align:center;padding:20px 16px;background:linear-gradient(160deg,rgba(6,182,212,.12),rgba(16,185,129,.06));border:1px solid rgba(6,182,212,.3);border-radius:16px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:800;letter-spacing:.6px;color:#67e8f9;text-transform:uppercase;margin-bottom:10px">Código da Viagem</div>
-          <div id="trip-code-big" style="font-size:48px;font-weight:900;letter-spacing:8px;font-family:'JetBrains Mono',monospace;background:linear-gradient(135deg,#67e8f9,#34d399);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${code}</div>
-          <div class="txs txm" style="margin-top:10px">Motorista digita esses 6 números no app dele</div>
+        <div style="background:linear-gradient(160deg,rgba(16,185,129,.12),rgba(16,185,129,.04));border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start">
+          <div style="font-size:22px;line-height:1">✅</div>
+          <div style="flex:1;font-size:13px;color:#86efac;line-height:1.55">
+            <b>Viagem já disponível no app do motorista.</b><br>
+            <span style="color:#bbf7d0">Use o botão abaixo só pra avisá-lo com os detalhes — não precisa digitar código nem fazer nada extra.</span>
+          </div>
         </div>
-        <div class="fl-row ic" style="gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <button class="btn btn-pr" style="flex:1;min-width:140px" onclick="copyTripCode('${code}')">
+        <textarea readonly id="trip-msg-preview" style="width:100%;min-height:170px;background:#0c1727;border:1px solid var(--bd);border-radius:11px;padding:12px;font-family:inherit;font-size:12.5px;color:#cbd5f5;resize:vertical;line-height:1.55">${msgText}</textarea>
+        <div class="fl-row ic" style="gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-pr" style="flex:1;min-width:140px" onclick="copyText('trip-msg-preview','Mensagem copiada!')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copiar código
+            Copiar mensagem
           </button>
           <a class="btn btn-sc" style="flex:1;min-width:140px;text-decoration:none" href="https://wa.me/?text=${waText}" target="_blank">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634z"/></svg>
             Enviar no WhatsApp
           </a>
         </div>
-        <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.22);border-radius:11px;padding:12px 14px;font-size:12px;color:#a5b4fc;line-height:1.6">
-          💡 <b>Como o motorista vai usar:</b> abre o app dele (link aí embaixo), toca em "📥 Receber Viagem", digita o código <b>${code}</b> e pronto — a viagem aparece programada pra ele iniciar.
-        </div>
-        <div class="txs txm" style="margin-top:10px;text-align:center">
-          <a href="${driverURL}" target="_blank" style="color:#67e8f9">🔗 Ou abra direto pra ele (link com código embutido)</a>
-        </div>
       </div>
     </div>`;
-    showToast('✅ Código '+code+' gerado!','ok');
+    showToast('✅ Mensagem pronta','ok');
   }catch(err){
     console.error(err);
     host.innerHTML='';
@@ -9339,6 +9338,8 @@ function renderClients(){
     if(searchDigits&&(docDigits.includes(searchDigits)||phoneDigits.includes(searchDigits))) return true;
     return false;
   });
+  // Ordem alfabética A→Z (case-insensitive, suporta acentos)
+  filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR',{sensitivity:'base'}));
 
   // Atualiza contador
   const cntEl=document.getElementById('clients-count');
@@ -9782,8 +9783,8 @@ function getDriverStats(){
 function renderDrivers(){
   const tripStats=getDriverStats();
 
-  // Registered drivers
-  const rows=DB.drivers.map(d=>{
+  // Registered drivers — ordem alfabética A→Z
+  const rows=DB.drivers.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR',{sensitivity:'base'})).map(d=>{
     const s=tripStats[d.name]||{trips:0,revenue:0,commission:0,lastDate:null};
     const avg=s.trips>0?s.revenue/s.trips:0;
     const cmtAvg=s.trips>0?s.commission/s.trips:0;
