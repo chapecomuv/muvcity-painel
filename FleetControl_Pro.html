@@ -19,6 +19,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+/* ── PERMISSÕES POR ROLE ──
+   Quando o body tem class role-socio, todos elementos com .gestor-only somem.
+   Banner discreto no rodapé indica modo somente leitura. */
+body.role-socio .gestor-only{ display:none !important; }
+body.role-socio::after{
+  content:'👁️ Modo Sócio (somente leitura)';
+  position:fixed; bottom:14px; left:14px; z-index:8500;
+  background:rgba(52,211,153,.12); color:#34d399;
+  border:1px solid rgba(52,211,153,.28); border-radius:999px;
+  padding:6px 14px; font-size:11.5px; font-weight:700; letter-spacing:.3px;
+  font-family:'Inter',system-ui,sans-serif;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  pointer-events:none;
+}
 :root{
   --pr:#3b82f6;--prl:#60a5fa;--prd:#2563eb;
   --sc:#10b981;--dg:#ef4444;--wn:#f59e0b;--inf:#6366f1;
@@ -1153,19 +1167,19 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></span>Agenciamento</div>
     <div class="nav-item" onclick="nav('shared')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>Desp. Compartilhadas</div>
-    <div class="nav-grp">Cadastros</div>
-    <div class="nav-item" onclick="nav('clients')">
+    <div class="nav-grp gestor-only">Cadastros</div>
+    <div class="nav-item gestor-only" onclick="nav('clients')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clientes</div>
-    <div class="nav-item" onclick="nav('drivers')">
+    <div class="nav-item gestor-only" onclick="nav('drivers')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></span>Motoristas</div>
-    <div class="nav-item" onclick="nav('admins')">
+    <div class="nav-item gestor-only" onclick="nav('admins')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M22 11l-3-3m0 0l-3 3m3-3v9"/></svg></span>Administradores</div>
     <div class="nav-grp">Análises</div>
     <div class="nav-item" onclick="nav('receivables')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>A Receber</div>
     <div class="nav-item" onclick="nav('reports')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Relatórios</div>
-    <div class="nav-item" onclick="nav('settings')">
+    <div class="nav-item gestor-only" onclick="nav('settings')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Configurações</div>
   </nav>
   <div class="nav-ft">FleetControl Pro v1.0<br>© 2026 Todos os direitos reservados</div>
@@ -1186,17 +1200,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
     <div class="topbar-r">
       <span id="topbar-actions" style="display:contents"></span>
-      <label class="btn btn-ol btn-sm" title="Importar viagem finalizada do motorista" style="cursor:pointer;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-        Do Motorista
-        <input type="file" accept=".json" style="display:none" onchange="importDriverTrip(event)">
-      </label>
-      <label class="btn btn-ol btn-sm" title="Importar lançamentos do sócio" style="cursor:pointer;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Do Sócio
-        <input type="file" accept=".json" style="display:none" onchange="importPartnerData(event)">
-      </label>
-      <button class="btn btn-ol btn-sm" title="Configurar sincronização na nuvem" onclick="openSyncSettings()" style="gap:6px">
+      <button class="btn btn-ol btn-sm gestor-only" title="Configurar sincronização na nuvem" onclick="openSyncSettings()" style="gap:6px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
         Sync
       </button>
@@ -1271,7 +1275,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           <button class="btn btn-gh btn-sm" onclick="agendaShift(-1)">◀</button>
           <button class="btn btn-gh btn-sm" onclick="agendaGoToday()">Hoje</button>
           <button class="btn btn-gh btn-sm" onclick="agendaShift(1)">▶</button>
-          <button class="btn btn-pr" onclick="openTripModal()">➕ Nova Viagem</button>
+          <button class="btn btn-pr gestor-only" onclick="openTripModal()">➕ Nova Viagem</button>
         </div>
       </div>
 
@@ -1300,7 +1304,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
             <option value="all">Todos os veículos</option>
           </select>
         </div>
-        <button class="btn btn-pr" onclick="openTripModal()">➕ Nova Viagem</button>
+        <button class="btn btn-pr gestor-only" onclick="openTripModal()">➕ Nova Viagem</button>
       </div>
       <div class="card">
         <div class="wrap"><table><thead><tr>
@@ -1335,7 +1339,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
                 <span class="mnav-l" id="mnav-expenses">—</span>
                 <button class="mnav-b" onclick="shiftMonth(1)">▶</button>
               </div>
-              <button class="btn btn-pr" onclick="openExpModal()">
+              <button class="btn btn-pr gestor-only" onclick="openExpModal()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Nova Despesa
               </button>
@@ -1385,7 +1389,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <div class="page" id="page-commitments">
       <div class="fl-row ic jb mb4">
         <div class="sec-t">Despesas Fixas da Frota</div>
-        <button class="btn btn-pr" onclick="openCmtModal()">➕ Nova Despesa Fixa</button>
+        <button class="btn btn-pr gestor-only" onclick="openCmtModal()">➕ Nova Despesa Fixa</button>
       </div>
       <!-- Alert banner -->
       <div id="cmt-alert-banner" style="display:none;margin-bottom:16px"></div>
@@ -1417,7 +1421,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
             <span class="mnav-l" id="mnav-investors">—</span>
             <button class="mnav-b" onclick="shiftMonth(1)">▶</button>
           </div>
-          <button class="btn btn-pr" onclick="openInvModal()">➕ Novo Investidor</button>
+          <button class="btn btn-pr gestor-only" onclick="openInvModal()">➕ Novo Investidor</button>
         </div>
       </div>
       <div id="inv-grid"></div>
@@ -1430,7 +1434,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           <div class="sec-t">✈️ Receitas de Agenciamento</div>
           <div class="txs txm mt1">Comissões recebidas por agenciar viagens para terceiros</div>
         </div>
-        <button class="btn btn-pr" onclick="openAgencyModal()">➕ Nova Comissão</button>
+        <button class="btn btn-pr gestor-only" onclick="openAgencyModal()">➕ Nova Comissão</button>
       </div>
       <div class="g4 mb4" id="agency-kpis"></div>
       <div class="card">
@@ -1456,7 +1460,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           <div class="sec-t">🔗 Despesas Compartilhadas entre Veículos</div>
           <div class="txs txm mt1">Custos fixos divididos entre todos os veículos da frota</div>
         </div>
-        <button class="btn btn-pr" onclick="openSharedModal()">➕ Nova Despesa</button>
+        <button class="btn btn-pr gestor-only" onclick="openSharedModal()">➕ Nova Despesa</button>
       </div>
       <div class="g2">
         <div>
@@ -1826,7 +1830,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           <div class="sec-t">👥 Administradores do Painel</div>
           <div class="txs txm mt1">Pessoas com acesso ao Painel Gestor. Cada uma com PIN próprio.</div>
         </div>
-        <button class="btn btn-pr" onclick="openAdminModal()">➕ Novo Administrador</button>
+        <button class="btn btn-pr gestor-only" onclick="openAdminModal()">➕ Novo Administrador</button>
       </div>
       <div class="card">
         <div class="banner info" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:11px;padding:12px 16px;color:#c4b5fd;font-size:12.5px;line-height:1.6;margin-bottom:14px">
@@ -1845,7 +1849,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           <div class="sec-t">👥 Cadastro de Clientes</div>
           <div class="txs txm mt1">Clientes cadastrados aparecem automaticamente na busca ao lançar viagens</div>
         </div>
-        <button class="btn btn-pr" onclick="openClientModal()">➕ Novo Cliente</button>
+        <button class="btn btn-pr gestor-only" onclick="openClientModal()">➕ Novo Cliente</button>
       </div>
       <div class="card">
         <div class="fl-row ic jb mb3" style="flex-wrap:wrap;gap:10px">
@@ -1862,7 +1866,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <div class="page" id="page-drivers">
       <div class="fl-row ic jb mb4">
         <div class="sec-t">🚗 Motoristas</div>
-        <button class="btn btn-pr" onclick="openDriverModal()">➕ Novo Motorista</button>
+        <button class="btn btn-pr gestor-only" onclick="openDriverModal()">➕ Novo Motorista</button>
       </div>
       <div class="g2 mb4" id="driver-stats-row"></div>
       <div class="card">
@@ -4200,17 +4204,18 @@ function nav(page){
 
 function renderTopbarActions(){
   const el=document.getElementById('topbar-actions');
+  // Todos os botões "Novo X" do topbar são apenas para gestor — sócio é somente leitura
   const map={
-    fleet:`<button class="btn btn-pr" onclick="openVehicleModal()">➕ Novo Veículo</button>`,
-    trips:`<button class="btn btn-pr" onclick="openTripModal()">➕ Nova Viagem</button>`,
-    expenses:`<button class="btn btn-pr" onclick="openExpModal()">➕ Nova Despesa</button>`,
-    commitments:`<button class="btn btn-pr" onclick="openCmtModal()">➕ Nova Despesa Fixa</button>`,
-    investors:`<button class="btn btn-pr" onclick="openInvModal()">➕ Novo Investidor</button>`,
-    clients:`<button class="btn btn-pr" onclick="openClientModal()">➕ Novo Cliente</button>`,
-    drivers:`<button class="btn btn-pr" onclick="openDriverModal()">➕ Novo Motorista</button>`,
-    agency:`<button class="btn btn-pr" onclick="openAgencyModal()">➕ Nova Comissão</button>`,
-    shared:`<button class="btn btn-pr" onclick="openSharedModal()">➕ Nova Despesa</button>`,
-    admins:`<button class="btn btn-pr" onclick="openAdminModal()">➕ Novo Administrador</button>`,
+    fleet:`<button class="btn btn-pr gestor-only" onclick="openVehicleModal()">➕ Novo Veículo</button>`,
+    trips:`<button class="btn btn-pr gestor-only" onclick="openTripModal()">➕ Nova Viagem</button>`,
+    expenses:`<button class="btn btn-pr gestor-only" onclick="openExpModal()">➕ Nova Despesa</button>`,
+    commitments:`<button class="btn btn-pr gestor-only" onclick="openCmtModal()">➕ Nova Despesa Fixa</button>`,
+    investors:`<button class="btn btn-pr gestor-only" onclick="openInvModal()">➕ Novo Investidor</button>`,
+    clients:`<button class="btn btn-pr gestor-only" onclick="openClientModal()">➕ Novo Cliente</button>`,
+    drivers:`<button class="btn btn-pr gestor-only" onclick="openDriverModal()">➕ Novo Motorista</button>`,
+    agency:`<button class="btn btn-pr gestor-only" onclick="openAgencyModal()">➕ Nova Comissão</button>`,
+    shared:`<button class="btn btn-pr gestor-only" onclick="openSharedModal()">➕ Nova Despesa</button>`,
+    admins:`<button class="btn btn-pr gestor-only" onclick="openAdminModal()">➕ Novo Administrador</button>`,
   };
   el.innerHTML=map[currentPage]||'';
 }
@@ -4679,8 +4684,26 @@ function renderTrips(){
     if(Array.from(vf.options).some(o=>o.value===prevValue)) vf.value=prevValue;
   }
   const vFilter=vf?.value||'all';
+  // Ordenação inteligente:
+  //  1. 🟢 Em andamento sempre no topo
+  //  2. ⏳ Programadas/futuras (sem driverStatus 'finalizada') em ordem CRESCENTE
+  //     (mais próxima primeiro — hoje, amanhã, depois...)
+  //  3. ✅ Finalizadas em ordem DECRESCENTE (mais recente primeiro — histórico)
+  const _todayKey=new Date().toISOString().slice(0,10);
+  const _rank=t=>{
+    const st=t.driverStatus||'';
+    if(st==='andamento') return 0;
+    if(st==='finalizada') return 2;
+    return 1; // programadas e sem status
+  };
   const trips=DB.trips.filter(t=>inMonth(t.date||t.departureDate,currentYear,currentMonth)&&(vFilter==='all'||t.vehicleId===vFilter))
-    .sort((a,b)=>(b.date||b.departureDate||'').localeCompare(a.date||a.departureDate||''));
+    .sort((a,b)=>{
+      const ra=_rank(a), rb=_rank(b);
+      if(ra!==rb) return ra-rb;                       // grupo (andamento → programada → finalizada)
+      const da=(a.date||a.departureDate||''), db=(b.date||b.departureDate||'');
+      if(ra===2) return db.localeCompare(da);         // finalizadas: DESC
+      return da.localeCompare(db);                    // andamento + programadas: ASC (próxima primeiro)
+    });
 
   let totalRev=0,totalExp=0,totalProfit=0;
   const rows=trips.map(t=>{
@@ -4703,9 +4726,9 @@ function renderTrips(){
       <td class="${c.netProfit>=0?'tsc':'tdr'} fb">${R(c.netProfit)}</td>
       <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn btn-pr btn-xs" onclick="sendTripToDriver('${t.id}')" title="Enviar para o motorista (gera link/código)" style="margin-right:2px">📤</button>
-        <button class="btn btn-gh btn-xs" onclick="editTrip('${t.id}')">✏️</button>
-        <button class="btn btn-gh btn-xs" onclick="confirmDelete('trip','${t.id}')">🗑️</button></td>
+        <button class="btn btn-pr btn-xs gestor-only" onclick="sendTripToDriver('${t.id}')" title="Enviar para o motorista (gera link/código)" style="margin-right:2px">📤</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${t.id}')">✏️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('trip','${t.id}')">🗑️</button></td>
     </tr>`;
   }).join('');
 
@@ -5203,7 +5226,7 @@ function renderCommitments(){
           <div class="txs txm">${p.date?fmtDate(p.date):'sem data'}${p.notes?' · '+p.notes:''}</div>
         </div>
         <div style="white-space:nowrap;flex-shrink:0">
-          <button class="btn btn-gh btn-xs" onclick="editOwnerPayment(${p._i})" title="Editar">✏️</button>
+          <button class="btn btn-gh btn-xs gestor-only" onclick="editOwnerPayment(${p._i})" title="Editar">✏️</button>
           <button class="btn btn-gh btn-xs" onclick="deleteOwnerPayment(${p._i})" title="Excluir">🗑️</button>
         </div>
       </div>`).join('') : '<div class="txs txm txc" style="padding:8px 0">Nenhum pagamento registrado ainda</div>';
@@ -6318,6 +6341,7 @@ function refreshTripStatusSection(t){
 // despesas, etc.) já preenchidos pelo gestor. NÃO mexe em driverExpenses (a 4ª camada
 // de proteção continua válida — agregados recalculam a partir deles).
 function finalizeTripByManager(){
+  if(!requireEdit()) return;
   const id=document.getElementById('trip-id').value;
   if(!id){ alert('Salve a viagem antes de finalizar.'); return; }
   const t=DB.trips.find(x=>x.id===id);
@@ -6346,6 +6370,7 @@ function finalizeTripByManager(){
 
 // Reabre uma viagem finalizada (gestor) — útil pra corrigir uma finalização equivocada.
 function reopenTripByManager(){
+  if(!requireEdit()) return;
   const id=document.getElementById('trip-id').value;
   if(!id) return;
   const t=DB.trips.find(x=>x.id===id);
@@ -6798,6 +6823,7 @@ function calcTripProfit(){
 }
 
 function saveTrip(){
+  if(!requireEdit()) return;
   const id=document.getElementById('trip-id').value;
   const hasNF=document.getElementById('trip-nf').value==='sim';
   const nfVal=n(document.getElementById('trip-nf-value').value);
@@ -7150,6 +7176,7 @@ function addExpInstallment(){
 }
 
 function saveExpense(){
+  if(!requireEdit()) return;
   try{
     const id=document.getElementById('exp-id').value;
     const cat=document.getElementById('exp-category').value;
@@ -7276,6 +7303,7 @@ function openCaixinhaModal(vehicleId){
 }
 
 function saveCaixinha(){
+  if(!requireEdit()) return;
   const vId=document.getElementById('cxv-vehicle-id').value;
   const v=DB.vehicles.find(x=>x.id===vId);
   if(!v)return;
@@ -7333,6 +7361,7 @@ function editVehicle(id){
 }
 
 function saveVehicle(){
+  if(!requireEdit()) return;
   const id=document.getElementById('veh-id').value;
   const existing=id?DB.vehicles.find(x=>x.id===id)||{}:{};
   const plate=document.getElementById('veh-plate').value.toUpperCase().replace(/\s/g,'');
@@ -7563,6 +7592,7 @@ function calcCmtTotal(){
 }
 
 function saveCommitment(){
+  if(!requireEdit()) return;
   try{
   const id=document.getElementById('cmt-id').value;
   const name=document.getElementById('cmt-name').value.trim();
@@ -7665,6 +7695,7 @@ function editInvestor(id){
 }
 
 function saveInvestor(){
+  if(!requireEdit()) return;
   const id=document.getElementById('inv-id').value;
   const existing=DB.investors.find(i=>i.id===id);
   const pctVal=document.getElementById('inv-return-pct').value;
@@ -7711,6 +7742,7 @@ function useSuggestedInvAmount(){
 }
 
 function saveInvPayment(){
+  if(!requireEdit()) return;
   const invId=document.getElementById('invpay-inv-id').value;
   const inv=DB.investors.find(i=>i.id===invId);
   if(!inv)return;
@@ -7750,6 +7782,7 @@ function editOwnerPayment(index){
 }
 
 function deleteOwnerPayment(index){
+  if(!requireEdit()) return;
   const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
   if(!fc||!fc.payments||!fc.payments[index])return;
   const p=fc.payments[index];
@@ -7763,6 +7796,7 @@ function deleteOwnerPayment(index){
 }
 
 function saveOwnerPayment(){
+  if(!requireEdit()) return;
   const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
   if(!fc)return;
   if(!fc.payments)fc.payments=[];
@@ -7790,6 +7824,7 @@ function saveOwnerPayment(){
 }
 
 function confirmDelete(type,id){
+  if(!requireEdit()) return;
   document.getElementById('confirm-delete-btn').onclick=()=>{
     if(type==='trip') DB.trips=DB.trips.filter(t=>t.id!==id);
     else if(type==='expense') DB.varExpenses=DB.varExpenses.filter(e=>e.id!==id);
@@ -7941,7 +7976,7 @@ function renderReceivables(){
           ?`<button class="btn btn-ol btn-xs" onclick="setInstDueDate('${inst.tripId}','${inst.id}')">📅 Definir data</button>`:''}
       </div>
       <div>
-        <button class="btn btn-gh btn-xs" onclick="editTrip('${inst.tripId}')">✏️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${inst.tripId}')">✏️</button>
       </div>
     </div>`;
   }).join('');
@@ -8783,8 +8818,8 @@ function renderAgency(){
     <td class="tsc fb">${R(a.commissionValue)}</td>
     <td>${nfCell}</td>
     <td style="white-space:nowrap">
-      <button class="btn btn-gh btn-xs" onclick="editAgency('${a.id}')">✏️</button>
-      <button class="btn btn-gh btn-xs" onclick="confirmDelete('agency','${a.id}')">🗑️</button>
+      <button class="btn btn-gh btn-xs gestor-only" onclick="editAgency('${a.id}')">✏️</button>
+      <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('agency','${a.id}')">🗑️</button>
     </td>
   </tr>`;
   }).join('');
@@ -8932,6 +8967,7 @@ function editAgency(id){
 }
 
 function saveAgency(){
+  if(!requireEdit()) return;
   const id=document.getElementById('ag-id').value;
   calcAgencyCommission();
   const a={
@@ -9194,6 +9230,7 @@ function editShared(id){
 }
 
 function saveShared(){
+  if(!requireEdit()) return;
   const id=document.getElementById('se-id').value;
   const type=document.getElementById('se-type').value;
   const split=document.getElementById('se-split').value;
@@ -9302,6 +9339,7 @@ function markSharedPaid(id){
 }
 
 function saveSharedPayment(){
+  if(!requireEdit()) return;
   try{
     const id=document.getElementById('sepay-id').value;
     let key=document.getElementById('sepay-month-key').value;
@@ -9385,8 +9423,8 @@ function renderClients(){
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           Relatório
         </button>
-        <button class="btn btn-gh btn-xs" onclick="editClient('${c.id}')">✏️</button>
-        <button class="btn btn-gh btn-xs" onclick="confirmDelete('client','${c.id}')">🗑️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="editClient('${c.id}')">✏️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('client','${c.id}')">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -9758,6 +9796,7 @@ function editClient(id){
 }
 
 function saveClient(){
+  if(!requireEdit()) return;
   const id=document.getElementById('client-id').value;
   const getV=id=>document.getElementById(id)?.value?.trim()||'';
   const name=getV('client-name');
@@ -9822,8 +9861,8 @@ function renderDrivers(){
       <td>${s.lastDate?fmtDate(s.lastDate):'—'}</td>
       <td><span class="badge ${isActive?'g':'gz'}">${isActive?'Ativo':'Inativo'}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn btn-gh btn-xs" onclick="editDriver('${d.id}')">✏️</button>
-        <button class="btn btn-gh btn-xs" onclick="confirmDelete('driver','${d.id}')">🗑️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="editDriver('${d.id}')">✏️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('driver','${d.id}')">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -9940,6 +9979,7 @@ function editDriver(id){
 }
 
 function saveDriver(){
+  if(!requireEdit()) return;
   const id=document.getElementById('driver-id').value;
   const name=document.getElementById('driver-name').value.trim();
   if(!name){alert('Informe o nome do motorista!');return;}
@@ -10095,6 +10135,7 @@ function bootApp(){
   loadDB();
   // Migração: garante array de admins
   if(!Array.isArray(DB.admins)) DB.admins=[];
+  applyRoleGate();      // aplica permissões por role (gestor/sócio/...)
   updateSidebarLogo();
   updateMonthLabels();
   renderDashboard();
@@ -10102,6 +10143,34 @@ function bootApp(){
   loadCities();   // popula datalist global de cidades (IBGE + histórico)
   // Inicializa sync na nuvem (já hardcoded)
   cloudSync.init();
+}
+
+// ════════════════════════════════════════════════════════════
+//  PERMISSÕES POR ROLE
+// ════════════════════════════════════════════════════════════
+// O usuário logado vem de sessionStorage 'current_admin' = {id, name, role}.
+// 'role-socio' no <body> dispara o CSS que esconde tudo com .gestor-only.
+// As funções helpers servem como segunda linha de defesa nas ações de salvar/deletar.
+function getCurrentAdmin(){
+  try{ return JSON.parse(sessionStorage.getItem('current_admin')||'null'); }catch(_){ return null; }
+}
+function currentRole(){ return getCurrentAdmin()?.role || 'gestor'; }
+function isGestor(){ return currentRole()==='gestor'; }
+function isSocio(){ return currentRole()==='socio'; }
+// canEdit é verdadeiro pra qualquer role que NÃO seja sócio (somente leitura).
+function canEdit(){ return !isSocio(); }
+// Use em handlers de ações: se a função retornar false, aborte e mostre aviso.
+function requireEdit(){
+  if(canEdit()) return true;
+  if(typeof showToast==='function') showToast('Modo somente leitura — peça pro gestor.','warn');
+  else alert('Modo somente leitura — peça pro gestor.');
+  return false;
+}
+function applyRoleGate(){
+  const role=currentRole();
+  // Limpa classes anteriores e aplica a nova
+  document.body.classList.remove('role-gestor','role-socio','role-contabilidade','role-secretaria');
+  document.body.classList.add('role-'+role);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -10129,7 +10198,7 @@ function renderAdmins(){
       <td>${a.active!==false?'<span class="badge g">✅ Ativo</span>':'<span class="badge gz">⏸️ Desativado</span>'}</td>
       <td class="txs txm">${a.lastLogin?fmtDate(a.lastLogin.split('T')[0])+' '+a.lastLogin.split('T')[1]?.slice(0,5):'—'}</td>
       <td style="white-space:nowrap">
-        <button class="btn btn-gh btn-xs" onclick="editAdmin('${a.id}')" title="Editar">✏️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="editAdmin('${a.id}')" title="Editar">✏️</button>
         <button class="btn btn-gh btn-xs" onclick="toggleAdminActive('${a.id}')" title="${a.active!==false?'Desativar':'Ativar'}">${a.active!==false?'⏸️':'▶️'}</button>
         <button class="btn btn-gh btn-xs" onclick="confirmDeleteAdmin('${a.id}')" title="Excluir">🗑️</button>
       </td>
@@ -10173,6 +10242,7 @@ function editAdmin(id){
   openModal('modal-admin');
 }
 function saveAdmin(){
+  if(!requireEdit()) return;
   try{
     const id=document.getElementById('admin-id').value;
     const name=document.getElementById('admin-name').value.trim();
@@ -10210,6 +10280,7 @@ function toggleAdminActive(id){
   saveDB();renderAdmins();
 }
 function confirmDeleteAdmin(id){
+  if(!requireEdit()) return;
   const a=DB.admins.find(x=>x.id===id);
   if(!a) return;
   if(!confirm(`Excluir administrador "${a.name}"?\n\nEle não vai conseguir mais entrar no painel.`)) return;
