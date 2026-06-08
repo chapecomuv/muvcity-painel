@@ -387,6 +387,9 @@ const cloudSync = {
           status:t.driverStatus||'programada',
           expenses:t.driverExpenses||[],
           kmStart:t.kmStart||null, kmEnd:t.kmEnd||null,
+          kmDriven:t.kmDriven||null,
+          fuelEfficiency:t.fuelEfficiency||null,
+          fuelLiters:t.fuelLiters||null,
           startedAt:t.startedAt||null, finishedAt:t.finishedAt||null,
           createdAt:new Date().toISOString()
         };
@@ -410,6 +413,16 @@ const cloudSync = {
           // (em viagem já finalizada, kmStart é histórico e não deve mudar.)
           if(local.status!=='finalizada' && enriched.kmStart!=null){
             local.kmStart=enriched.kmStart;
+          }
+          // 🛠️ CAMPOS DE QUILOMETRAGEM/COMBUSTÍVEL ajustados pelo gestor:
+          // só substitui se o motorista NÃO está com a viagem em andamento
+          // (enquanto roda, ele que dita os números). Em programada/finalizada,
+          // o gestor é autoritário — permite corrigir KM Final, kmRodado, média e litros
+          // sem que o cache local do motorista bloqueie a correção.
+          if(local.status!=='andamento'){
+            ['kmEnd','kmDriven','fuelEfficiency','fuelLiters'].forEach(k=>{
+              if(enriched[k]!==undefined) local[k]=enriched[k];
+            });
           }
           // 🔄 STATUS: aceita mudanças autoritárias do gestor (reabrir ou finalizar).
           // Cenário 1: gestor reabre viagem (driverStatus: finalizada → andamento)
