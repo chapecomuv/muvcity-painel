@@ -1061,24 +1061,45 @@ function renderFuelMetaCard(trip){
   // Não exibe se não tem meta, nem abastecimentos, nem fuelLiters agregado
   if(!target && stops.length===0 && fuelLitersTotal<=0) return '';
   const r2=v=>Math.round(v*100)/100;
-  let kmL=null, kmRange=0, litrosConsumidos=0, calcSource='';
+  let kmL=null, kmRange=0, litrosConsumidos=0, calcSource='', implausivel=false;
+  // 🛡️ FAIXA DE PLAUSIBILIDADE: descarta cálculos absurdos (KM com erro de digitação,
+  // abastecimento pré-viagem, lançamento que pertencia a outra viagem). Veículos pesados
+  // ficam tipicamente entre 3 e 18 km/L; fora disso, o cálculo provavelmente está errado.
+  const PLAUSIVEL=v=>v!=null && v>=2 && v<=25;
   if(stops.length>=2){
     // Cálculo padrão: entre 1º e último abastecimento, somando litros do 2º em diante
     kmRange=stops[stops.length-1].km-stops[0].km;
     litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-    if(kmRange>0 && litrosConsumidos>0){ kmL=r2(kmRange/litrosConsumidos); calcSource='entre abastecimentos'; }
+    if(kmRange>0 && litrosConsumidos>0){
+      const candidate=r2(kmRange/litrosConsumidos);
+      if(PLAUSIVEL(candidate)){ kmL=candidate; calcSource='entre abastecimentos'; }
+      else { implausivel=true; kmRange=0; litrosConsumidos=0; }
+    }
   } else if(stops.length===1 && kmStart>0 && stops[0].km>kmStart){
-    // Cálculo parcial: usa o KM inicial da viagem (assume tanque cheio no início)
-    kmRange=stops[0].km-kmStart;
-    litrosConsumidos=stops[0].liters;
-    if(kmRange>0 && litrosConsumidos>0){ kmL=r2(kmRange/litrosConsumidos); calcSource='desde o KM inicial'; }
+    // Cálculo parcial: usa o KM inicial da viagem (assume tanque cheio no início).
+    // Só vale a pena se o KM rodado até o abastecimento for representativo (>= 30% do
+    // KM total e pelo menos 50 km). Senão, foi um abastecimento pré-viagem cobrindo
+    // mais que essa viagem → não dá pra atribuir esse consumo só a ela.
+    const kmRangeCandidate=stops[0].km-kmStart;
+    const minKmEsperado=Math.max(50, kmDriven*0.30);
+    if(kmRangeCandidate>=minKmEsperado){
+      kmRange=kmRangeCandidate;
+      litrosConsumidos=stops[0].liters;
+      const candidate=r2(kmRange/litrosConsumidos);
+      if(PLAUSIVEL(candidate)){ kmL=candidate; calcSource='desde o KM inicial'; }
+      else { implausivel=true; kmRange=0; litrosConsumidos=0; }
+    }
+    // Senão: silenciosamente ignora (provável abastecimento pré-viagem)
   } else if(fuelLitersTotal>0 && kmDriven>0){
     // 🛡️ Fallback agregado: gestor lançou litros totais e KM no modal sem que o motorista
     // tenha registrado abastecimentos individuais com kmAtPump. Usa o cálculo geral.
-    kmRange=kmDriven;
-    litrosConsumidos=fuelLitersTotal;
-    kmL=r2(kmDriven/fuelLitersTotal);
-    calcSource='geral da viagem';
+    const candidate=r2(kmDriven/fuelLitersTotal);
+    if(PLAUSIVEL(candidate)){
+      kmRange=kmDriven;
+      litrosConsumidos=fuelLitersTotal;
+      kmL=candidate;
+      calcSource='geral da viagem';
+    } else { implausivel=true; }
   }
   const isFinalized=trip.status==='finalizada';
   const mediaLabel=isFinalized?'🏁 Média Final':'📊 Média Atual';

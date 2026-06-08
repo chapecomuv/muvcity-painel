@@ -6176,26 +6176,45 @@ function calcFuelEfficiency(trip){
     .map(e=>({km:n(e.kmAtPump), liters:n(e.liters), date:e.date||'', amount:n(e.amount)}))
     .sort((a,b)=>a.km-b.km);
   const kmStart=n(trip.kmStart);
+  const kmEnd=n(trip.kmEnd);
+  const kmDriven=n(trip.kmDriven)|| (kmEnd>kmStart ? kmEnd-kmStart : 0);
+  // 🛡️ FAIXA DE PLAUSIBILIDADE: descarta valores absurdos (erro de digitação de KM,
+  // abastecimento pré-viagem, lançamento que pertencia a outra viagem).
+  // Veículos pesados ficam tipicamente entre 3 e 18 km/L.
+  const PLAUSIVEL=v=>v!=null && v>=2 && v<=25;
   if(stops.length>=2){
     const kmRange=stops[stops.length-1].km - stops[0].km;
     const litrosConsumidos=stops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-    const kmL=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
-    return { kmL, stops, kmRange, litros:litrosConsumidos, partial:false, source:'stops' };
+    if(kmRange>0 && litrosConsumidos>0){
+      const candidate=r2(kmRange/litrosConsumidos);
+      if(PLAUSIVEL(candidate)){
+        return { kmL:candidate, stops, kmRange, litros:litrosConsumidos, partial:false, source:'stops' };
+      }
+    }
+    return { kmL:null, stops, kmRange:0, litros:0, partial:false, source:null, implausivel:true };
   }
   if(stops.length===1 && kmStart>0 && stops[0].km>kmStart){
-    // Cálculo parcial: usa KM inicial como base (assume tanque cheio na largada)
+    // Cálculo parcial: usa KM inicial como base (assume tanque cheio na largada).
+    // Só vale se o range coberto for representativo (>=30% da viagem e pelo menos 50 km).
     const kmRange=stops[0].km - kmStart;
-    const litros=stops[0].liters;
-    const kmL=(kmRange>0 && litros>0)?r2(kmRange/litros):null;
-    return { kmL, stops, kmRange, litros, partial:true, source:'stops' };
+    const minKmEsperado=Math.max(50, kmDriven*0.30);
+    if(kmRange>=minKmEsperado){
+      const litros=stops[0].liters;
+      const candidate=(kmRange>0 && litros>0)?r2(kmRange/litros):null;
+      if(PLAUSIVEL(candidate)){
+        return { kmL:candidate, stops, kmRange, litros, partial:true, source:'stops' };
+      }
+    }
+    // Senão: não calcula — abastecimento provavelmente pré-viagem
   }
   // 🛡️ Fallback: sem abastecimentos individuais com KM/litros, mas o gestor pode ter
   // preenchido kmEnd e fuelLiters no modal. Usa o cálculo geral da viagem.
-  const kmEnd=n(trip.kmEnd);
   const fuelLiters=n(trip.fuelLiters);
-  const kmDriven=n(trip.kmDriven)|| (kmEnd>kmStart ? kmEnd-kmStart : 0);
   if(kmDriven>0 && fuelLiters>0){
-    return { kmL:r2(kmDriven/fuelLiters), stops, kmRange:kmDriven, litros:fuelLiters, partial:false, source:'aggregate' };
+    const candidate=r2(kmDriven/fuelLiters);
+    if(PLAUSIVEL(candidate)){
+      return { kmL:candidate, stops, kmRange:kmDriven, litros:fuelLiters, partial:false, source:'aggregate' };
+    }
   }
   return { kmL:null, stops, kmRange:0, litros:0, partial:false, source:null };
 }
