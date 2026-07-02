@@ -6942,15 +6942,32 @@ function renderTripRateioInfo(t){
   const fret=(DB.trips||[]).find(f=>f && f.id!==t.id && f.vehicleId===t.vehicleId
     && _isFretCont(f) && t.date>=f.date && t.date<=f.returnDate);
   if(!fret){
-    // Sem fretamento no período — mostra a atribuição por custo/km móvel (90d), se houver
+    // Sem fretamento no período — conta a história do diesel em linguagem simples
     const cr=calcTripReal(t);
-    if(cr.real && _tripKm(t)>0){
-      const semAbast=!n(t.fuelCost);
-      box(`📈 <b>Margem gerencial (custo/km real)</b><br>
-        Esta viagem rodou <b>${_tripKm(t).toLocaleString('pt-BR')} km</b> × custo/km do veículo <b>${R(cr.costPerKm)}</b> (média móvel 90 dias)<br>
-        → Diesel atribuído: <b style="color:#67e8f9">${R(cr.fuelAttr)}</b>${semAbast
-          ?' — <b style="color:#f59e0b">sem abastecimento nesta viagem</b>; a margem gerencial usa este valor pra não superestimar o lucro'
-          :` (lançado nela: ${R(cr.fuelLancado)}; a margem gerencial usa o atribuído — o tanque é compartilhado entre viagens)`}`);
+    const km=_tripKm(t);
+    if(cr.real && km>0){
+      const cont=calcTrip(t);
+      const lancado=n(t.fuelCost);
+      const consumiu=cr.fuelAttr;
+      const diff=lancado-consumiu;
+      // Diferença irrelevante (<8%): visões convergem, não precisa de card
+      if(lancado>0 && Math.abs(diff)<=consumiu*0.08) return;
+      let historia;
+      if(lancado<=0){
+        historia=`Você não abasteceu nesta viagem — ela rodou com diesel do tanque (pago em outra viagem).<br>
+          Consumo real dos <b>${km.toLocaleString('pt-BR')} km</b>: <b style="color:#f59e0b">${R(consumiu)}</b> <span class="txm">(custo/km do veículo: ${R(cr.costPerKm)})</span>`;
+      } else if(diff>0){
+        historia=`Você abasteceu: <b>${R(lancado)}</b>${t.fuelLiters?` (${r2(t.fuelLiters)} L)`:''}<br>
+          A viagem consumiu (${km.toLocaleString('pt-BR')} km): <b>${R(consumiu)}</b><br>
+          Ficou no tanque: <b style="color:#34d399">${R(diff)}</b> → vai pras próximas viagens`;
+      } else {
+        historia=`Você abasteceu: <b>${R(lancado)}</b>${t.fuelLiters?` (${r2(t.fuelLiters)} L)`:''}<br>
+          A viagem consumiu (${km.toLocaleString('pt-BR')} km): <b>${R(consumiu)}</b><br>
+          Pegou do tanque além do abastecido: <b style="color:#f59e0b">${R(-diff)}</b> (pago em viagens anteriores)`;
+      }
+      box(`⛽ <b>Entendendo o diesel desta viagem</b><br>
+        ${historia}<br>
+        <span class="txm">Margem contábil: <b>${Pct(cont.profitMargin)}</b> · Margem real: <b style="color:#67e8f9">${Pct(cr.profitMargin)}</b></span>`);
     }
     return;
   }
