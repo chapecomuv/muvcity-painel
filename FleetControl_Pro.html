@@ -3696,7 +3696,11 @@ const cloudSync = {
           if(dTrip.startedAt) orig.startedAt=dTrip.startedAt;
           if(dTrip.finishedAt) orig.finishedAt=dTrip.finishedAt;
           if(dTrip.status) orig.driverStatus=dTrip.status;
-          if(dTrip.expenses){
+          // 🛡️ BUG FIX (2026-07-02): lista de despesas VAZIA do motorista não pode
+          // apagar lançamentos manuais do gestor. Só recalcula agregados quando o
+          // motorista tem lançamentos de verdade — e SÓ nas categorias que ele lançou.
+          // (Antes: gestor lançava combustível no modal e 30s depois o pull zerava.)
+          if(Array.isArray(dTrip.expenses) && dTrip.expenses.length>0){
             // Soma despesas categorizadas
             let f=0,fd=0,h=0,o=0,oDescs=[];
             let litros=0;
@@ -3714,24 +3718,34 @@ const cloudSync = {
             });
             // Arredondamento financeiro: 2 casas (resolve erros de ponto flutuante)
             const r2=v=>Math.round(v*100)/100;
-            orig.fuelCost=r2(f); orig.foodCost=r2(fd); orig.accommodationCost=r2(h); orig.otherCost=r2(o);
-            orig.fuelLiters=r2(litros);
-            // Consumo médio (km/L): assume que cada abastecimento completa o tanque.
-            // Caso 1: 2+ abastecimentos → KM entre 1º e último ÷ soma dos litros do 2º em diante.
-            // Caso 2: 1 abastecimento + kmStart → cálculo parcial assumindo tanque cheio na largada.
+            // Atualiza APENAS categorias com lançamento do motorista — categoria zerada
+            // no app dele preserva o valor manual do gestor.
+            if(f>0){ orig.fuelCost=r2(f); orig.fuelLiters=r2(litros); }
+            if(fd>0) orig.foodCost=r2(fd);
+            if(h>0) orig.accommodationCost=r2(h);
+            if(o>0){ orig.otherCost=r2(o); if(oDescs.length) orig.otherCostDesc='[motorista] '+oDescs.join('; '); }
+            // Consumo médio (km/L) com faixa de plausibilidade (2–25) — evita gravar lixo
+            // tipo 0,16 km/L de abastecimento pré-viagem ou 379 km/L de KM digitado errado.
+            const PLAUS=v=>v!=null && v>=2 && v<=25;
             const kmStartTrip=n(orig.kmStart);
+            const kmEndTrip=n(orig.kmEnd);
+            const kmDrivenTrip=n(orig.kmDriven)|| (kmEndTrip>kmStartTrip ? kmEndTrip-kmStartTrip : 0);
             if(fuelStops.length>=2){
               fuelStops.sort((a,b)=>a.km-b.km);
               const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
               const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-              orig.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
+              const cand=(kmRange>0 && litrosConsumidos>0)?r2(kmRange/litrosConsumidos):null;
+              orig.fuelEfficiency=PLAUS(cand)?cand:null;
             } else if(fuelStops.length===1 && kmStartTrip>0 && fuelStops[0].km>kmStartTrip){
+              // Parcial: só se cobrir trecho representativo (>=30% da viagem e >=50 km)
               const kmRange=fuelStops[0].km-kmStartTrip;
-              orig.fuelEfficiency=(kmRange>0 && fuelStops[0].liters>0)?r2(kmRange/fuelStops[0].liters):null;
-            } else {
-              orig.fuelEfficiency=null;
+              const minKm=Math.max(50, kmDrivenTrip*0.30);
+              if(kmRange>=minKm && fuelStops[0].liters>0){
+                const cand=r2(kmRange/fuelStops[0].liters);
+                orig.fuelEfficiency=PLAUS(cand)?cand:null;
+              }
+              // trecho pequeno demais → mantém o que estava (não inventa nem apaga)
             }
-            if(oDescs.length) orig.otherCostDesc='[motorista] '+oDescs.join('; ');
             orig.driverExpenses=dTrip.expenses;
           }
           orig.driverLastSync=dTrip._lastChange||Date.now();
@@ -5090,18 +5104,22 @@ function renderTrips(){
 
   let totalRev=0,totalExp=0,totalProfit=0,anyReal=false;
   const rows=trips.map(t=>{
-    // Visão GERENCIAL: diesel por custo/km móvel (90d) — margem real da viagem.
-    // Sem amostra confiável, calcTripReal cai na visão contábil automaticamente.
-    const c=calcTripReal(t);
-    if(c.real) anyReal=true;
+    // Colunas de valores: visão CONTÁBIL (exatamente o que você lançou — nada "some").
+    // Margem real (diesel por custo/km móvel) aparece como indicação secundária.
+    const c=calcTrip(t);
+    const cr=calcTripReal(t);
+    if(cr.real) anyReal=true;
     totalRev+=n(t.grossRevenue);totalExp+=c.totalExpenses;totalProfit+=c.netProfit;
     const mc=c.profitMargin>=50?'g':c.profitMargin>=20?'y':'r';
     const km=n(t.kmEnd)-n(t.kmStart);
     const depDate=fmtDate(t.date||t.departureDate);
     const retDate=t.returnDate?`<div class="txs txm">↩ ${fmtDate(t.returnDate)}</div>`:'';
     // Indicador: diesel atribuído por média (viagem sem abastecimento próprio)
-    const fuelTag=c.real&&!n(t.fuelCost)&&_tripKm(t)>0
-      ?`<span title="Sem abastecimento nesta viagem — diesel atribuído pela média do veículo: ${R(c.fuelAttr)} (${R(c.costPerKm)}/km)" style="cursor:help;font-size:10px;opacity:.8"> ⛽~</span>`:'';
+    const fuelTag=cr.real&&!n(t.fuelCost)&&_tripKm(t)>0
+      ?`<span title="Sem abastecimento nesta viagem — diesel estimado pela média do veículo: ${R(cr.fuelAttr)} (${R(cr.costPerKm)}/km). A margem real ao lado já considera esse custo." style="cursor:help;font-size:10px;opacity:.8"> ⛽~</span>`:'';
+    // Margem real como linha secundária quando difere da contábil em 3+ pontos
+    const realTag=cr.real&&Math.abs(cr.profitMargin-c.profitMargin)>=3
+      ?`<div class="txs" style="color:#67e8f9;margin-top:2px" title="Margem real: diesel pelo custo/km do veículo (média móvel 90 dias), independente de onde o tanque foi cheio">real ${Pct(cr.profitMargin)}</div>`:'';
     return `<tr>
       <td><div>${depDate}</div>${retDate}</td>
       <td><span class="badge b">${vehicleName(t.vehicleId)}</span></td>
@@ -5113,7 +5131,7 @@ function renderTrips(){
       <td>${km>0?km.toLocaleString('pt-BR')+' km':'—'}</td>
       <td class="tdr">${R(c.totalExpenses)}</td>
       <td class="${c.netProfit>=0?'tsc':'tdr'} fb">${R(c.netProfit)}</td>
-      <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span></td>
+      <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span>${realTag}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-pr btn-xs gestor-only" onclick="sendTripToDriver('${t.id}')" title="Enviar para o motorista (gera link/código)" style="margin-right:2px">📤</button>
         <button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${t.id}')">✏️</button>
@@ -5132,7 +5150,7 @@ function renderTrips(){
         <div><span class="txm">Lucro Total:</span> <span class="fb ${totalProfit>=0?'tsc':'tdr'}">${R(totalProfit)}</span></div>
         <div><span class="txm">Margem Média:</span> <span class="fb twn">${Pct(avgM)}</span></div>
       </div>
-      ${anyReal?`<div class="txs txm" style="padding:6px 13px 0">📈 Margens gerenciais: diesel atribuído por km rodado × custo/km real do veículo (média móvel 90 dias). Viagens marcadas com ⛽~ não tiveram abastecimento próprio. O Dashboard segue mostrando a visão caixa (compras reais).</div>`:''}`;
+      ${anyReal?`<div class="txs txm" style="padding:6px 13px 0">💡 Valores das colunas = o que foi lançado (contábil). A linha "real %" na margem usa o diesel pelo custo/km do veículo (média móvel 90 dias) — útil quando o tanque de uma viagem foi pago em outra. ⛽~ = viagem sem abastecimento próprio.</div>`:''}`;
   } else {
     document.getElementById('trips-summary').innerHTML='';
   }
@@ -7463,9 +7481,10 @@ function saveTrip(){
     if(v&&trip.kmEnd>v.currentKm) v.currentKm=trip.kmEnd;
   }
 
-  // 🛡️ Se a viagem tem driverExpenses (lançamentos do motorista), RECALCULA agregados
-  // a partir deles — ignora o que está no formulário. Os lançamentos são a fonte de verdade.
-  // Evita que cache desatualizado do gestor sobrescreva fuelCost/foodCost/etc com valores antigos.
+  // 🛡️ Se a viagem tem driverExpenses (lançamentos do motorista), os lançamentos dele
+  // são fonte de verdade — MAS só nas categorias que ele realmente lançou. Categoria
+  // sem lançamento do motorista respeita o valor manual do formulário do gestor.
+  // (Antes recalculava TODAS: gestor lançava combustível manual e era zerado no salvar.)
   if(id){
     const existing = DB.trips.find(t=>t.id===id);
     if(existing && Array.isArray(existing.driverExpenses) && existing.driverExpenses.length>0){
@@ -7477,11 +7496,10 @@ function saveTrip(){
         else if(e.type==='hospedagem') _hosp+=a;
         else _other+=a;
       });
-      trip.fuelCost = r2(_fuel);
-      trip.foodCost = r2(_food);
-      trip.accommodationCost = r2(_hosp);
-      trip.otherCost = r2(_other);
-      trip.fuelLiters = r2(_liters);
+      if(_fuel>0){ trip.fuelCost = r2(_fuel); trip.fuelLiters = r2(_liters); }
+      if(_food>0) trip.foodCost = r2(_food);
+      if(_hosp>0) trip.accommodationCost = r2(_hosp);
+      if(_other>0) trip.otherCost = r2(_other);
     }
   }
   // 🛡️ MERGE em vez de substituir — preserva campos que o formulário não tem
