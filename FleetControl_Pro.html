@@ -3413,23 +3413,37 @@ function loadDB(){
       if(t.otherCost) t.otherCost=r(t.otherCost);
       // Consumo (se ainda não calculado) — aceita 2+ abastecimentos OU 1 + kmStart
       // OU fallback de agregados (fuelLiters + kmDriven, preenchidos pelo gestor no modal)
+      // 🛡️ FAIXA DE PLAUSIBILIDADE (2–25 km/L): descarta cálculo absurdo (erro de KM,
+      // abastecimento pré-viagem, lançamento de outra viagem) em vez de gravar lixo.
+      const PLAUS=v=>v!=null && v>=2 && v<=25;
+      // Limpeza retroativa: valores implausíveis já gravados por versões antigas → null
+      if(t.fuelEfficiency!=null && !PLAUS(parseFloat(t.fuelEfficiency))){
+        t.fuelEfficiency=null;
+      }
       if(t.fuelEfficiency==null){
         const kmStartT=parseFloat(t.kmStart)||0;
+        const kmEndT=parseFloat(t.kmEnd)||0;
+        const kmDrivenT=parseFloat(t.kmDriven)|| (kmEndT>kmStartT ? kmEndT-kmStartT : 0);
         if(fuelStops.length>=2){
           fuelStops.sort((a,b)=>a.km-b.km);
           const kmRange=fuelStops[fuelStops.length-1].km-fuelStops[0].km;
           const litrosConsumidos=fuelStops.slice(1).reduce((s,fs)=>s+fs.liters,0);
-          t.fuelEfficiency=(kmRange>0 && litrosConsumidos>0)?r(kmRange/litrosConsumidos):null;
+          const cand=(kmRange>0 && litrosConsumidos>0)?r(kmRange/litrosConsumidos):null;
+          if(PLAUS(cand)) t.fuelEfficiency=cand;
         } else if(fuelStops.length===1 && kmStartT>0 && fuelStops[0].km>kmStartT){
+          // Parcial: só se o trecho coberto for representativo (>=30% da viagem e >=50 km)
           const kmRange=fuelStops[0].km-kmStartT;
-          t.fuelEfficiency=(kmRange>0 && fuelStops[0].liters>0)?r(kmRange/fuelStops[0].liters):null;
+          const minKm=Math.max(50, kmDrivenT*0.30);
+          if(kmRange>=minKm && fuelStops[0].liters>0){
+            const cand=r(kmRange/fuelStops[0].liters);
+            if(PLAUS(cand)) t.fuelEfficiency=cand;
+          }
         } else {
           // Fallback agregado: usa fuelLiters total + kmDriven (ou kmEnd-kmStart)
           const fLiters=parseFloat(t.fuelLiters)||0;
-          const kmEndT=parseFloat(t.kmEnd)||0;
-          const kmDrivenT=parseFloat(t.kmDriven)|| (kmEndT>kmStartT ? kmEndT-kmStartT : 0);
           if(fLiters>0 && kmDrivenT>0){
-            t.fuelEfficiency=r(kmDrivenT/fLiters);
+            const cand=r(kmDrivenT/fLiters);
+            if(PLAUS(cand)) t.fuelEfficiency=cand;
           }
         }
       }
