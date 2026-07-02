@@ -1944,8 +1944,8 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         <input type="date" class="fc" id="trip-return-date" onchange="calcDriverPayment()"></div>
       <div class="fg"><label class="fl">Tipo de Receita</label>
         <select class="fc" id="trip-type" onchange="handleTripTypeChange(this)">
-          <option value="fixo">Viagem Fixa Mensal</option>
-          <option value="avulso">Viagem Avulsa</option>
+          <option value="fixo">Fretamento Contínuo</option>
+          <option value="avulso">Viagem Eventual</option>
           <option value="diaria">Diária</option>
           <option value="__new__">➕ Nova categoria...</option>
         </select>
@@ -1953,9 +1953,19 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
     <div class="fr c2">
       <div class="fg"><label class="fl">📍 Origem</label>
-        <input type="text" class="fc" id="trip-origin" list="cities-list" autocomplete="off" placeholder="Ex: Chapecó - SC"></div>
+        <div class="ac-wrap">
+          <input type="text" class="fc" id="trip-origin" autocomplete="off" placeholder="Ex: Chapecó - SC"
+                 oninput="cityAc('trip-origin')" onfocus="cityAc('trip-origin')"
+                 onkeydown="cityAcKey(event,'trip-origin')" onblur="setTimeout(()=>acClose('trip-origin-ac'),180)">
+          <div class="ac-list" id="trip-origin-ac" style="display:none"></div>
+        </div></div>
       <div class="fg"><label class="fl">🎯 Destino</label>
-        <input type="text" class="fc" id="trip-destination" list="cities-list" autocomplete="off" placeholder="Ex: Pinhalzinho - SC"></div>
+        <div class="ac-wrap">
+          <input type="text" class="fc" id="trip-destination" autocomplete="off" placeholder="Ex: Pinhalzinho - SC"
+                 oninput="cityAc('trip-destination')" onfocus="cityAc('trip-destination')"
+                 onkeydown="cityAcKey(event,'trip-destination')" onblur="setTimeout(()=>acClose('trip-destination-ac'),180)">
+          <div class="ac-list" id="trip-destination-ac" style="display:none"></div>
+        </div></div>
     </div>
     <div class="fr c2">
       <div class="fg"><label class="fl">Cliente</label>
@@ -1971,6 +1981,11 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         <div class="fl-row ic jb" style="margin-top:4px">
           <div class="txs txm">💡 Digite para buscar cadastrado</div>
           <button class="btn btn-gh btn-xs" type="button" onclick="toggleQuickClientPanel()" style="font-size:11px;padding:2px 8px">➕ Novo cliente</button>
+        </div>
+        <!-- Subcliente: aparece quando o cliente selecionado tem subclientes cadastrados -->
+        <div id="trip-subclient-wrap" style="display:none;margin-top:8px">
+          <label class="fl">🏷️ Subcliente <span style="opacity:.6">(de quem é essa demanda)</span></label>
+          <select class="fc" id="trip-subclient"></select>
         </div>
         <!-- Quick-add inline panel -->
         <div id="trip-quick-client-panel" style="display:none;background:var(--bg3);border:1px solid rgba(99,102,241,.4);border-radius:8px;padding:12px;margin-top:6px">
@@ -2098,6 +2113,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         <div class="fc" style="display:flex;align-items:center;font-weight:700;font-size:16px" id="trip-km-vs-display">—</div>
       </div>
     </div>
+    <div id="trip-rateio-info" style="display:none"></div>
     <div class="fr c3">
       <div class="fg"><label class="fl">KM Inicial</label>
         <input type="number" class="fc" id="trip-km-start" placeholder="0" oninput="calcKM()"></div>
@@ -2387,6 +2403,17 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       Salvar Despesa
     </button>
   </div>
+</div>
+</div>
+
+<!-- TIRES MODAL -->
+<div class="overlay" id="modal-tires">
+<div class="modal" style="max-width:640px">
+  <div class="modal-h">
+    <span class="modal-t" id="tires-modal-title">🛞 Controle de Pneus</span>
+    <button class="xbtn" onclick="closeModal('modal-tires')">✕</button>
+  </div>
+  <div id="tires-body"></div>
 </div>
 </div>
 
@@ -2737,6 +2764,12 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       <div class="fg"><label class="fl">De</label><input type="date" class="fc" id="cr-date-from" onchange="renderClientReport()"></div>
       <div class="fg"><label class="fl">Até</label><input type="date" class="fc" id="cr-date-to" onchange="renderClientReport()"></div>
     </div>
+    <div class="fr" id="cr-subclient-wrap" style="display:none">
+      <div class="fg">
+        <label class="fl">🏷️ Filtrar por subcliente</label>
+        <select class="fc" id="cr-subclient" onchange="renderClientReport()"></select>
+      </div>
+    </div>
   </div>
 
   <!-- Conteúdo do relatório (área que vai pra impressão) -->
@@ -2837,8 +2870,20 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         <input type="text" class="fc" id="ag-client" placeholder="Nome do cliente" list="client-datalist" autocomplete="off"></div>
     </div>
     <div class="fr c2">
-      <div class="fg"><label class="fl">Origem</label><input type="text" class="fc" id="ag-origin" list="cities-list" autocomplete="off" placeholder="Ex: Chapecó - SC"></div>
-      <div class="fg"><label class="fl">Destino</label><input type="text" class="fc" id="ag-dest" list="cities-list" autocomplete="off" placeholder="Ex: Florianópolis - SC"></div>
+      <div class="fg"><label class="fl">Origem</label>
+        <div class="ac-wrap">
+          <input type="text" class="fc" id="ag-origin" autocomplete="off" placeholder="Ex: Chapecó - SC"
+                 oninput="cityAc('ag-origin')" onfocus="cityAc('ag-origin')"
+                 onkeydown="cityAcKey(event,'ag-origin')" onblur="setTimeout(()=>acClose('ag-origin-ac'),180)">
+          <div class="ac-list" id="ag-origin-ac" style="display:none"></div>
+        </div></div>
+      <div class="fg"><label class="fl">Destino</label>
+        <div class="ac-wrap">
+          <input type="text" class="fc" id="ag-dest" autocomplete="off" placeholder="Ex: Florianópolis - SC"
+                 oninput="cityAc('ag-dest')" onfocus="cityAc('ag-dest')"
+                 onkeydown="cityAcKey(event,'ag-dest')" onblur="setTimeout(()=>acClose('ag-dest-ac'),180)">
+          <div class="ac-list" id="ag-dest-ac" style="display:none"></div>
+        </div></div>
     </div>
     <div class="fr">
       <div class="fg"><label class="fl">Empresa/Transportadora Executora</label>
@@ -3116,6 +3161,21 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <div class="fr">
       <div class="fg"><label class="fl">Observações</label>
         <textarea class="fc" id="client-notes" placeholder="Informações adicionais, preferências, histórico..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <div class="fsec-t">🏷️ Subclientes <span class="txs txm" style="text-transform:none;letter-spacing:0">(pra clientes parceiros que repassam viagens de terceiros)</span></div>
+    <div class="fr">
+      <div class="fg">
+        <div class="fl-row ic" style="gap:8px">
+          <input type="text" class="fc" id="client-subclient-input" placeholder="Digite o nome e aperte Enter — Ex: Saúde"
+                 onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addSubclientChip();}">
+          <button type="button" class="btn btn-pr btn-sm" style="flex-shrink:0" onclick="addSubclientChip()">➕ Adicionar</button>
+        </div>
+        <div id="client-subclient-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;min-height:8px"></div>
+        <div class="txs txm mt1">Ao lançar uma viagem deste cliente, você escolhe de qual subcliente ela é — e o relatório de cobrança filtra por subcliente.</div>
+      </div>
     </div>
   </div>
 
@@ -3574,7 +3634,7 @@ const cloudSync = {
           localStorage.setItem('fleetcontrol_db',JSON.stringify(DB));
           localStorage.setItem('muvcity_lastWrite',String(cloudTs));
           try{ renderCurrentPage(); updateSidebarLogo(); }catch(_){}
-          if(typeof showToast==='function') showToast('☁️ Atualizações recebidas','ok');
+          // Toast de rotina removido a pedido do gestor — o indicador "Sincronizado" já sinaliza.
         }
       }
       // Verifica também /drivers/* pra trazer atualizações dos motoristas
@@ -3667,7 +3727,7 @@ const cloudSync = {
       if(updated>0){
         localStorage.setItem('fleetcontrol_db',JSON.stringify(DB));
         try{ renderCurrentPage(); }catch(_){}
-        if(typeof showToast==='function') showToast(`🚗 ${updated} atualização(ões) do motorista recebida(s)`,'ok');
+        // Toast de rotina removido — atualizações do motorista chegam silenciosamente.
         // Sincroniza de volta pra cloud com os dados consolidados
         this.scheduledPush();
       }
@@ -3934,14 +3994,101 @@ function handleMaintSubChange(sel){
 }
 
 // ══════════ CALCULATIONS ══════════
+// ══════════ RATEIO DE COMBUSTÍVEL — Fretamento Contínuo × Viagens Eventuais ══════════
+// Quando um veículo tem um Fretamento Contínuo (type 'fixo' com período) e roda
+// Viagens Eventuais no mesmo período, o hodômetro do fretamento engloba TUDO.
+// O rateio redistribui o diesel proporcionalmente ao km de cada serviço:
+//   custo/km = diesel do fretamento ÷ km total do período (hodômetro)
+//   eventual absorve: km dela × custo/km  ·  fretamento fica com o restante
+function _tripKm(t){
+  const ks=n(t.kmStart), ke=n(t.kmEnd);
+  return n(t.kmDriven) || (ke>ks ? ke-ks : 0);
+}
+function _isFretCont(t){
+  return t && t.type==='fixo' && t.date && t.returnDate && t.returnDate>t.date;
+}
+function getFretRateioInfo(fret){
+  if(!_isFretCont(fret)) return null;
+  const totalKm=_tripKm(fret);
+  const fuel=n(fret.fuelCost);
+  if(totalKm<=0 || fuel<=0) return null;   // rateio só ao final, com km+diesel conhecidos
+  const eventuais=(DB.trips||[]).filter(x=>x && x.id!==fret.id && x.vehicleId===fret.vehicleId
+    && !_isFretCont(x)
+    && (x.date||'')>=fret.date && (x.date||'')<=fret.returnDate
+    && _tripKm(x)>0);
+  const kmEv=eventuais.reduce((s,x)=>s+_tripKm(x),0);
+  const costPerKm=fuel/totalKm;
+  const allocatedOut=Math.min(fuel, kmEv*costPerKm);
+  return { totalKm, kmEv, kmFret:Math.max(0,totalKm-kmEv), fuel, costPerKm, allocatedOut, eventuais };
+}
+// Ajuste no combustível da viagem: negativo pro fretamento (repassa), positivo pra eventual (absorve).
+function getFuelRateioAdjust(t){
+  try{
+    if(_isFretCont(t)){
+      const info=getFretRateioInfo(t);
+      return info ? -info.allocatedOut : 0;
+    }
+    if(!t || !t.vehicleId || !t.date) return 0;
+    const fret=(DB.trips||[]).find(f=>f && f.id!==t.id && f.vehicleId===t.vehicleId
+      && _isFretCont(f) && t.date>=f.date && t.date<=f.returnDate);
+    if(!fret) return 0;
+    const info=getFretRateioInfo(fret);
+    if(!info) return 0;
+    const km=_tripKm(t);
+    return km>0 ? km*info.costPerKm : 0;
+  }catch(_){ return 0; }
+}
+
 function calcTrip(t){
   const rev = n(t.grossRevenue);
   const taxAmt = n(t.taxAmount);
-  const exp = n(t.fuelCost)+n(t.tollCost)+n(t.accommodationCost)+n(t.foodCost)+
+  const fuelRateio = getFuelRateioAdjust(t);
+  const exp = n(t.fuelCost)+fuelRateio+n(t.tollCost)+n(t.accommodationCost)+n(t.foodCost)+
               n(t.driverCost)+n(t.maintenanceCost)+n(t.otherCost)+taxAmt;
   const profit = rev - exp;
   const margin = rev>0 ? (profit/rev)*100 : 0;
-  return {totalExpenses:exp, netProfit:profit, profitMargin:margin};
+  return {totalExpenses:exp, netProfit:profit, profitMargin:margin, fuelRateio};
+}
+
+// ══════════ CUSTO/KM REAL — média móvel de 90 dias por veículo ══════════
+// O diesel é comprado por tanque, mas consumido por viagem. A média móvel
+// dilui as fronteiras (tanque meio cheio na virada do mês vira ruído) e dá
+// o custo/km REAL do veículo pra atribuir diesel a QUALQUER viagem com km —
+// abastecendo nela ou não.
+//   Visão CAIXA  (dashboard/relatórios): compras reais → getMonthlyTotals/calcTrip
+//   Visão GERENCIAL (margem por viagem): km × custo/km móvel → calcTripReal
+function getVehRollingCostPerKm(vehicleId, refDateStr){
+  if(!vehicleId) return null;
+  const ref = refDateStr || new Date().toISOString().split('T')[0];
+  const refT = new Date(ref+'T00:00:00').getTime();
+  if(isNaN(refT)) return null;
+  const from = new Date(refT - 90*86400000).toISOString().split('T')[0];
+  let fuel=0, km=0;
+  (DB.trips||[]).forEach(t=>{
+    if(!t || t.vehicleId!==vehicleId) return;
+    const d=t.date||'';
+    if(d<from || d>ref) return;
+    fuel += n(t.fuelCost);
+    km += _tripKm(t);
+  });
+  // Amostra mínima: 300 km e pelo menos 1 abastecimento — senão o índice não é confiável
+  if(km<300 || fuel<=0) return null;
+  return { costPerKm: fuel/km, fuel, km, from, to: ref };
+}
+// Margem GERENCIAL da viagem: diesel = km × custo/km móvel (substitui o lançado).
+// Fallback: sem média confiável, usa a visão contábil (calcTrip) intacta.
+function calcTripReal(t){
+  const c=calcTrip(t);
+  const km=_tripKm(t);
+  const roll=getVehRollingCostPerKm(t.vehicleId, t.date);
+  if(!roll || km<=0) return {...c, real:false};
+  const fuelAttr=km*roll.costPerKm;
+  const contFuel=n(t.fuelCost)+(c.fuelRateio||0);
+  const exp=c.totalExpenses-contFuel+fuelAttr;
+  const rev=n(t.grossRevenue);
+  const profit=rev-exp;
+  return { totalExpenses:exp, netProfit:profit, profitMargin:rev>0?(profit/rev)*100:0,
+           real:true, fuelAttr, fuelLancado:n(t.fuelCost), costPerKm:roll.costPerKm, fuelRateio:c.fuelRateio };
 }
 
 function getMonthlyTotals(y,m,vFilter){
@@ -4126,11 +4273,66 @@ async function loadCities(){
   const seen=new Set();
   const final=[];
   hist.concat(cities).forEach(c=>{ const k=c.toLowerCase(); if(!seen.has(k)){ seen.add(k); final.push(c); } });
-  // 4. Renderiza no datalist
-  const dl=document.getElementById('cities-list');
-  if(dl){
-    dl.innerHTML=final.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">`).join('');
+  // 4. Guarda em memória pro autocomplete customizado (o datalist nativo foi
+  //    aposentado — dropdown branco sem estilo, destoava do painel)
+  window._citiesHist=hist.filter(h=>h.length<=48 && !/[>→]/.test(h));  // filtra lixo tipo "A > B > C"
+  window._citiesAll=final;
+}
+
+// ══════════ AUTOCOMPLETE DE CIDADES (estilizado, substitui datalist nativo) ══════════
+function cityAc(inputId){
+  const inp=document.getElementById(inputId);
+  const list=document.getElementById(inputId+'-ac');
+  if(!inp||!list) return;
+  const q=_norm(inp.value);
+  const hist=window._citiesHist||[];
+  const all=window._citiesAll||[];
+  let matches;
+  if(!q){
+    matches=hist.slice(0,8);   // vazio: mostra histórico recente (mais relevante)
+  } else {
+    const h=hist.filter(c=>_norm(c).includes(q)).slice(0,5);
+    const rest=all.filter(c=>_norm(c).includes(q) && !h.includes(c)).slice(0,10);
+    matches=h.concat(rest);
   }
+  if(!matches.length){ list.style.display='none'; return; }
+  const histSet=new Set(hist);
+  list.innerHTML=matches.map((c,idx)=>`
+    <div class="ac-item${idx===0?' active':''}" data-name="${c.replace(/"/g,'&quot;')}"
+         onmousedown="cityPick('${inputId}','${c.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <span style="opacity:.55;margin-right:6px">${histSet.has(c)?'🕐':'📍'}</span>${c}
+    </div>`).join('');
+  list.style.display='';
+  list._activeIdx=0;
+}
+function cityPick(inputId, val){
+  const inp=document.getElementById(inputId);
+  if(inp){ inp.value=val; inp.dispatchEvent(new Event('change')); }
+  acClose(inputId+'-ac');
+}
+function cityAcKey(e, inputId){
+  const list=document.getElementById(inputId+'-ac');
+  if(!list || list.style.display==='none') return;
+  const items=list.querySelectorAll('.ac-item');
+  if(!items.length) return;
+  let idx=list._activeIdx ?? 0;
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    idx=Math.min(items.length-1, idx+1);
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    idx=Math.max(0, idx-1);
+  } else if(e.key==='Enter'){
+    e.preventDefault();
+    const sel=items[idx>=0?idx:0];
+    if(sel) cityPick(inputId, sel.getAttribute('data-name'));
+    return;
+  } else if(e.key==='Escape'){
+    acClose(inputId+'-ac'); return;
+  } else return;
+  items.forEach((it,i)=>it.classList.toggle('active', i===idx));
+  items[idx].scrollIntoView({block:'nearest'});
+  list._activeIdx=idx;
 }
 
 // Recolhe/expande a sidebar em desktop (libera espaço pro conteúdo).
@@ -4483,6 +4685,14 @@ function renderFleet(){
           <div class="vst"><div class="vst-l">Viagens</div><div class="vst-v">${t.tripCount}</div></div>
           <div class="vst"><div class="vst-l">KM Atual</div><div class="vst-v">${(v.currentKm||0).toLocaleString('pt-BR')} km</div></div>
         </div>
+        ${(()=>{
+          const roll=getVehRollingCostPerKm(v.id);
+          if(!roll) return '';
+          return `<div class="fl-row ic jb" style="padding:6px 10px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:9px;margin-bottom:8px;font-size:11.5px">
+            <span style="color:#67e8f9">⛽ Custo/km real <span class="txm">(90 dias)</span></span>
+            <span class="fb" style="color:#67e8f9">${R(roll.costPerKm)}/km</span>
+          </div>`;
+        })()}
 
         <div style="margin-bottom:8px">${chips}</div>
 
@@ -4496,6 +4706,7 @@ function renderFleet(){
           <button class="btn btn-ol btn-sm" onclick="event.stopPropagation();editVehicle('${v.id}')">✏️ Editar</button>
           <button class="btn btn-pr btn-sm" onclick="event.stopPropagation();openTripModal('${v.id}')">➕ Viagem</button>
           <button class="btn btn-sm" style="background:rgba(99,102,241,.2);color:#a78bfa;border:1px solid rgba(99,102,241,.3)" onclick="event.stopPropagation();openCaixinhaModal('${v.id}')">💜 Caixinha</button>
+          <button class="btn btn-sm" style="background:rgba(6,182,212,.15);color:#67e8f9;border:1px solid rgba(6,182,212,.3)" onclick="event.stopPropagation();openTiresModal('${v.id}')">🛞 Pneus</button>
         </div>
       </div>
     </div>`;
@@ -4511,9 +4722,167 @@ function renderFleet(){
   el.innerHTML=html;
 }
 
+// ══════════ PNEUS — mapa por posição, trocas parciais e rodízio ══════════
+// Cada posição guarda o pneu que está nela: quando foi instalado (since) e o km
+// do veículo na instalação (kmAt). Rodízio copia o registro entre posições —
+// o pneu "leva junto" seu histórico de km mesmo mudando de lugar.
+const TIRE_LAYOUTS={
+  4:[['DE','Dianteiro Esq.'],['DD','Dianteiro Dir.'],['TE','Traseiro Esq.'],['TD','Traseiro Dir.']],
+  6:[['DE','Dianteiro Esq.'],['DD','Dianteiro Dir.'],['TEE','Tras. Esq. Externo'],['TEI','Tras. Esq. Interno'],['TDI','Tras. Dir. Interno'],['TDE','Tras. Dir. Externo']]
+};
+function vehCurrentKm(v){
+  let km=n(v.currentKm);
+  (DB.trips||[]).forEach(t=>{ if(t.vehicleId===v.id){ const ke=n(t.kmEnd); if(ke>km) km=ke; } });
+  return km;
+}
+function ensureTires(v){
+  if(!v.tires||typeof v.tires!=='object') v.tires={layout:4,pos:{}};
+  if(!v.tires.layout) v.tires.layout=4;
+  if(!v.tires.pos) v.tires.pos={};
+  if(!Array.isArray(v.tireLog)) v.tireLog=[];
+  return v.tires;
+}
+let _tiresVehId=null;
+function openTiresModal(vid){
+  const v=DB.vehicles.find(x=>x.id===vid); if(!v) return;
+  _tiresVehId=vid;
+  ensureTires(v);
+  document.getElementById('tires-modal-title').textContent=`🛞 Pneus — ${v.plate}`;
+  renderTiresBody(v);
+  openModal('modal-tires');
+}
+function setTireLayout(nLay){
+  const v=DB.vehicles.find(x=>x.id===_tiresVehId); if(!v) return;
+  ensureTires(v).layout=parseInt(nLay)||4;
+  saveDB(); renderTiresBody(v);
+}
+function renderTiresBody(v){
+  const el=document.getElementById('tires-body'); if(!el) return;
+  const tires=ensureTires(v);
+  const layout=TIRE_LAYOUTS[tires.layout]||TIRE_LAYOUTS[4];
+  const curKm=vehCurrentKm(v);
+  const cfg=DB.settings?.maintenance?.tire||{intervalKm:10000,warnKm:2000};
+  const interval=n(cfg.intervalKm)||10000, warn=n(cfg.warnKm)||2000;
+
+  const tileHtml=([code,label])=>{
+    const p=tires.pos[code];
+    let body, color='#64748b', bg='rgba(255,255,255,.03)';
+    if(p && p.kmAt!=null){
+      const rodado=Math.max(0,curKm-n(p.kmAt));
+      if(rodado>=interval){ color='#ef4444'; bg='rgba(239,68,68,.08)'; }
+      else if(rodado>=interval-warn){ color='#f59e0b'; bg='rgba(245,158,11,.08)'; }
+      else { color='#10b981'; bg='rgba(16,185,129,.06)'; }
+      body=`<div style="font-size:16px;font-weight:800;color:${color}">${rodado.toLocaleString('pt-BR')} km</div>
+        <div class="txs txm">desde ${p.since?fmtDate(p.since):'?'}${p.isNew?' · 🆕':''}</div>`;
+    } else {
+      body=`<div class="txs txm" style="padding:4px 0">sem registro</div>`;
+    }
+    return `<div style="border:1px solid ${color}44;background:${bg};border-radius:11px;padding:10px;text-align:center">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.4px;color:${color}">${code}</div>
+      <div class="txs txm" style="margin-bottom:4px">${label}</div>
+      ${body}
+    </div>`;
+  };
+
+  // Grid: dianteiros em cima, traseiros embaixo
+  const front=layout.filter(([c])=>c.startsWith('D'));
+  const rear=layout.filter(([c])=>!c.startsWith('D'));
+  const mapHtml=`
+    <div style="display:grid;grid-template-columns:repeat(${front.length},1fr);gap:8px;max-width:${front.length*130}px;margin:0 auto 8px">${front.map(tileHtml).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(${rear.length},1fr);gap:8px;margin-bottom:4px">${rear.map(tileHtml).join('')}</div>`;
+
+  // Formulário de intervenção: por posição escolhe manter / novo / veio de X
+  const posOptions=(code)=>{
+    const others=layout.filter(([c])=>c!==code).map(([c])=>`<option value="from:${c}">⬅️ veio de ${c}</option>`).join('');
+    return `<select class="fc" id="tire-act-${code}" style="font-size:12px;padding:7px 8px">
+      <option value="keep">— manter —</option>
+      <option value="new">🆕 Pneu novo</option>
+      ${others}
+    </select>`;
+  };
+  const interHtml=`
+    <div class="fsec" style="margin-top:14px">
+      <div class="fsec-t">🔧 Registrar troca / rodízio</div>
+      <div class="fr c2">
+        <div class="fg"><label class="fl">Data</label><input type="date" class="fc" id="tire-int-date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="fg"><label class="fl">KM do veículo</label><input type="number" class="fc" id="tire-int-km" value="${curKm||''}" placeholder="${curKm||0}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px">
+        ${layout.map(([code,label])=>`<div>
+          <label class="fl" style="font-size:10px">${code} · ${label}</label>
+          ${posOptions(code)}
+        </div>`).join('')}
+      </div>
+      <div class="fg"><label class="fl">Observação (opcional)</label>
+        <input type="text" class="fc" id="tire-int-notes" placeholder="Ex: 2 Pirelli novos atrás, dianteiros passados pra trás"></div>
+      <button class="btn btn-sc gestor-only" style="width:100%" onclick="saveTireIntervention()">💾 Salvar intervenção</button>
+      <div class="txs txm" style="margin-top:8px;line-height:1.6">
+        💡 <b>Rodízio recomendado a cada ${interval.toLocaleString('pt-BR')} km:</b>
+        ${tires.layout===6
+          ?'dianteiros → traseiros externos · externos → internos · internos → frente. Duplas do mesmo lado sempre com desgaste parecido.'
+          :'traseiros → frente · novos atrás.'}
+      </div>
+    </div>`;
+
+  // Histórico
+  const logs=(v.tireLog||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
+  const logHtml=logs.length?`
+    <div class="fsec-t" style="margin:14px 0 8px">📜 Histórico</div>
+    ${logs.map(l=>`<div class="fl-row ic jb" style="padding:7px 10px;border:1px solid var(--bd);border-radius:9px;margin-bottom:5px;background:rgba(255,255,255,.02)">
+      <div style="min-width:0">
+        <div style="font-size:12.5px">${l.desc||'—'}</div>
+        <div class="txs txm">${l.date?fmtDate(l.date):''} · ${l.km!=null?n(l.km).toLocaleString('pt-BR')+' km':''}${l.notes?' · '+l.notes:''}</div>
+      </div>
+    </div>`).join('')}`:'';
+
+  el.innerHTML=`
+    <div class="fl-row ic jb" style="margin-bottom:12px">
+      <div class="txs txm">KM atual do veículo: <b style="color:var(--tx)">${curKm.toLocaleString('pt-BR')} km</b></div>
+      <select class="fc" style="width:auto;font-size:12px;padding:6px 10px" onchange="setTireLayout(this.value)">
+        <option value="4" ${tires.layout===4?'selected':''}>4 pneus</option>
+        <option value="6" ${tires.layout===6?'selected':''}>6 pneus (rodado duplo)</option>
+      </select>
+    </div>
+    ${mapHtml}
+    ${interHtml}
+    ${logHtml}`;
+}
+function saveTireIntervention(){
+  if(typeof requireEdit==='function' && !requireEdit()) return;
+  const v=DB.vehicles.find(x=>x.id===_tiresVehId); if(!v) return;
+  const tires=ensureTires(v);
+  const layout=TIRE_LAYOUTS[tires.layout]||TIRE_LAYOUTS[4];
+  const date=document.getElementById('tire-int-date')?.value||new Date().toISOString().split('T')[0];
+  const km=n(document.getElementById('tire-int-km')?.value);
+  const notes=document.getElementById('tire-int-notes')?.value?.trim()||'';
+  // Snapshot ANTES da intervenção — os "veio de X" copiam do estado antigo,
+  // permitindo trocas encadeadas (ex: TE→DE e pneu novo em TE) sem conflito.
+  const snap=JSON.parse(JSON.stringify(tires.pos));
+  const acts=[];
+  layout.forEach(([code])=>{
+    const sel=document.getElementById('tire-act-'+code);
+    const val=sel?.value||'keep';
+    if(val==='new'){
+      tires.pos[code]={since:date,kmAt:km||null,isNew:true};
+      acts.push(`🆕 novo em ${code}`);
+    } else if(val.startsWith('from:')){
+      const src=val.slice(5);
+      tires.pos[code]=snap[src]?{...snap[src],isNew:false}:{since:date,kmAt:km||null,isNew:false};
+      acts.push(`${src}→${code}`);
+    }
+  });
+  if(!acts.length){ showToast('Nenhuma ação selecionada.','warn'); return; }
+  v.tireLog.push({date,km:km||null,desc:acts.join(' · '),notes});
+  // Mantém compatibilidade com o alerta antigo de manutenção (usa a intervenção mais recente)
+  v.lastTireChange={date,km:km||null};
+  saveDB();
+  showToast('🛞 Intervenção registrada!','ok');
+  renderTiresBody(v);
+}
+
 // ══════════ TRIPS ══════════
 function tripTypeBadge(type){
-  const map={fixo:['p','Fixo'],avulso:['o','Avulso'],diaria:['b','Diária']};
+  const map={fixo:['p','🔄 Fretamento'],avulso:['o','Eventual'],diaria:['b','Diária']};
   const def=map[type]||['gz',type];
   return `<span class="badge ${def[0]}">${def[1]}</span>`;
 }
@@ -4705,20 +5074,26 @@ function renderTrips(){
       return da.localeCompare(db);                    // andamento + programadas: ASC (próxima primeiro)
     });
 
-  let totalRev=0,totalExp=0,totalProfit=0;
+  let totalRev=0,totalExp=0,totalProfit=0,anyReal=false;
   const rows=trips.map(t=>{
-    const c=calcTrip(t);
+    // Visão GERENCIAL: diesel por custo/km móvel (90d) — margem real da viagem.
+    // Sem amostra confiável, calcTripReal cai na visão contábil automaticamente.
+    const c=calcTripReal(t);
+    if(c.real) anyReal=true;
     totalRev+=n(t.grossRevenue);totalExp+=c.totalExpenses;totalProfit+=c.netProfit;
     const mc=c.profitMargin>=50?'g':c.profitMargin>=20?'y':'r';
     const km=n(t.kmEnd)-n(t.kmStart);
     const depDate=fmtDate(t.date||t.departureDate);
     const retDate=t.returnDate?`<div class="txs txm">↩ ${fmtDate(t.returnDate)}</div>`:'';
+    // Indicador: diesel atribuído por média (viagem sem abastecimento próprio)
+    const fuelTag=c.real&&!n(t.fuelCost)&&_tripKm(t)>0
+      ?`<span title="Sem abastecimento nesta viagem — diesel atribuído pela média do veículo: ${R(c.fuelAttr)} (${R(c.costPerKm)}/km)" style="cursor:help;font-size:10px;opacity:.8"> ⛽~</span>`:'';
     return `<tr>
       <td><div>${depDate}</div>${retDate}</td>
       <td><span class="badge b">${vehicleName(t.vehicleId)}</span></td>
       <td>${tripTypeBadge(t.type)}</td>
-      <td style="max-width:200px"><div style="font-weight:500">${t.origin&&t.destination?`${t.origin} <span class="txm">→</span> ${t.destination}`:(t.description||'—')}</div>
-        <div class="txs txm">${[t.client,t.driverName?'🚗 '+t.driverName:''].filter(Boolean).join(' · ')}</div></td>
+      <td style="max-width:200px"><div style="font-weight:500">${t.origin&&t.destination?`${t.origin} <span class="txm">→</span> ${t.destination}`:(t.description||'—')}${fuelTag}</div>
+        <div class="txs txm">${[t.client,t.subclient?'🏷️ '+t.subclient:'',t.driverName?'🚗 '+t.driverName:''].filter(Boolean).join(' · ')}</div></td>
       <td class="tpr fb">${R(t.grossRevenue)}</td>
       <td><span class="badge ${t.hasInvoice?'g':'gz'}">${t.hasInvoice?'Sim':'Não'}</span></td>
       <td>${km>0?km.toLocaleString('pt-BR')+' km':'—'}</td>
@@ -4737,12 +5112,13 @@ function renderTrips(){
   if(trips.length){
     const avgM=totalRev>0?(totalProfit/totalRev)*100:0;
     document.getElementById('trips-summary').innerHTML=`
-      <div style="display:flex;gap:24px;padding:10px 13px;background:var(--bg3);border-radius:8px;font-size:13px">
+      <div style="display:flex;gap:24px;padding:10px 13px;background:var(--bg3);border-radius:8px;font-size:13px;flex-wrap:wrap">
         <div><span class="txm">Total Receita:</span> <span class="fb tpr">${R(totalRev)}</span></div>
         <div><span class="txm">Total Despesas:</span> <span class="fb tdr">${R(totalExp)}</span></div>
         <div><span class="txm">Lucro Total:</span> <span class="fb ${totalProfit>=0?'tsc':'tdr'}">${R(totalProfit)}</span></div>
         <div><span class="txm">Margem Média:</span> <span class="fb twn">${Pct(avgM)}</span></div>
-      </div>`;
+      </div>
+      ${anyReal?`<div class="txs txm" style="padding:6px 13px 0">📈 Margens gerenciais: diesel atribuído por km rodado × custo/km real do veículo (média móvel 90 dias). Viagens marcadas com ⛽~ não tiveram abastecimento próprio. O Dashboard segue mostrando a visão caixa (compras reais).</div>`:''}`;
   } else {
     document.getElementById('trips-summary').innerHTML='';
   }
@@ -5157,16 +5533,22 @@ function renderCommitments(){
       <div class="fl-row ic jb mt3" style="flex-wrap:wrap;gap:8px">
         ${(()=>{
           if(!fc.totalInstallments) return '<span></span>';
-          const todayKey=invMonthKey(new Date().getFullYear(), new Date().getMonth()+1);
+          const _now=new Date();
+          const todayKey=invMonthKey(_now.getFullYear(), _now.getMonth()+1);
           const paidThisMonth=fc.lastPaidMonthKey===todayKey;
+          // Competência = mês/ano corrente, formato compacto "Jun/26"
+          const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+          const compet=`${MESES[_now.getMonth()]}/${String(_now.getFullYear()).slice(2)}`;
           if(paidThisMonth){
+            const quando=fc.lastPaidAt?` em ${fmtDate(fc.lastPaidAt)}`:'';
             return `<div class="fl-row ic" style="gap:8px">
-              <span style="font-size:12px;color:var(--tsc)">✅ Pago este mês</span>
+              <span style="font-size:12px;color:var(--tsc)">✅ Parcela ${compet} paga${quando}</span>
               <button class="btn btn-gh btn-xs" onclick="unmarkCmtPaid('${fc.id}')">↩️ Desfazer</button>
             </div>`;
           }
           if(fc.paidInstallments<fc.totalInstallments){
-            return `<button class="btn btn-sc btn-sm" onclick="markCmtPaid('${fc.id}')">✅ Marcar Parcela Paga</button>`;
+            const venc=fc.dueDay?` · venc. dia ${fc.dueDay}`:'';
+            return `<button class="btn btn-sc btn-sm" onclick="markCmtPaid('${fc.id}')">✅ Pagar parcela ${compet}${venc}</button>`;
           }
           return '<span></span>';
         })()}
@@ -5239,9 +5621,85 @@ function renderCommitments(){
       </div>
       <div class="prg"><div class="prg-f" style="width:${pct}%;background:var(--sc)"></div></div>
       <div class="txs txm mt1 mb3">${pct}% quitado</div>
-      <div class="fsec-t" style="margin:10px 0 8px">📋 Pagamentos realizados</div>
+      <div class="fl-row ic jb" style="margin:10px 0 8px">
+        <div class="fsec-t" style="margin:0">📋 Pagamentos realizados</div>
+        <button class="btn btn-pr btn-sm" onclick="printOwnerReport()" title="Gerar relatório em PDF pra enviar ao vendedor">📄 Relatório PDF</button>
+      </div>
       ${paysHtml}`;
   }
+}
+
+// Gera o relatório de pagamentos do vendedor numa janela de impressão.
+// O usuário salva como PDF pelo diálogo do navegador (Destino: Salvar como PDF).
+function printOwnerReport(){
+  const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
+  if(!fc){ alert('Parcelamento do vendedor não encontrado.'); return; }
+  const pago=n(fc.paidTotal), total=n(fc.totalDebt), resta=total-pago;
+  const pct=total>0?Math.round((pago/total)*100):0;
+  const pays=(fc.payments||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const linhas=pays.map((p,i)=>`
+    <tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${p.date?fmtDate(p.date):'—'}</td>
+      <td>${p.notes||'—'}</td>
+      <td style="text-align:right;font-weight:600">${R(p.amount)}</td>
+    </tr>`).join('');
+  const w=window.open('','_blank');
+  if(!w){ alert('Popup bloqueado. Libere popups pra este site e tente de novo.'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Relatório de Pagamentos — MUVCITY</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif;color:#1e293b;padding:36px;font-size:13px}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0f172a;padding-bottom:16px;margin-bottom:22px}
+    .brand{font-size:22px;font-weight:800;letter-spacing:-.5px;color:#0f172a}
+    .brand small{display:block;font-size:11px;font-weight:500;color:#64748b;letter-spacing:.4px;margin-top:2px}
+    .doc-info{text-align:right;font-size:11.5px;color:#64748b;line-height:1.6}
+    h1{font-size:16px;margin-bottom:4px;color:#0f172a}
+    .sub{font-size:12px;color:#64748b;margin-bottom:20px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+    .kpi{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
+    .kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700}
+    .kpi-v{font-size:17px;font-weight:800;margin-top:4px;color:#0f172a}
+    .kpi-v.green{color:#059669}.kpi-v.red{color:#dc2626}
+    .bar{background:#e2e8f0;border-radius:6px;height:14px;overflow:hidden;margin-bottom:6px}
+    .bar-f{background:#059669;height:100%;border-radius:6px}
+    .bar-t{font-size:11px;color:#64748b;margin-bottom:22px}
+    table{width:100%;border-collapse:collapse;margin-bottom:24px}
+    th{background:#0f172a;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:9px 10px;text-align:left}
+    th:first-child{border-radius:6px 0 0 0}th:last-child{border-radius:0 6px 0 0;text-align:right}
+    td{padding:8px 10px;border-bottom:1px solid #e2e8f0}
+    tr:nth-child(even) td{background:#f8fafc}
+    .tot td{font-weight:800;font-size:14px;border-top:2px solid #0f172a;background:#f1f5f9!important}
+    .foot{font-size:10.5px;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:8px}
+    @media print{ body{padding:16px} }
+  </style></head><body>
+    <div class="head">
+      <div class="brand">MUVCITY TRANSFER<small>Transporte Executivo · Chapecó/SC</small></div>
+      <div class="doc-info">Relatório gerado em<br><b>${hoje}</b></div>
+    </div>
+    <h1>Relatório de Pagamentos — ${fc.name||'Parcelamento'}</h1>
+    <div class="sub">Demonstrativo de valores pagos e saldo em aberto</div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-l">Valor Total</div><div class="kpi-v">${R(total)}</div></div>
+      <div class="kpi"><div class="kpi-l">Total Pago</div><div class="kpi-v green">${R(pago)}</div></div>
+      <div class="kpi"><div class="kpi-l">Saldo Restante</div><div class="kpi-v red">${R(resta)}</div></div>
+      <div class="kpi"><div class="kpi-l">Pagamentos</div><div class="kpi-v">${pays.length}x</div></div>
+    </div>
+    <div class="bar"><div class="bar-f" style="width:${pct}%"></div></div>
+    <div class="bar-t">${pct}% do valor total já quitado</div>
+    <table>
+      <thead><tr><th style="width:36px;text-align:center">#</th><th style="width:110px">Data</th><th>Observação</th><th style="width:130px">Valor</th></tr></thead>
+      <tbody>
+        ${linhas||'<tr><td colspan="4" style="text-align:center;color:#94a3b8">Nenhum pagamento registrado</td></tr>'}
+        <tr class="tot"><td colspan="3">TOTAL PAGO</td><td style="text-align:right">${R(pago)}</td></tr>
+      </tbody>
+    </table>
+    <div class="foot">MUVCITY TRANSFER · Documento gerado automaticamente pelo painel de gestão · ${hoje}</div>
+    <script>window.onload=()=>setTimeout(()=>window.print(),400);<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 // ══════════ INVESTORS ══════════
@@ -5986,17 +6444,25 @@ function populateClientDatalist(){
 }
 
 // ─────────── Autocomplete customizado de clientes ───────────
+// Normaliza pra busca: minúsculas E sem acentos (MEU CHOFER acha Meu Chofer, Á acha a)
+function _norm(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+}
 function acFilter(inputId, listId){
   const inp=document.getElementById(inputId);
   const list=document.getElementById(listId);
   if(!inp||!list) return;
-  const q=(inp.value||'').toLowerCase().trim();
+  const q=_norm(inp.value);
+  const qDigits=q.replace(/\D/g,'');
   const all=DB.clients||[];
   const matches=q
     ? all.filter(c=>{
-        return (c.name||'').toLowerCase().includes(q) ||
-               (c.legal||'').toLowerCase().includes(q) ||
-               (c.phone||'').replace(/\D/g,'').includes(q.replace(/\D/g,''));
+        if(_norm(c.name).includes(q)) return true;
+        if(_norm(c.legal).includes(q)) return true;
+        // Telefone só entra na busca se digitou pelo menos 3 dígitos —
+        // senão ''.includes('') dava match em TODO cliente e a lista nunca filtrava
+        if(qDigits.length>=3 && (c.phone||'').replace(/\D/g,'').includes(qDigits)) return true;
+        return false;
       })
     : all.slice(0,12);  // primeiros 12 quando vazio
   if(!matches.length){
@@ -6063,10 +6529,36 @@ function acKeydown(e, inputId, listId){
 function acPick(inputId, listId, name){
   document.getElementById(inputId).value=name;
   acClose(listId);
+  // Selecionou cliente no modal de viagem → atualiza o seletor de subcliente
+  if(inputId==='trip-client') updateTripSubclientOptions();
 }
 function acClose(listId){
   const el=document.getElementById(listId);
   if(el) el.style.display='none';
+}
+
+// Mostra o seletor de subcliente quando o cliente escolhido tem subclientes cadastrados.
+// selected = valor a pré-selecionar (usado no editTrip).
+function updateTripSubclientOptions(selected){
+  const wrap=document.getElementById('trip-subclient-wrap');
+  const sel=document.getElementById('trip-subclient');
+  if(!wrap||!sel) return;
+  const cName=_norm(document.getElementById('trip-client')?.value||'');
+  const client=(DB.clients||[]).find(c=>_norm(c.name)===cName);
+  const subs=(client&&Array.isArray(client.subclients))?client.subclients.filter(Boolean):[];
+  if(!subs.length){
+    // Sem subclientes: esconde, mas preserva valor legado se a viagem já tinha um
+    wrap.style.display='none';
+    sel.innerHTML=selected?`<option value="${selected}" selected>${selected}</option>`:'';
+    return;
+  }
+  sel.innerHTML=`<option value="">— sem subcliente —</option>`+
+    subs.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${s===selected?'selected':''}>${s}</option>`).join('');
+  if(selected && !subs.includes(selected)){
+    // Valor antigo que saiu da lista: mantém disponível pra não perder o dado
+    sel.innerHTML+=`<option value="${selected}" selected>${selected} (antigo)</option>`;
+  }
+  wrap.style.display='';
 }
 
 function toggleQuickClientPanel(){
@@ -6125,8 +6617,8 @@ function populateDriverSelect(currentVal){
 
 // Built-in revenue types (internal keys + display labels)
 const BUILTIN_REVENUE_TYPES=[
-  {v:'fixo',  l:'Viagem Fixa Mensal'},
-  {v:'avulso',l:'Viagem Avulsa'},
+  {v:'fixo',  l:'Fretamento Contínuo'},
+  {v:'avulso',l:'Viagem Eventual'},
   {v:'diaria',l:'Diária'},
 ];
 const BUILTIN_REVENUE_LABELS=BUILTIN_REVENUE_TYPES.map(x=>x.l.toLowerCase());
@@ -6167,6 +6659,8 @@ function openTripModal(vId){
     .forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';if(el.dataset)el.dataset.manual='0';} });
   const dps=document.getElementById('driver-payment-section'); if(dps) dps.style.display='none';
   const qcp=document.getElementById('trip-quick-client-panel'); if(qcp) qcp.style.display='none';
+  const rti=document.getElementById('trip-rateio-info'); if(rti){ rti.style.display='none'; rti.innerHTML=''; }
+  const scw=document.getElementById('trip-subclient-wrap'); if(scw){ scw.style.display='none'; document.getElementById('trip-subclient').innerHTML=''; }
   document.getElementById('trip-nf').value='nao';
   populateTripTypeSelect();
   populateClientDatalist();
@@ -6384,6 +6878,61 @@ function reopenTripByManager(){
   refreshTripStatusSection(t);
 }
 
+// Card informativo do rateio de combustível no modal da viagem.
+// Fretamento: mostra a decomposição km fretamento × km eventuais e o diesel repassado.
+// Eventual dentro de fretamento: mostra o diesel absorvido via rateio.
+function renderTripRateioInfo(t){
+  const el=document.getElementById('trip-rateio-info');
+  if(!el) return;
+  el.style.display='none'; el.innerHTML='';
+  if(!t) return;
+  const box=(html)=>{
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(6,182,212,.10),rgba(99,102,241,.06));border:1px solid rgba(6,182,212,.3);border-radius:12px;padding:13px 15px;margin:4px 0 10px;font-size:12.5px;line-height:1.7;color:#cbd5f5">${html}</div>`;
+    el.style.display='';
+  };
+  if(_isFretCont(t)){
+    const info=getFretRateioInfo(t);
+    if(!info){
+      box(`🔄 <b>Fretamento Contínuo</b> — o rateio de km e diesel com as Viagens Eventuais do período é calculado automaticamente quando o KM total e o combustível estiverem lançados.`);
+      return;
+    }
+    const evList=info.eventuais.map(x=>`&nbsp;&nbsp;• ${fmtDate(x.date)} — ${x.origin||'?'} → ${x.destination||'?'} (${_tripKm(x).toLocaleString('pt-BR')} km)`).join('<br>');
+    box(`🔄 <b>Rateio do Fretamento Contínuo</b><br>
+      KM total do período (hodômetro): <b>${info.totalKm.toLocaleString('pt-BR')} km</b><br>
+      (−) Viagens Eventuais no período: <b>${info.kmEv.toLocaleString('pt-BR')} km</b>${evList?'<br>'+evList:''}<br>
+      (=) KM do fretamento: <b>${info.kmFret.toLocaleString('pt-BR')} km</b><br>
+      ⛽ Diesel lançado: <b>${R(info.fuel)}</b> · custo/km: <b>${R(info.costPerKm)}</b><br>
+      → Repassado às eventuais: <b style="color:#f59e0b">${R(info.allocatedOut)}</b> · fica no fretamento: <b style="color:#34d399">${R(info.fuel-info.allocatedOut)}</b>`);
+    return;
+  }
+  // Eventual: procura fretamento cobrindo a data
+  if(!t.vehicleId || !t.date) return;
+  const fret=(DB.trips||[]).find(f=>f && f.id!==t.id && f.vehicleId===t.vehicleId
+    && _isFretCont(f) && t.date>=f.date && t.date<=f.returnDate);
+  if(!fret){
+    // Sem fretamento no período — mostra a atribuição por custo/km móvel (90d), se houver
+    const cr=calcTripReal(t);
+    if(cr.real && _tripKm(t)>0){
+      const semAbast=!n(t.fuelCost);
+      box(`📈 <b>Margem gerencial (custo/km real)</b><br>
+        Esta viagem rodou <b>${_tripKm(t).toLocaleString('pt-BR')} km</b> × custo/km do veículo <b>${R(cr.costPerKm)}</b> (média móvel 90 dias)<br>
+        → Diesel atribuído: <b style="color:#67e8f9">${R(cr.fuelAttr)}</b>${semAbast
+          ?' — <b style="color:#f59e0b">sem abastecimento nesta viagem</b>; a margem gerencial usa este valor pra não superestimar o lucro'
+          :` (lançado nela: ${R(cr.fuelLancado)}; a margem gerencial usa o atribuído — o tanque é compartilhado entre viagens)`}`);
+    }
+    return;
+  }
+  const info=getFretRateioInfo(fret);
+  const km=_tripKm(t);
+  if(!info || km<=0){
+    box(`ℹ️ Este veículo tem um <b>Fretamento Contínuo</b> ativo neste período (${fret.origin||''} → ${fret.destination||''}). O diesel desta viagem será rateado automaticamente pelo km quando os valores estiverem completos — lance só as despesas diretas (pedágio, alimentação etc).`);
+    return;
+  }
+  box(`ℹ️ <b>Rateio automático de diesel</b> — veículo compartilhado com Fretamento Contínuo<br>
+    Esta viagem rodou <b>${km.toLocaleString('pt-BR')} km</b> × custo/km <b>${R(info.costPerKm)}</b><br>
+    → Diesel absorvido via rateio: <b style="color:#f59e0b">${R(km*info.costPerKm)}</b> (já entra no custo e na margem desta viagem — não lance o diesel de novo aqui)`);
+}
+
 function editTrip(id){
   const t=DB.trips.find(t=>t.id===id);
   if(!t)return;
@@ -6399,6 +6948,7 @@ function editTrip(id){
   document.getElementById('trip-origin').value=t.origin||'';
   document.getElementById('trip-destination').value=t.destination||'';
   document.getElementById('trip-client').value=t.client||'';
+  updateTripSubclientOptions(t.subclient||'');
   // Detalhes do embarque
   const _pt=document.getElementById('trip-pickup-time'); if(_pt) _pt.value=t.pickupTime||'';
   const _pa=document.getElementById('trip-passengers'); if(_pa) _pa.value=t.passengers||'';
@@ -6458,6 +7008,7 @@ function editTrip(id){
   toggleNF();calcKM();calcTripProfit();
   loadPaymentPlanToModal(t.paymentPlan||null);
   renderTripFuelStats(t);
+  renderTripRateioInfo(t);
   refreshTripStatusSection(t);
   openModal('modal-trip');
 }
@@ -6854,6 +7405,7 @@ function saveTrip(){
     destination:_destination,
     description:_description,    // mantém pra retrocompatibilidade
     client:document.getElementById('trip-client').value,
+    subclient:(document.getElementById('trip-subclient')?.value)||null,
     driverName:document.getElementById('trip-driver-name').value||'',
     pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
     passengers:parseInt(document.getElementById('trip-passengers')?.value)||null,
@@ -7647,6 +8199,7 @@ function markCmtPaid(id){
     fc.paidInstallments=(fc.paidInstallments||0)+1;
     const today=new Date();
     fc.lastPaidMonthKey=invMonthKey(today.getFullYear(), today.getMonth()+1);
+    fc.lastPaidAt=today.toISOString().split('T')[0];
     saveDB(); renderCurrentPage();
     return;
   }
@@ -7654,6 +8207,7 @@ function markCmtPaid(id){
     fc.paidInstallments++;
     const today=new Date();
     fc.lastPaidMonthKey=invMonthKey(today.getFullYear(), today.getMonth()+1);
+    fc.lastPaidAt=today.toISOString().split('T')[0];
     saveDB(); renderCurrentPage();
   }
 }
@@ -7666,6 +8220,7 @@ function unmarkCmtPaid(id){
   if(fc.lastPaidMonthKey!==thisMonthKey){ alert('Nenhum pagamento registrado neste mês para desfazer.'); return; }
   if(fc.paidInstallments>0) fc.paidInstallments--;
   fc.lastPaidMonthKey=null;
+  fc.lastPaidAt=null;
   saveDB(); renderCurrentPage();
 }
 
@@ -9446,6 +10001,24 @@ function openClientReport(clientId){
   if(!c){ alert('Cliente não encontrado.'); return; }
   document.getElementById('cr-client-id').value=clientId;
   document.getElementById('cr-title').textContent=`📄 Relatório de Viagens — ${c.name}`;
+  // Filtro de subcliente: monta com os cadastrados no cliente + os usados nas viagens dele
+  const scWrap=document.getElementById('cr-subclient-wrap');
+  const scSel=document.getElementById('cr-subclient');
+  if(scWrap&&scSel){
+    const subs=new Set((Array.isArray(c.subclients)?c.subclients:[]).filter(Boolean));
+    const cNameNorm=_norm(c.name);
+    (DB.trips||[]).forEach(t=>{
+      if(t.subclient && _norm(t.client)===cNameNorm) subs.add(t.subclient);
+    });
+    if(subs.size){
+      scSel.innerHTML=`<option value="">Todos os subclientes</option>`+
+        Array.from(subs).sort((a,b)=>a.localeCompare(b,'pt-BR')).map(s=>`<option value="${s.replace(/"/g,'&quot;')}">${s}</option>`).join('');
+      scWrap.style.display='';
+    } else {
+      scSel.innerHTML='';
+      scWrap.style.display='none';
+    }
+  }
   // Reset período
   clientReportPeriod='previous';
   document.querySelectorAll('#cr-period-tabs .tab').forEach((t,idx)=>t.classList.toggle('active', idx===1));
@@ -9498,14 +10071,16 @@ function getClientReportTrips(clientId){
   if(!c) return {trips:[], client:null, range:{from:'',to:''}};
   const {from, to}=getClientReportRange();
   const cName=c.name.toLowerCase().trim();
+  const scFilter=document.getElementById('cr-subclient')?.value||'';
   const trips=DB.trips.filter(t=>{
     if(!t.client) return false;
     if(t.client.toLowerCase().trim()!==cName) return false;
+    if(scFilter && (t.subclient||'')!==scFilter) return false;
     const d=t.date||t.departureDate||'';
     if(!d) return false;
     return d>=from && d<=to;
   }).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  return {trips, client:c, range:{from, to}};
+  return {trips, client:c, range:{from, to}, subclientFilter:scFilter};
 }
 
 function buildCompanyHeaderHTML(){
@@ -9578,8 +10153,10 @@ function buildClientBlockHTML(client){
 
 function renderClientReport(){
   const id=document.getElementById('cr-client-id').value;
-  const {trips, client, range}=getClientReportTrips(id);
+  const {trips, client, range, subclientFilter}=getClientReportTrips(id);
   if(!client) return;
+  // Coluna de subcliente aparece quando há subclientes em jogo e não está filtrado por um só
+  const showSubCol=!subclientFilter && trips.some(t=>t.subclient);
   const totalRev=trips.reduce((s,t)=>s+n(t.grossRevenue),0);
   const totalNF=trips.filter(t=>t.hasInvoice).reduce((s,t)=>s+n(t.invoiceValue),0);
   const tripsWithNF=trips.filter(t=>t.hasInvoice).length;
@@ -9602,12 +10179,13 @@ function renderClientReport(){
       <td><strong>${fmtDate(t.date||t.departureDate)}</strong>${t.returnDate?`<div class="cr-sub">↩ ${fmtDate(t.returnDate)}</div>`:''}</td>
       <td>${origin}</td>
       <td>${destination}</td>
+      ${showSubCol?`<td>${t.subclient||'—'}</td>`:''}
       <td>${vehModel}</td>
       <td><strong>${plate}</strong></td>
       <td>${t.driverName||'—'}</td>
       <td style="text-align:right;font-weight:700">${R(t.grossRevenue)}</td>
     </tr>`;
-  }).join(''):`<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8">Nenhuma viagem encontrada no período</td></tr>`;
+  }).join(''):`<tr><td colspan="${showSubCol?9:8}" style="text-align:center;padding:24px;color:#94a3b8">Nenhuma viagem encontrada no período</td></tr>`;
 
   const condition = trips.some(t=>t.hasInvoice) ? 'FATURADO (Com Nota Fiscal)' : 'A combinar';
 
@@ -9627,15 +10205,17 @@ function renderClientReport(){
         <div><div class="cr-lbl">Total de Viagens</div><div><strong>${trips.length}</strong></div></div>
         <div><div class="cr-lbl">Total Faturado</div><div style="font-weight:800;color:#1d4ed8">${R(totalRev)}</div></div>
         <div><div class="cr-lbl">Viagens com NF</div><div>${tripsWithNF} de ${trips.length}</div></div>
+        ${subclientFilter?`<div><div class="cr-lbl">Subcliente</div><div style="font-weight:800">🏷️ ${subclientFilter}</div></div>`:''}
       </div>
 
-      <div class="cr-section-bar">Detalhamento das Viagens</div>
+      <div class="cr-section-bar">Detalhamento das Viagens${subclientFilter?` — ${subclientFilter}`:''}</div>
       <table class="cr-table">
         <thead><tr>
           <th style="width:28px">#</th>
           <th>Data</th>
           <th>Origem</th>
           <th>Destino</th>
+          ${showSubCol?'<th>Subcliente</th>':''}
           <th>Veículo</th>
           <th>Placa</th>
           <th>Motorista</th>
@@ -9644,7 +10224,7 @@ function renderClientReport(){
         <tbody>${rowsHtml}</tbody>
         ${trips.length?`<tfoot>
           <tr class="cr-total-row">
-            <td colspan="7" style="text-align:right;padding:14px"><strong>TOTAL FATURADO</strong></td>
+            <td colspan="${showSubCol?8:7}" style="text-align:right;padding:14px"><strong>TOTAL FATURADO</strong></td>
             <td style="text-align:right;font-size:17px;font-weight:800;padding:14px">${R(totalRev)}</td>
           </tr>
         </tfoot>`:''}
@@ -9763,13 +10343,47 @@ function exportClientReportCSV(){
 }
 
 const CLIENT_FIELDS=['client-name','client-legal','client-phone','client-email','client-doc',
-  'client-street','client-complement','client-district','client-city','client-state','client-cep','client-notes'];
+  'client-street','client-complement','client-district','client-city','client-state','client-cep','client-notes','client-subclient-input'];
+
+// ══════════ SUBCLIENTES — chips profissionais no modal de cliente ══════════
+let _subclientsTmp=[];
+function renderSubclientChips(){
+  const host=document.getElementById('client-subclient-chips');
+  if(!host) return;
+  host.innerHTML=_subclientsTmp.map((s,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.35);color:#c7d2fe;border-radius:999px;padding:5px 6px 5px 12px;font-size:12.5px;font-weight:600">
+      🏷️ ${s}
+      <button type="button" class="gestor-only" onclick="removeSubclientChip(${i})" title="Remover"
+        style="background:rgba(239,68,68,.15);border:none;color:#fca5a5;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center">✕</button>
+    </span>`).join('')
+    ||'<span class="txs txm" style="font-style:italic">Nenhum subcliente ainda — adicione acima se este cliente repassa viagens de terceiros</span>';
+}
+function addSubclientChip(){
+  const inp=document.getElementById('client-subclient-input');
+  if(!inp) return;
+  const val=(inp.value||'').replace(/,/g,' ').trim();
+  if(!val){ inp.focus(); return; }
+  // Sem duplicados (ignora maiúsculas/acentos)
+  if(_subclientsTmp.some(s=>_norm(s)===_norm(val))){
+    showToast('Subcliente já está na lista.','warn');
+    inp.value=''; inp.focus(); return;
+  }
+  _subclientsTmp.push(val);
+  inp.value=''; inp.focus();
+  renderSubclientChips();
+}
+function removeSubclientChip(i){
+  _subclientsTmp.splice(i,1);
+  renderSubclientChips();
+}
 
 function openClientModal(){
   document.getElementById('client-id').value='';
   document.getElementById('client-modal-title').textContent='Novo Cliente';
   CLIENT_FIELDS.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('client-type').value='pf';
+  _subclientsTmp=[];
+  renderSubclientChips();
   openModal('modal-client');
 }
 
@@ -9792,6 +10406,9 @@ function editClient(id){
   setVal('client-cep', fmtCEP(c.cep||''));
   document.getElementById('client-type').value=c.type||'pf';
   setVal('client-notes', c.notes);
+  _subclientsTmp=Array.isArray(c.subclients)?c.subclients.filter(Boolean).slice():[];
+  renderSubclientChips();
+  setVal('client-subclient-input','');
   openModal('modal-client');
 }
 
@@ -9814,7 +10431,14 @@ function saveClient(){
     state:getV('client-state').toUpperCase(),
     cep:getV('client-cep'),
     type:document.getElementById('client-type').value,
-    notes:getV('client-notes')
+    notes:getV('client-notes'),
+    subclients:(()=>{
+      // Inclui o que ficou digitado no input sem clicar em "Adicionar" — não perde nada
+      const pend=getV('client-subclient-input').replace(/,/g,' ').trim();
+      const list=_subclientsTmp.slice();
+      if(pend && !list.some(s=>_norm(s)===_norm(pend))) list.push(pend);
+      return list;
+    })()
   };
   if(id) DB.clients=DB.clients.map(x=>x.id===id?c:x);
   else DB.clients.push(c);
