@@ -4099,6 +4099,15 @@ function getVehRollingCostPerKm(vehicleId, refDateStr){
     fuel += n(t.fuelCost);
     km += _tripKm(t);
   });
+  // ⛽ Abastecimentos AVULSOS (sem viagem — ex: encher o tanque com a van parada)
+  // entram no diesel do período: lançados em Despesas Variáveis > Combustível.
+  (DB.varExpenses||[]).forEach(e=>{
+    if(!e || e.vehicleId!==vehicleId) return;
+    if((e.category||'')!=='combustivel') return;
+    const d=e.date||'';
+    if(d<from || d>ref) return;
+    fuel += n(e.amount);
+  });
   // Amostra mínima: 300 km e pelo menos 1 abastecimento — senão o índice não é confiável
   if(km<300 || fuel<=0) return null;
   return { costPerKm: fuel/km, fuel, km, from, to: ref };
