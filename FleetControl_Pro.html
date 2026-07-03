@@ -32,6 +32,20 @@ body.role-socio .gestor-only{ display:none !important; }
 [data-ccol].collapsed .ccol-body{display:none}
 [data-ccol].collapsed .ccol-btn svg{transform:rotate(-90deg)}
 [data-ccol].collapsed{padding-bottom:14px}
+/* ── POPOVER DE DETALHAMENTO DE GASTOS (hover na coluna Despesas) ── */
+#exp-pop{
+  position:fixed;z-index:9500;display:none;min-width:260px;max-width:320px;
+  background:linear-gradient(160deg,#12203a,#0c1727);
+  border:1px solid rgba(123,169,249,.35);border-radius:13px;padding:14px 16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.03) inset;
+  font-size:12.5px;color:#cbd5f5;pointer-events:none;line-height:1.7
+}
+#exp-pop .ep-title{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#7ba9f9;margin-bottom:8px}
+#exp-pop .ep-row{display:flex;justify-content:space-between;gap:16px}
+#exp-pop .ep-row b{font-weight:700}
+#exp-pop .ep-div{height:1px;background:rgba(148,163,184,.18);margin:8px 0}
+#exp-pop .ep-total{font-size:13.5px}
+#exp-pop .ep-prev{color:#67e8f9;font-style:italic}
 body.role-socio::after{
   content:'👁️ Modo Sócio (somente leitura)';
   position:fixed; bottom:14px; left:14px; z-index:8500;
@@ -1311,7 +1325,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
             <option value="all">Todos os veículos</option>
           </select>
         </div>
-        <button class="btn btn-pr gestor-only" onclick="openTripModal()">➕ Nova Viagem</button>
+        <!-- Botão "Nova Viagem" fica só no topo (renderTopbarActions) — sem duplicar -->
       </div>
       <div class="card">
         <div class="wrap"><table><thead><tr>
@@ -1396,7 +1410,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <div class="page" id="page-commitments">
       <div class="fl-row ic jb mb4">
         <div class="sec-t">Despesas Fixas da Frota</div>
-        <button class="btn btn-pr gestor-only" onclick="openCmtModal()">➕ Nova Despesa Fixa</button>
+        <!-- Botão fica só no topo (renderTopbarActions) — sem duplicar -->
       </div>
       <!-- Alert banner -->
       <div id="cmt-alert-banner" style="display:none;margin-bottom:16px"></div>
@@ -5015,6 +5029,67 @@ function saveTireIntervention(){
   renderTiresBody(v);
 }
 
+// ══════════ POPOVER DE GASTOS DA VIAGEM ══════════
+// Hover na coluna Despesas mostra o detalhamento: itens lançados + imposto +
+// previsão de diesel (km previsto × custo/km do veículo) em viagens ainda sem km real.
+function _expPopHost(){
+  let el=document.getElementById('exp-pop');
+  if(!el){ el=document.createElement('div'); el.id='exp-pop'; document.body.appendChild(el); }
+  return el;
+}
+function showExpPop(ev, tripId){
+  const t=DB.trips.find(x=>x.id===tripId); if(!t) return;
+  const c=calcTrip(t);
+  const linhas=[];
+  const item=(rot,v)=>{ if(n(v)>0) linhas.push(`<div class="ep-row"><span>${rot}</span><b>${R(v)}</b></div>`); };
+  const fuelCont=n(t.fuelCost)+(c.fuelRateio||0);
+  item('⛽ Combustível lançado', fuelCont);
+  item('🛂 Pedágio', t.tollCost);
+  item('🏨 Hospedagem', t.accommodationCost);
+  item('🍽️ Alimentação', t.foodCost);
+  item('👤 Motorista', t.driverCost);
+  item('🔧 Manutenção', t.maintenanceCost);
+  item('📦 Outros', t.otherCost);
+  if(n(t.taxAmount)>0) linhas.push(`<div class="ep-row"><span>🧾 Imposto${t.taxRate?' ('+t.taxRate+'%)':''}</span><b>${R(t.taxAmount)}</b></div>`);
+  if(!linhas.length) linhas.push('<div class="txm">Nenhum gasto lançado ainda</div>');
+
+  // Previsões (não somadas no total contábil)
+  const km=_tripKm(t);
+  const roll=getVehRollingCostPerKm(t.vehicleId, t.date);
+  let prev='';
+  if(fuelCont<=0 && roll){
+    if(km>0){
+      prev=`<div class="ep-div"></div><div class="ep-row ep-prev"><span>⛽ Diesel real (${km.toLocaleString('pt-BR')} km × ${R(roll.costPerKm)})</span><b>${R(km*roll.costPerKm)}</b></div>
+        <div class="ep-prev" style="font-size:11px">consumo pela média do veículo — já na "margem real"</div>`;
+    } else if(n(t.kmEstimated)>0){
+      const dPrev=n(t.kmEstimated)*roll.costPerKm;
+      const margPrev=n(t.grossRevenue)>0?((n(t.grossRevenue)-c.totalExpenses-dPrev)/n(t.grossRevenue)*100):0;
+      prev=`<div class="ep-div"></div><div class="ep-row ep-prev"><span>⛽ Diesel previsto (${n(t.kmEstimated)} km × ${R(roll.costPerKm)})</span><b>${R(dPrev)}</b></div>
+        <div class="ep-row ep-prev"><span>📊 Margem prevista com diesel</span><b>${margPrev.toFixed(1)}%</b></div>
+        <div class="ep-prev" style="font-size:11px">previsão pelo KM estimado — não entra no total até rodar</div>`;
+    }
+  }
+
+  const el=_expPopHost();
+  el.innerHTML=`<div class="ep-title">💸 Gastos desta viagem</div>
+    ${linhas.join('')}
+    <div class="ep-div"></div>
+    <div class="ep-row ep-total"><span>Total lançado</span><b class="tdr">${R(c.totalExpenses)}</b></div>
+    ${prev}`;
+  el.style.display='block';
+  // Posiciona perto do cursor, sem sair da tela
+  const r=el.getBoundingClientRect();
+  let x=ev.clientX+14, y=ev.clientY+10;
+  if(x+r.width>window.innerWidth-8) x=ev.clientX-r.width-14;
+  if(y+r.height>window.innerHeight-8) y=ev.clientY-r.height-10;
+  el.style.left=Math.max(8,x)+'px';
+  el.style.top=Math.max(8,y)+'px';
+}
+function hideExpPop(){
+  const el=document.getElementById('exp-pop');
+  if(el) el.style.display='none';
+}
+
 // ══════════ TRIPS ══════════
 function tripTypeBadge(type){
   const map={fixo:['p','🔄 Fretamento'],avulso:['o','Eventual'],diaria:['b','Diária']};
@@ -5221,12 +5296,12 @@ function renderTrips(){
       <td><div>${depDate}</div>${retDate}</td>
       <td><span class="badge b">${vehicleName(t.vehicleId)}</span></td>
       <td>${tripTypeBadge(t.type)}</td>
-      <td style="max-width:200px"><div style="font-weight:500">${t.origin&&t.destination?`${t.origin} <span class="txm">→</span> ${t.destination}`:(t.description||'—')}${fuelTag}</div>
+      <td style="min-width:230px;max-width:340px"><div style="font-weight:500">${t.origin&&t.destination?`${t.origin} <span class="txm">→</span> ${t.destination}`:(t.description||'—')}${fuelTag}</div>
         <div class="txs txm">${[t.client,t.subclient?'🏷️ '+t.subclient:'',t.driverName?'🚗 '+t.driverName:''].filter(Boolean).join(' · ')}</div></td>
       <td class="tpr fb">${R(t.grossRevenue)}</td>
       <td><span class="badge ${t.hasInvoice?'g':'gz'}">${t.hasInvoice?'Sim':'Não'}</span></td>
       <td>${km>0?km.toLocaleString('pt-BR')+' km':'—'}</td>
-      <td class="tdr">${R(c.totalExpenses)}</td>
+      <td class="tdr" style="cursor:help" onmouseenter="showExpPop(event,'${t.id}')" onmousemove="showExpPop(event,'${t.id}')" onmouseleave="hideExpPop()" onclick="showExpPop(event,'${t.id}')">${R(c.totalExpenses)}</td>
       <td class="${c.netProfit>=0?'tsc':'tdr'} fb">${R(c.netProfit)}</td>
       <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span>${realTag}</td>
       <td style="white-space:nowrap">
