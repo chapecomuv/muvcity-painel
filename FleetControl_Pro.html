@@ -23,6 +23,15 @@
    Quando o body tem class role-socio, todos elementos com .gestor-only somem.
    Banner discreto no rodapé indica modo somente leitura. */
 body.role-socio .gestor-only{ display:none !important; }
+/* ── CARDS MINIMIZÁVEIS ──
+   Qualquer card com data-ccol ganha um chevron no cabeçalho; o corpo recolhe/expande
+   e o estado fica salvo no dispositivo (localStorage ui_collapsed). */
+.ccol-btn{background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.18);color:#7689a1;width:26px;height:26px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px;transition:all .15s;padding:0}
+.ccol-btn:hover{color:#e2e8f0;border-color:rgba(123,169,249,.45);background:rgba(123,169,249,.08)}
+.ccol-btn svg{transition:transform .22s ease}
+[data-ccol].collapsed .ccol-body{display:none}
+[data-ccol].collapsed .ccol-btn svg{transform:rotate(-90deg)}
+[data-ccol].collapsed{padding-bottom:14px}
 body.role-socio::after{
   content:'👁️ Modo Sócio (somente leitura)';
   position:fixed; bottom:14px; left:14px; z-index:8500;
@@ -54,7 +63,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .logo-avatar img{width:100%;height:100%;object-fit:cover}
 .logo-avatar-ic{color:#fff;opacity:.9}
 .logo-info{min-width:0}
-.logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo-name{font-size:13.5px;font-weight:700;color:#fff;letter-spacing:-.2px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .logo-tag{font-size:9px;color:var(--txm);margin-top:1px;letter-spacing:.8px;text-transform:uppercase}
 .nav{flex:1;overflow-y:auto;padding:8px 0 8px}
 .nav-grp{padding:14px 18px 4px;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(100,116,139,.55);font-weight:600}
@@ -507,7 +516,7 @@ body{
   border-radius:13px
 }
 .logo-avatar:hover{transform:rotate(-3deg) scale(1.04);box-shadow:0 12px 32px rgba(59,130,246,.55)}
-.logo-name{font-size:15.5px;letter-spacing:-.2px;background:linear-gradient(135deg,#fff,#cbd5f5);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.logo-name{font-size:13.5px;letter-spacing:-.2px;background:linear-gradient(135deg,#fff,#cbd5f5);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .logo-tag{color:rgba(123,169,249,.7);font-weight:700}
 .nav-grp{
   font-size:9px;letter-spacing:1.6px;color:rgba(123,169,249,.55);
@@ -1200,13 +1209,9 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
     <div class="topbar-r">
       <span id="topbar-actions" style="display:contents"></span>
-      <button class="btn btn-ol btn-sm gestor-only" title="Configurar sincronização na nuvem" onclick="openSyncSettings()" style="gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-        Sync
-      </button>
-      <button class="btn btn-ol btn-sm" title="Bloquear painel (sair)" onclick="logoutApp()" style="gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Bloquear
+      <button class="btn btn-ol btn-sm" title="Sair do painel — pede o PIN pra entrar de novo" onclick="logoutApp()" style="gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
       </button>
     </div>
   </div>
@@ -1393,18 +1398,18 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       </div>
       <!-- Alert banner -->
       <div id="cmt-alert-banner" style="display:none;margin-bottom:16px"></div>
-      <div class="g2">
-        <div id="cmt-list"></div>
-        <div>
-          <div class="card mb4">
-            <div class="fl-row ic jb mb3"><span class="fsb">Resumo Mensal de Despesas Fixas</span></div>
-            <div id="cmt-summary"></div>
-          </div>
-          <div class="card">
-            <div class="fl-row ic jb mb3"><span class="fsb">Parcelamento — Vendedor</span></div>
-            <div id="owner-payment-detail"></div>
-          </div>
+      <!-- 1º Resumo (visão geral) · 2º despesas · 3º parcelamento (também é despesa) -->
+      <div class="card mb4" data-ccol="cmt_resumo">
+        <div class="fl-row ic jb mb3"><span class="fsb">📊 Resumo Mensal de Despesas Fixas</span></div>
+        <div id="cmt-summary"></div>
+      </div>
+      <div id="cmt-list"></div>
+      <div class="card" id="owner-payment-card" data-ccol="owner_panel">
+        <div class="fl-row ic jb mb3">
+          <span class="fsb" id="owner-panel-title">Parcelamento</span>
+          <button class="btn btn-gh btn-xs gestor-only" onclick="editCommitment('fc_vendedor')" title="Editar nome, valores e vencimento">✏️ Editar</button>
         </div>
+        <div id="owner-payment-detail"></div>
       </div>
     </div>
 
@@ -1507,6 +1512,18 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
 
         <!-- Alertas de manutenção -->
         <div>
+          <div class="card mb4 gestor-only">
+            <div class="fl-row ic jb">
+              <div>
+                <div class="sec-t">☁️ Sincronização na Nuvem</div>
+                <div class="txs txm mt1">Mantém painel, motoristas e sócio com os mesmos dados em tempo real</div>
+              </div>
+              <button class="btn btn-ol btn-sm" onclick="openSyncSettings()" style="gap:6px;flex-shrink:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                Configurar
+              </button>
+            </div>
+          </div>
           <div class="card mb4">
             <div class="fl-row ic jb mb4">
               <div>
@@ -4474,6 +4491,7 @@ function renderCurrentPage(){
     agency:renderAgency,shared:renderShared,receivables:renderReceivables,
     reports:renderReports,settings:renderSettings,admins:renderAdmins};
   r[currentPage]?.();
+  try{ applyCollapsibles(); }catch(_){}
 }
 
 function updateMonthLabels(){
@@ -5090,25 +5108,15 @@ function renderTrips(){
     if(Array.from(vf.options).some(o=>o.value===prevValue)) vf.value=prevValue;
   }
   const vFilter=vf?.value||'all';
-  // Ordenação inteligente:
-  //  1. 🟢 Em andamento sempre no topo
-  //  2. ⏳ Programadas/futuras (sem driverStatus 'finalizada') em ordem CRESCENTE
-  //     (mais próxima primeiro — hoje, amanhã, depois...)
-  //  3. ✅ Finalizadas em ordem DECRESCENTE (mais recente primeiro — histórico)
-  const _todayKey=new Date().toISOString().slice(0,10);
-  const _rank=t=>{
-    const st=t.driverStatus||'';
-    if(st==='andamento') return 0;
-    if(st==='finalizada') return 2;
-    return 1; // programadas e sem status
-  };
+  // Ordenação: 🟢 em andamento fixas no topo; todo o resto em ordem DECRESCENTE
+  // de data (mais recente primeiro) — simples e previsível de localizar.
   const trips=DB.trips.filter(t=>inMonth(t.date||t.departureDate,currentYear,currentMonth)&&(vFilter==='all'||t.vehicleId===vFilter))
     .sort((a,b)=>{
-      const ra=_rank(a), rb=_rank(b);
-      if(ra!==rb) return ra-rb;                       // grupo (andamento → programada → finalizada)
+      const aAnd=(a.driverStatus||'')==='andamento'?0:1;
+      const bAnd=(b.driverStatus||'')==='andamento'?0:1;
+      if(aAnd!==bAnd) return aAnd-bAnd;
       const da=(a.date||a.departureDate||''), db=(b.date||b.departureDate||'');
-      if(ra===2) return db.localeCompare(da);         // finalizadas: DESC
-      return da.localeCompare(db);                    // andamento + programadas: ASC (próxima primeiro)
+      return db.localeCompare(da);   // DESC: últimas realizadas primeiro
     });
 
   let totalRev=0,totalExp=0,totalProfit=0,anyReal=false;
@@ -5493,6 +5501,8 @@ function renderCommitments(){
     }
 
     const isVendedor=fc.id==='fc_vendedor';
+    // O parcelamento do vendedor tem painel dedicado à direita — não duplica na lista.
+    if(isVendedor) return '';
     const remainingDebt=isVendedor?(n(fc.totalDebt)-n(fc.paidTotal)):null;
 
     const dueBadge=dueStatus==='overdue'
@@ -5501,7 +5511,7 @@ function renderCommitments(){
       ? `<span class="badge" style="background:rgba(251,191,36,.2);color:#f59e0b">🟡 Vence dia ${fc.dueDay}</span>`
       : '';
 
-    return `<div class="card mb3" style="${dueStatus==='overdue'?'border-left:3px solid #f87171':dueStatus==='due-soon'?'border-left:3px solid #f59e0b':''}">
+    return `<div class="card mb3" data-ccol="cmt_${fc.id}" style="${dueStatus==='overdue'?'border-left:3px solid #f87171':dueStatus==='due-soon'?'border-left:3px solid #f59e0b':''}">
       <div class="cmt-h">
         <div>
           <div class="fl-row ic" style="gap:8px;flex-wrap:wrap">
@@ -5594,6 +5604,7 @@ function renderCommitments(){
           return '<span></span>';
         })()}
         <div class="fl-row ic" style="gap:8px">
+          <button class="btn btn-gh btn-sm" onclick="printCommitmentReport('${fc.id}')" title="Relatório em PDF com o cabeçalho da empresa">📄 Relatório</button>
           <button class="btn btn-pr btn-sm" onclick="editCommitment('${fc.id}')" title="Editar despesa fixa">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Editar
@@ -5635,8 +5646,12 @@ function renderCommitments(){
     </div>
     ${activeCmts.length===0?'<div class="txs txm txc" style="padding:8px 0">Nenhuma despesa fixa ativa</div>':''}`;
 
-  // Owner detail
+  // Owner detail — painel dedicado do parcelamento (título segue o nome dado pelo gestor)
   const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
+  const ownerCard=document.getElementById('owner-payment-card');
+  if(ownerCard) ownerCard.style.display=fc?'':'none';
+  const ownerTitle=document.getElementById('owner-panel-title');
+  if(ownerTitle && fc) ownerTitle.textContent='💰 '+(fc.name||'Parcelamento');
   if(fc){
     const pct=fc.totalDebt>0?Math.round((n(fc.paidTotal)/n(fc.totalDebt))*100):0;
     // Lista de pagamentos com editar/excluir (mais recente primeiro)
@@ -5662,85 +5677,18 @@ function renderCommitments(){
       </div>
       <div class="prg"><div class="prg-f" style="width:${pct}%;background:var(--sc)"></div></div>
       <div class="txs txm mt1 mb3">${pct}% quitado</div>
-      <div class="fl-row ic jb" style="margin:10px 0 8px">
-        <div class="fsec-t" style="margin:0">📋 Pagamentos realizados</div>
-        <button class="btn btn-pr btn-sm" onclick="printOwnerReport()" title="Gerar relatório em PDF pra enviar ao vendedor">📄 Relatório PDF</button>
+      <div class="fl-row ic" style="gap:8px;margin:10px 0 12px;flex-wrap:wrap">
+        <button class="btn btn-sc btn-sm gestor-only" style="flex:1;min-width:150px" onclick="openOwnerPaymentModal()">➕ Registrar Pagamento</button>
+        <button class="btn btn-pr btn-sm" style="flex:1;min-width:150px" onclick="printOwnerReport()" title="Relatório em PDF com o cabeçalho da empresa">📄 Relatório PDF</button>
       </div>
+      <div class="fsec-t" style="margin:0 0 8px">📋 Pagamentos realizados</div>
       ${paysHtml}`;
   }
 }
 
-// Gera o relatório de pagamentos do vendedor numa janela de impressão.
-// O usuário salva como PDF pelo diálogo do navegador (Destino: Salvar como PDF).
+// Relatório do parcelamento do vendedor — usa o motor padrão com cabeçalho da empresa.
 function printOwnerReport(){
-  const fc=DB.fixedCommitments.find(f=>f.id==='fc_vendedor');
-  if(!fc){ alert('Parcelamento do vendedor não encontrado.'); return; }
-  const pago=n(fc.paidTotal), total=n(fc.totalDebt), resta=total-pago;
-  const pct=total>0?Math.round((pago/total)*100):0;
-  const pays=(fc.payments||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
-  const linhas=pays.map((p,i)=>`
-    <tr>
-      <td style="text-align:center">${i+1}</td>
-      <td>${p.date?fmtDate(p.date):'—'}</td>
-      <td>${p.notes||'—'}</td>
-      <td style="text-align:right;font-weight:600">${R(p.amount)}</td>
-    </tr>`).join('');
-  const w=window.open('','_blank');
-  if(!w){ alert('Popup bloqueado. Libere popups pra este site e tente de novo.'); return; }
-  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-  <title>Relatório de Pagamentos — MUVCITY</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Segoe UI',system-ui,sans-serif;color:#1e293b;padding:36px;font-size:13px}
-    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0f172a;padding-bottom:16px;margin-bottom:22px}
-    .brand{font-size:22px;font-weight:800;letter-spacing:-.5px;color:#0f172a}
-    .brand small{display:block;font-size:11px;font-weight:500;color:#64748b;letter-spacing:.4px;margin-top:2px}
-    .doc-info{text-align:right;font-size:11.5px;color:#64748b;line-height:1.6}
-    h1{font-size:16px;margin-bottom:4px;color:#0f172a}
-    .sub{font-size:12px;color:#64748b;margin-bottom:20px}
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-    .kpi{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
-    .kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700}
-    .kpi-v{font-size:17px;font-weight:800;margin-top:4px;color:#0f172a}
-    .kpi-v.green{color:#059669}.kpi-v.red{color:#dc2626}
-    .bar{background:#e2e8f0;border-radius:6px;height:14px;overflow:hidden;margin-bottom:6px}
-    .bar-f{background:#059669;height:100%;border-radius:6px}
-    .bar-t{font-size:11px;color:#64748b;margin-bottom:22px}
-    table{width:100%;border-collapse:collapse;margin-bottom:24px}
-    th{background:#0f172a;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:9px 10px;text-align:left}
-    th:first-child{border-radius:6px 0 0 0}th:last-child{border-radius:0 6px 0 0;text-align:right}
-    td{padding:8px 10px;border-bottom:1px solid #e2e8f0}
-    tr:nth-child(even) td{background:#f8fafc}
-    .tot td{font-weight:800;font-size:14px;border-top:2px solid #0f172a;background:#f1f5f9!important}
-    .foot{font-size:10.5px;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:8px}
-    @media print{ body{padding:16px} }
-  </style></head><body>
-    <div class="head">
-      <div class="brand">MUVCITY TRANSFER<small>Transporte Executivo · Chapecó/SC</small></div>
-      <div class="doc-info">Relatório gerado em<br><b>${hoje}</b></div>
-    </div>
-    <h1>Relatório de Pagamentos — ${fc.name||'Parcelamento'}</h1>
-    <div class="sub">Demonstrativo de valores pagos e saldo em aberto</div>
-    <div class="kpis">
-      <div class="kpi"><div class="kpi-l">Valor Total</div><div class="kpi-v">${R(total)}</div></div>
-      <div class="kpi"><div class="kpi-l">Total Pago</div><div class="kpi-v green">${R(pago)}</div></div>
-      <div class="kpi"><div class="kpi-l">Saldo Restante</div><div class="kpi-v red">${R(resta)}</div></div>
-      <div class="kpi"><div class="kpi-l">Pagamentos</div><div class="kpi-v">${pays.length}x</div></div>
-    </div>
-    <div class="bar"><div class="bar-f" style="width:${pct}%"></div></div>
-    <div class="bar-t">${pct}% do valor total já quitado</div>
-    <table>
-      <thead><tr><th style="width:36px;text-align:center">#</th><th style="width:110px">Data</th><th>Observação</th><th style="width:130px">Valor</th></tr></thead>
-      <tbody>
-        ${linhas||'<tr><td colspan="4" style="text-align:center;color:#94a3b8">Nenhum pagamento registrado</td></tr>'}
-        <tr class="tot"><td colspan="3">TOTAL PAGO</td><td style="text-align:right">${R(pago)}</td></tr>
-      </tbody>
-    </table>
-    <div class="foot">MUVCITY TRANSFER · Documento gerado automaticamente pelo painel de gestão · ${hoje}</div>
-    <script>window.onload=()=>setTimeout(()=>window.print(),400);<\/script>
-  </body></html>`);
-  w.document.close();
+  printCommitmentReport('fc_vendedor');
 }
 
 // ══════════ INVESTORS ══════════
@@ -5849,7 +5797,7 @@ function renderInvestors(){
     const histTotalPaid=validHistory.reduce((s,r)=>s+r.paid,0);
     const histBalance=histTotalCalc-histTotalPaid;
 
-    return `<div class="card mb4">
+    return `<div class="card mb4" data-ccol="inv_${inv.id}">
       <!-- Header -->
       <div class="fl-row ic jb mb3">
         <div>
@@ -6442,7 +6390,7 @@ function renderVehicleReport(el){
     const sg=t.netProfit>=0?'tsc':'tdr';
     const revKM=t.kmTotal>0?(t.grossRev/t.kmTotal):0;
     const profitKM=t.kmTotal>0?(t.netProfit/t.kmTotal):0;
-    return `<div class="card mb3">
+    return `<div class="card mb3" data-ccol="rep_${v.id}">
       <div class="fl-row ic jb mb3" style="flex-wrap:wrap;gap:8px">
         <div>
           <span style="font-size:20px;font-weight:800;letter-spacing:1.5px">${v.plate}</span>
@@ -10307,12 +10255,9 @@ function renderClientReport(){
   `;
 }
 
-function printClientReport(){
-  const node=document.getElementById('client-report-print');
-  if(!node||!node.innerHTML.trim()){ alert('Nada para imprimir.'); return; }
-  const id=document.getElementById('cr-client-id').value;
-  const c=DB.clients.find(x=>x.id===id);
-  const title=`Relatorio - ${c?c.name:'Cliente'} - ${new Date().toISOString().slice(0,10)}`;
+// Pipeline compartilhado de impressão — todos os relatórios (cliente, parcelamentos,
+// despesas fixas) saem com o mesmo visual profissional e o cabeçalho padrão da empresa.
+function printDocWindow(title, bodyHTML){
   const w=window.open('','_blank','width=1100,height=800');
   if(!w){ alert('Popup bloqueado pelo navegador. Permita popups para este site.'); return; }
   const css=`
@@ -10356,10 +10301,99 @@ function printClientReport(){
     .cr-sig-name{font-size:13px;color:#0f172a}
     .cr-sig-resp{font-size:11.5px;color:#475569;margin-top:2px}
   `;
-  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>${node.innerHTML}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>${bodyHTML}</body></html>`);
   w.document.close();
   w.focus();
   setTimeout(()=>{ try{ w.print(); }catch(_){} },400);
+}
+
+function printClientReport(){
+  const node=document.getElementById('client-report-print');
+  if(!node||!node.innerHTML.trim()){ alert('Nada para imprimir.'); return; }
+  const id=document.getElementById('cr-client-id').value;
+  const c=DB.clients.find(x=>x.id===id);
+  printDocWindow(`Relatorio - ${c?c.name:'Cliente'} - ${new Date().toISOString().slice(0,10)}`, node.innerHTML);
+}
+
+// Relatório de qualquer despesa fixa (seguro, financiamento, parcelamento...)
+// com o cabeçalho padrão da empresa — mostra a situação e as parcelas.
+function printCommitmentReport(fcId){
+  const fc=DB.fixedCommitments.find(f=>f.id===fcId);
+  if(!fc){ alert('Despesa não encontrada.'); return; }
+  const v=getVehicle(fc.vehicleId);
+  const isVendedor=fc.id==='fc_vendedor';
+  const hoje=new Date().toISOString().split('T')[0];
+
+  let kpis, tabela;
+  if(isVendedor){
+    // Parcelamento com pagamentos avulsos registrados (valores variáveis)
+    const pago=n(fc.paidTotal), total=n(fc.totalDebt), resta=total-pago;
+    const pct=total>0?Math.round((pago/total)*100):0;
+    const pays=(fc.payments||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    kpis=`
+      <div><div class="cr-lbl">Valor Total</div><div style="font-weight:800">${R(total)}</div></div>
+      <div><div class="cr-lbl">Total Pago</div><div style="font-weight:800;color:#166534">${R(pago)}</div></div>
+      <div><div class="cr-lbl">Saldo Restante</div><div style="font-weight:800;color:#b91c1c">${R(resta)}</div></div>
+      <div><div class="cr-lbl">Pagamentos</div><div>${pays.length}x</div></div>
+      <div><div class="cr-lbl">Quitado</div><div><strong>${pct}%</strong></div></div>`;
+    tabela=`<table class="cr-table">
+      <thead><tr><th style="width:32px">#</th><th style="width:110px">Data</th><th>Observação</th><th style="width:120px;text-align:right">Valor</th></tr></thead>
+      <tbody>
+        ${pays.map((p,i)=>`<tr><td>${i+1}</td><td><strong>${p.date?fmtDate(p.date):'—'}</strong></td><td>${p.notes||'—'}</td><td style="text-align:right;font-weight:700">${R(p.amount)}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Nenhum pagamento registrado</td></tr>'}
+        <tr class="cr-total-row"><td colspan="3" style="text-align:right;padding:12px"><strong>TOTAL PAGO</strong></td><td style="text-align:right;font-weight:800;padding:12px">${R(pago)}</td></tr>
+      </tbody></table>`;
+  } else if(fc.totalInstallments){
+    // Parcelado com valor fixo: deriva as parcelas mês a mês a partir do início
+    const total=n(fc.installmentValue)*fc.totalInstallments;
+    const pago=n(fc.installmentValue)*fc.paidInstallments;
+    const pct=Math.round((fc.paidInstallments/fc.totalInstallments)*100);
+    kpis=`
+      <div><div class="cr-lbl">Valor Total</div><div style="font-weight:800">${R(total)}</div></div>
+      <div><div class="cr-lbl">Total Pago</div><div style="font-weight:800;color:#166534">${R(pago)}</div></div>
+      <div><div class="cr-lbl">Saldo Restante</div><div style="font-weight:800;color:#b91c1c">${R(total-pago)}</div></div>
+      <div><div class="cr-lbl">Parcelas</div><div>${fc.paidInstallments} de ${fc.totalInstallments} pagas (${pct}%)</div></div>
+      <div><div class="cr-lbl">Vencimento</div><div>Todo dia ${fc.dueDay||'—'}</div></div>`;
+    const base=fc.startDate?new Date(fc.startDate+'T00:00:00'):new Date();
+    const linhas=[];
+    for(let i=0;i<fc.totalInstallments;i++){
+      const d=new Date(base.getFullYear(), base.getMonth()+i, Math.min(parseInt(fc.dueDay)||base.getDate(),28));
+      const venc=d.toISOString().split('T')[0];
+      const paga=i<fc.paidInstallments;
+      const status=paga?'<span class="cr-pill cr-pill-g">PAGA</span>'
+        :(venc<hoje?'<span class="cr-pill" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5">VENCIDA</span>'
+        :'<span class="cr-pill cr-pill-z">PENDENTE</span>');
+      linhas.push(`<tr><td>${i+1}ª</td><td><strong>${fmtDate(venc)}</strong></td><td>${status}</td><td style="text-align:right;font-weight:700">${R(fc.installmentValue)}</td></tr>`);
+    }
+    tabela=`<table class="cr-table">
+      <thead><tr><th style="width:60px">Parcela</th><th style="width:130px">Vencimento</th><th>Status</th><th style="width:120px;text-align:right">Valor</th></tr></thead>
+      <tbody>${linhas.join('')}
+        <tr class="cr-total-row"><td colspan="3" style="text-align:right;padding:12px"><strong>TOTAL PAGO ATÉ AQUI</strong></td><td style="text-align:right;font-weight:800;padding:12px">${R(pago)}</td></tr>
+      </tbody></table>`;
+  } else {
+    // Recorrente sem fim (ex: internet, mensalidades)
+    kpis=`
+      <div><div class="cr-lbl">Valor Mensal</div><div style="font-weight:800">${R(fc.installmentValue)}</div></div>
+      <div><div class="cr-lbl">Vencimento</div><div>Todo dia ${fc.dueDay||'—'}</div></div>
+      <div><div class="cr-lbl">Tipo</div><div>Recorrente (sem parcelas fixas)</div></div>
+      <div><div class="cr-lbl">Pagamentos registrados</div><div>${fc.paidInstallments||0}</div></div>`;
+    tabela='';
+  }
+
+  const body=`<div class="cr-doc">
+    ${buildCompanyHeaderHTML()}
+    <div class="cr-section-title">Relatório de Pagamentos — ${fc.name}</div>
+    <div class="cr-section-bar">Dados</div>
+    <div class="cr-info-grid">
+      <div><div class="cr-lbl">Categoria</div><div>${catLabel(fc.category)}</div></div>
+      <div><div class="cr-lbl">Veículo</div><div>${v?.plate||'—'}${v?.model?' · '+v.model:''}</div></div>
+      <div><div class="cr-lbl">Início</div><div>${fc.startDate?fmtDate(fc.startDate):'—'}</div></div>
+    </div>
+    <div class="cr-section-bar">Situação</div>
+    <div class="cr-info-grid">${kpis}</div>
+    ${tabela?`<div class="cr-section-bar">Detalhamento</div>${tabela}`:''}
+    ${fc.notes?`<div class="cr-thanks">${fc.notes}</div>`:''}
+  </div>`;
+  printDocWindow(`Relatorio - ${fc.name} - ${hoje}`, body);
 }
 
 function exportClientReportCSV(){
@@ -10853,6 +10887,47 @@ function applyRoleGate(){
   // Limpa classes anteriores e aplica a nova
   document.body.classList.remove('role-gestor','role-socio','role-contabilidade','role-secretaria');
   document.body.classList.add('role-'+role);
+}
+
+// ══════════ CARDS MINIMIZÁVEIS ══════════
+// Uso: adicione data-ccol="id-unico" em qualquer card cujo PRIMEIRO elemento filho
+// seja o cabeçalho. applyCollapsibles() injeta o chevron no cabeçalho e embrulha o
+// resto num .ccol-body recolhível. Estado salvo por dispositivo (não sincroniza).
+function ccolIsCollapsed(id){
+  try{ return (JSON.parse(localStorage.getItem('ui_collapsed')||'[]')).includes(id); }catch(_){ return false; }
+}
+function ccolToggle(id){
+  const card=document.querySelector(`[data-ccol="${id}"]`);
+  if(!card) return;
+  card.classList.toggle('collapsed');
+  let set=[];
+  try{ set=JSON.parse(localStorage.getItem('ui_collapsed')||'[]'); }catch(_){}
+  const idx=set.indexOf(id);
+  if(card.classList.contains('collapsed')){ if(idx===-1) set.push(id); }
+  else if(idx>-1) set.splice(idx,1);
+  try{ localStorage.setItem('ui_collapsed', JSON.stringify(set)); }catch(_){}
+}
+function applyCollapsibles(){
+  document.querySelectorAll('[data-ccol]').forEach(card=>{
+    if(card._ccolInit) return;
+    const kids=[...card.children];
+    if(kids.length<2) return;   // precisa de cabeçalho + corpo
+    card._ccolInit=true;
+    const id=card.getAttribute('data-ccol');
+    // Embrulha tudo (menos o cabeçalho) num corpo recolhível
+    const body=document.createElement('div');
+    body.className='ccol-body';
+    kids.slice(1).forEach(k=>body.appendChild(k));
+    card.appendChild(body);
+    // Chevron no cabeçalho
+    const btn=document.createElement('button');
+    btn.className='ccol-btn';
+    btn.title='Minimizar / expandir';
+    btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+    btn.onclick=e=>{ e.stopPropagation(); ccolToggle(id); };
+    kids[0].appendChild(btn);
+    if(ccolIsCollapsed(id)) card.classList.add('collapsed');
+  });
 }
 
 // ════════════════════════════════════════════════════════════
