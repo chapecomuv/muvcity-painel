@@ -1181,6 +1181,8 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clientes</div>
     <div class="nav-item gestor-only" onclick="nav('drivers')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></span>Motoristas</div>
+    <div class="nav-item gestor-only" onclick="nav('providers')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Prestadores</div>
     <div class="nav-item gestor-only" onclick="nav('admins')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M22 11l-3-3m0 0l-3 3m3-3v9"/></svg></span>Administradores</div>
     <div class="nav-grp">Análises</div>
@@ -1452,7 +1454,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           </div>
         </div>
         <div class="wrap"><table><thead><tr>
-          <th>Data</th><th>Cliente</th><th>Origem → Destino</th><th>Valor da Viagem</th><th>% Comissão</th><th>Comissão (R$)</th><th>NF</th><th>Ações</th>
+          <th>Data</th><th>Cliente</th><th>Origem → Destino</th><th>Cobrado</th><th>Repasse</th><th>Comissão</th><th>💰 Situação</th><th>NF</th><th>Ações</th>
         </tr></thead><tbody id="agency-tbody"></tbody></table></div>
         <div id="agency-summary" class="mt3"></div>
       </div>
@@ -1837,6 +1839,21 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           </div>
 
         </div>
+      </div>
+    </div>
+
+    <!-- ── PRESTADORES DE SERVIÇO ── -->
+    <div class="page" id="page-providers">
+      <div class="card">
+        <div class="fl-row ic jb mb3">
+          <div>
+            <span class="fsb">Prestadores cadastrados</span>
+            <div class="txs txm mt1">Parceiros terceirizados que executam viagens agenciadas — com histórico de repasses</div>
+          </div>
+        </div>
+        <div class="wrap"><table><thead><tr>
+          <th>Prestador</th><th>Contato</th><th>PIX</th><th>Agenciamentos</th><th>Total Repassado</th><th>📤 Pendente</th><th>Ações</th>
+        </tr></thead><tbody id="providers-tbody"></tbody></table></div>
       </div>
     </div>
 
@@ -2423,6 +2440,43 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
 </div>
 </div>
 
+<!-- PROVIDER MODAL -->
+<div class="overlay" id="modal-provider">
+<div class="modal" style="max-width:540px">
+  <div class="modal-h">
+    <span class="modal-t" id="provider-modal-title">Novo Prestador de Serviço</span>
+    <button class="xbtn" onclick="closeModal('modal-provider')">✕</button>
+  </div>
+  <input type="hidden" id="prov-id">
+  <div class="fr c2">
+    <div class="fg"><label class="fl">Nome / Empresa *</label>
+      <input type="text" class="fc" id="prov-name" placeholder="Ex: Jesus Torres - Beto"></div>
+    <div class="fg"><label class="fl">Telefone / WhatsApp</label>
+      <input type="text" class="fc" id="prov-phone" placeholder="(XX) 9 XXXX-XXXX" oninput="maskPhone(this)"></div>
+  </div>
+  <div class="fr c2">
+    <div class="fg"><label class="fl">CPF / CNPJ</label>
+      <input type="text" class="fc" id="prov-doc" placeholder="Documento fiscal"></div>
+    <div class="fg"><label class="fl">Chave PIX <span style="opacity:.6">(pros repasses)</span></label>
+      <input type="text" class="fc" id="prov-pix" placeholder="CPF, telefone, e-mail ou aleatória"></div>
+  </div>
+  <div class="fr c2">
+    <div class="fg"><label class="fl">Cidade</label>
+      <input type="text" class="fc" id="prov-city" placeholder="Ex: São Miguel do Oeste - SC"></div>
+    <div class="fg"><label class="fl">Tipo de Veículo</label>
+      <input type="text" class="fc" id="prov-vehicle" placeholder="Ex: Van 15 lugares, Ônibus 46"></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><label class="fl">Observações</label>
+      <textarea class="fc" id="prov-notes" placeholder="Condições combinadas, qualidade do serviço, restrições..."></textarea></div>
+  </div>
+  <div class="fl-row ic jb mt4">
+    <button class="btn btn-gh" onclick="closeModal('modal-provider')">Cancelar</button>
+    <button class="btn btn-pr" onclick="saveProvider()">💾 Salvar Prestador</button>
+  </div>
+</div>
+</div>
+
 <!-- TIRES MODAL -->
 <div class="overlay" id="modal-tires">
 <div class="modal" style="max-width:640px">
@@ -2884,7 +2938,14 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <div class="fr c2">
       <div class="fg"><label class="fl">Data</label><input type="date" class="fc" id="ag-date"></div>
       <div class="fg"><label class="fl">Cliente / Contratante</label>
-        <input type="text" class="fc" id="ag-client" placeholder="Nome do cliente" list="client-datalist" autocomplete="off"></div>
+        <div class="ac-wrap">
+          <input type="text" class="fc" id="ag-client" placeholder="Buscar cliente cadastrado..." autocomplete="off"
+                 oninput="acFilter('ag-client','ag-client-ac')"
+                 onkeydown="acKeydown(event,'ag-client','ag-client-ac')"
+                 onfocus="acFilter('ag-client','ag-client-ac')"
+                 onblur="setTimeout(()=>acClose('ag-client-ac'),180)">
+          <div class="ac-list" id="ag-client-ac" style="display:none"></div>
+        </div></div>
     </div>
     <div class="fr c2">
       <div class="fg"><label class="fl">Origem</label>
@@ -2903,44 +2964,59 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         </div></div>
     </div>
     <div class="fr">
-      <div class="fg"><label class="fl">Empresa/Transportadora Executora</label>
-        <input type="text" class="fc" id="ag-operator" placeholder="Quem executou a viagem"></div>
+      <div class="fg"><label class="fl">🤝 Prestador Executor</label>
+        <div class="ac-wrap">
+          <input type="text" class="fc" id="ag-operator" placeholder="Buscar prestador cadastrado..." autocomplete="off"
+                 oninput="provAc('ag-operator')" onfocus="provAc('ag-operator')"
+                 onkeydown="cityAcKey(event,'ag-operator')" onblur="setTimeout(()=>acClose('ag-operator-ac'),180)">
+          <div class="ac-list" id="ag-operator-ac" style="display:none"></div>
+        </div>
+        <div class="txs txm mt1">Se não estiver cadastrado, o sistema oferece o cadastro ao salvar</div></div>
     </div>
   </div>
   <div class="fsec">
     <div class="fsec-t">💰 Valores</div>
     <div class="fr c3">
-      <div class="fg"><label class="fl">Valor Total da Viagem (R$)</label>
-        <input type="number" class="fc" id="ag-total" placeholder="0,00" step="0.01" oninput="calcAgencyCommission()"></div>
-      <div class="fg"><label class="fl">% de Comissão</label>
-        <input type="number" class="fc" id="ag-rate" placeholder="10" step="0.1" oninput="calcAgencyCommission()"></div>
-      <div class="fg"><label class="fl">Comissão (R$)</label>
-        <input type="number" class="fc" id="ag-commission" placeholder="0,00" step="0.01" style="background:var(--bg2)" readonly></div>
+      <div class="fg"><label class="fl">💵 Cobrado do Cliente (R$)</label>
+        <input type="number" class="fc" id="ag-total" placeholder="Ex: 700,00" step="0.01" oninput="calcAgencyCommission()">
+        <div class="txs txm mt1">Quanto o cliente paga pra você</div></div>
+      <div class="fg"><label class="fl">🚚 Repasse ao Prestador (R$)</label>
+        <input type="number" class="fc" id="ag-repasse" placeholder="Ex: 560,00" step="0.01" oninput="calcAgencyCommission()">
+        <div class="txs txm mt1">Quanto você paga a quem executa</div></div>
+      <div class="fg"><label class="fl">🤝 Sua Comissão (R$)</label>
+        <input type="number" class="fc" id="ag-commission" placeholder="0,00" step="0.01" style="background:var(--bg2);color:var(--sc);font-weight:700" readonly>
+        <div class="txs txm mt1">Calculada: cobrado − repasse</div></div>
     </div>
+    <input type="hidden" id="ag-rate">
     <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:12px 14px;margin-top:4px">
-      <div class="fsec-t" style="color:#a78bfa;margin-bottom:10px">🧾 Notas Fiscais</div>
+      <div class="fsec-t" style="color:#a78bfa;margin-bottom:6px">🧾 Notas Fiscais</div>
+      <div class="txs" style="color:#a5b4fc;line-height:1.6;margin-bottom:12px">
+        Como funciona: <b>você emite NF pro cliente</b> do valor cobrado (ex: R$ 700) ·
+        <b>o prestador emite NF pra você</b> do repasse (ex: R$ 560). A NF do prestador comprova
+        tua despesa — pro fisco, tua receita real é só a diferença.
+      </div>
       <div class="fr c2">
         <div class="fg">
-          <label class="fl">Emitiu NF para o cliente?</label>
+          <label class="fl">Você emitiu NF pro cliente?</label>
           <select class="fc" id="ag-nf" onchange="calcAgencyCommission()">
             <option value="nao">Sem Nota Fiscal</option>
             <option value="sim">Com Nota Fiscal</option>
           </select>
         </div>
         <div class="fg">
-          <label class="fl">Valor NF Emitida (R$)</label>
-          <input type="number" class="fc" id="ag-nf-value" placeholder="0,00" step="0.01" oninput="calcAgencyCommission()">
+          <label class="fl">Valor da SUA NF pro cliente (R$)</label>
+          <input type="number" class="fc" id="ag-nf-value" placeholder="Normalmente = cobrado" step="0.01" oninput="calcAgencyCommission()">
         </div>
       </div>
       <div class="fr c2">
         <div class="fg">
-          <label class="fl">NF do Prestador/Executora (R$)</label>
-          <input type="number" class="fc" id="ag-provider-nf-value" placeholder="0,00" step="0.01" oninput="calcAgencyCommission()"
-            title="Valor da NF que o prestador emite para você (dedução fiscal)">
+          <label class="fl">NF que o PRESTADOR te emitiu (R$)</label>
+          <input type="number" class="fc" id="ag-provider-nf-value" placeholder="Normalmente = repasse" step="0.01" oninput="calcAgencyCommission()"
+            title="A nota que o prestador (quem executou a viagem) emite pra você, no valor do repasse — comprova a despesa e abate da tua base fiscal">
         </div>
         <div class="fg" style="display:flex;flex-direction:column;justify-content:flex-end">
           <div style="background:var(--bg3);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--txm)">
-            💡 Líquido Fiscal = NF Emitida − NF Prestador
+            💡 Líquido Fiscal = sua NF − NF do prestador
           </div>
         </div>
       </div>
@@ -3467,6 +3543,7 @@ function loadDB(){
     });
     if(!DB.clients) DB.clients=[];
     if(!DB.drivers) DB.drivers=[];
+    if(!Array.isArray(DB.providers)) DB.providers=[];
     if(!DB.agencyRevenue) DB.agencyRevenue=[];
     if(!DB.sharedExpenses) DB.sharedExpenses=JSON.parse(JSON.stringify(INIT.sharedExpenses));
     if(!DB.settings) DB.settings=JSON.parse(JSON.stringify(INIT.settings));
@@ -4444,6 +4521,7 @@ function nav(page){
     investors:['Investidores','Gestão de aportes e retornos'],
     clients:['Clientes','Cadastro e histórico de clientes'],
     drivers:['Motoristas','Cadastro e desempenho dos motoristas'],
+    providers:['Prestadores de Serviço','Parceiros terceirizados das viagens agenciadas'],
     agency:['Agenciamento','Receitas de comissão por viagens agenciadas'],
     shared:['Despesas Compartilhadas','Custos divididos entre os veículos da frota'],
     receivables:['Contas a Receber','Pagamentos pendentes e recebidos por viagem'],
@@ -4469,6 +4547,7 @@ function renderTopbarActions(){
     investors:`<button class="btn btn-pr gestor-only" onclick="openInvModal()">➕ Novo Investidor</button>`,
     clients:`<button class="btn btn-pr gestor-only" onclick="openClientModal()">➕ Novo Cliente</button>`,
     drivers:`<button class="btn btn-pr gestor-only" onclick="openDriverModal()">➕ Novo Motorista</button>`,
+    providers:`<button class="btn btn-pr gestor-only" onclick="openProviderModal()">➕ Novo Prestador</button>`,
     agency:`<button class="btn btn-pr gestor-only" onclick="openAgencyModal()">➕ Nova Comissão</button>`,
     shared:`<button class="btn btn-pr gestor-only" onclick="openSharedModal()">➕ Nova Despesa</button>`,
     admins:`<button class="btn btn-pr gestor-only" onclick="openAdminModal()">➕ Novo Administrador</button>`,
@@ -4488,6 +4567,7 @@ function renderCurrentPage(){
   const r={dashboard:renderDashboard,fleet:renderFleet,agenda:renderAgenda,trips:renderTrips,
     expenses:renderExpenses,commitments:renderCommitments,
     investors:renderInvestors,clients:renderClients,drivers:renderDrivers,
+    providers:renderProviders,
     agency:renderAgency,shared:renderShared,receivables:renderReceivables,
     reports:renderReports,settings:renderSettings,admins:renderAdmins};
   r[currentPage]?.();
@@ -8462,6 +8542,7 @@ function confirmDelete(type,id){
     else if(type==='investor') DB.investors=DB.investors.filter(i=>i.id!==id);
     else if(type==='client') DB.clients=DB.clients.filter(c=>c.id!==id);
     else if(type==='driver') DB.drivers=DB.drivers.filter(d=>d.id!==id);
+    else if(type==='provider') DB.providers=(DB.providers||[]).filter(p=>p.id!==id);
     else if(type==='agency') DB.agencyRevenue=(DB.agencyRevenue||[]).filter(a=>a.id!==id);
     else if(type==='shared') DB.sharedExpenses=(DB.sharedExpenses||[]).filter(s=>s.id!==id);
     saveDB();closeModal('modal-confirm');renderCurrentPage();
@@ -9416,36 +9497,49 @@ function renderAgency(){
   const monthAgency=allAgency.filter(a=>inMonth(a.date,currentYear,currentMonth));
   const totalComm=allAgency.reduce((s,a)=>s+n(a.commissionValue),0);
   const monthComm=monthAgency.reduce((s,a)=>s+n(a.commissionValue),0);
+  // Contas a receber/repassar (histórico todo — pendência não expira com o mês)
+  const _repasseDe=a=>(a.providerPayout!=null)?n(a.providerPayout):Math.max(0,n(a.totalValue)-n(a.commissionValue));
+  const aReceber=allAgency.filter(a=>!a.clientPaid).reduce((s,a)=>s+n(a.totalValue),0);
+  const aRepassar=allAgency.filter(a=>!a.providerPaid).reduce((s,a)=>s+_repasseDe(a),0);
 
   kpiEl.innerHTML=`
     <div class="kpi"><div class="kpi-lbl">✈️ Comissões (mês)</div>
       <div class="kpi-val tsc">${R(monthComm)}</div>
-      <div class="kpi-sub">${monthAgency.length} agenciamento(s)</div></div>
-    <div class="kpi"><div class="kpi-lbl">📅 Total Histórico</div>
-      <div class="kpi-val tpr">${R(totalComm)}</div>
-      <div class="kpi-sub">${allAgency.length} agenciamento(s) total</div></div>
-    <div class="kpi"><div class="kpi-lbl">📊 Ticket Médio (mês)</div>
-      <div class="kpi-val twn">${R(monthAgency.length?monthComm/monthAgency.length:0)}</div>
-      <div class="kpi-sub">por comissão</div></div>
+      <div class="kpi-sub">${monthAgency.length} agenciamento(s) · histórico ${R(totalComm)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">📥 A Receber de Clientes</div>
+      <div class="kpi-val ${aReceber>0?'twn':'tsc'}">${R(aReceber)}</div>
+      <div class="kpi-sub">${allAgency.filter(a=>!a.clientPaid).length} pendente(s)</div></div>
+    <div class="kpi"><div class="kpi-lbl">📤 A Repassar a Prestadores</div>
+      <div class="kpi-val ${aRepassar>0?'tdr':'tsc'}">${R(aRepassar)}</div>
+      <div class="kpi-sub">${allAgency.filter(a=>!a.providerPaid).length} pendente(s)</div></div>
     <div class="kpi"><div class="kpi-lbl">💵 Volume Agenciado (mês)</div>
       <div class="kpi-val b">${R(monthAgency.reduce((s,a)=>s+n(a.totalValue),0))}</div>
       <div class="kpi-sub">valor total das viagens</div></div>`;
 
   const rows=monthAgency.sort((a,b)=>b.date.localeCompare(a.date)).map(a=>{
     const hasProviderNF=a.providerInvoiceValue>0;
+    const repasse=_repasseDe(a);
     const nfCell=a.hasInvoice
       ? (hasProviderNF
           ? `<div><span class="badge g">NF: ${R(a.invoiceValue)}</span></div>
              <div style="font-size:11px;color:var(--txm);margin-top:2px">Prest.: ${R(a.providerInvoiceValue)} · <span class="tsc fb">Líq: ${R(a.netFiscalValue||a.invoiceValue-a.providerInvoiceValue)}</span></div>`
           : `<span class="badge g">Sim — ${R(a.invoiceValue)}</span>`)
       : `<span class="badge gz">Não</span>`;
+    // Situação financeira: 2 etapas clicáveis (receber do cliente → repassar ao prestador)
+    const stCliente=a.clientPaid
+      ? `<button class="badge g gestor-only" style="border:none;cursor:pointer;display:block;width:100%;text-align:left" onclick="toggleAgencyClientPaid('${a.id}')" title="Recebido em ${a.clientPaidDate?fmtDate(a.clientPaidDate):'—'} — clique pra desfazer">✅ Recebido ${a.clientPaidDate?fmtDate(a.clientPaidDate):''}</button>`
+      : `<button class="badge y gestor-only" style="border:none;cursor:pointer;display:block;width:100%;text-align:left" onclick="toggleAgencyClientPaid('${a.id}')" title="Clique quando o cliente pagar">📥 A receber ${R(a.totalValue)}</button>`;
+    const stPrestador=a.providerPaid
+      ? `<button class="badge g gestor-only" style="border:none;cursor:pointer;display:block;width:100%;text-align:left;margin-top:3px" onclick="toggleAgencyProviderPaid('${a.id}')" title="Repassado em ${a.providerPaidDate?fmtDate(a.providerPaidDate):'—'} — clique pra desfazer">✅ Repassado ${a.providerPaidDate?fmtDate(a.providerPaidDate):''}</button>`
+      : `<button class="badge ${a.clientPaid?'r':'gz'} gestor-only" style="border:none;cursor:pointer;display:block;width:100%;text-align:left;margin-top:3px" onclick="toggleAgencyProviderPaid('${a.id}')" title="Clique quando repassar ao prestador">📤 Repassar ${R(repasse)}</button>`;
     return `<tr>
     <td>${fmtDate(a.date)}</td>
     <td><div style="font-weight:500">${a.client||'—'}</div><div class="txs txm">${a.operator||''}</div></td>
     <td>${a.origin||'—'} → ${a.destination||'—'}</td>
     <td>${R(a.totalValue)}</td>
-    <td class="txc"><span class="badge b">${a.commissionRate||0}%</span></td>
-    <td class="tsc fb">${R(a.commissionValue)}</td>
+    <td class="tdr">${R(repasse)}</td>
+    <td class="tsc fb">${R(a.commissionValue)}<div class="txs txm">${a.commissionRate||0}%</div></td>
+    <td style="min-width:150px">${stCliente}${stPrestador}</td>
     <td>${nfCell}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-gh btn-xs gestor-only" onclick="editAgency('${a.id}')">✏️</button>
@@ -9454,7 +9548,7 @@ function renderAgency(){
   </tr>`;
   }).join('');
 
-  el.innerHTML=rows||`<tr><td colspan="8"><div class="empty">
+  el.innerHTML=rows||`<tr><td colspan="9"><div class="empty">
     <div class="empty-ic">✈️</div><div class="empty-tx">Nenhum agenciamento neste período</div></div></td></tr>`;
 
   sumEl.innerHTML=monthAgency.length?`
@@ -9535,13 +9629,153 @@ function onDriverTotalChange(){
 
 function toggleDriverPayModel(){ /* legacy stub — no longer used */ }
 
+// ══════════ PRESTADORES DE SERVIÇO ══════════
+// Parceiros terceirizados que executam viagens agenciadas. Estatísticas
+// calculadas em cima dos agenciamentos (match pelo nome do executor).
+function _provStats(name){
+  const nn=_norm(name);
+  let count=0, repassado=0, pendente=0;
+  (DB.agencyRevenue||[]).forEach(a=>{
+    if(_norm(a.operator||'')!==nn) return;
+    count++;
+    const rep=(a.providerPayout!=null)?n(a.providerPayout):Math.max(0,n(a.totalValue)-n(a.commissionValue));
+    if(a.providerPaid) repassado+=rep; else pendente+=rep;
+  });
+  return {count, repassado, pendente};
+}
+function renderProviders(){
+  const el=document.getElementById('providers-tbody');
+  if(!el) return;
+  if(!Array.isArray(DB.providers)) DB.providers=[];
+  const list=DB.providers.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR',{sensitivity:'base'}));
+  if(!list.length){
+    el.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-ic">🤝</div>
+      <div class="empty-tx">Nenhum prestador cadastrado</div>
+      <div class="txm txs">Cadastre os parceiros que executam suas viagens agenciadas — ou lance um agenciamento que o sistema oferece o cadastro na hora.</div></div></td></tr>`;
+    return;
+  }
+  el.innerHTML=list.map(p=>{
+    const st=_provStats(p.name);
+    return `<tr>
+      <td><div style="font-weight:600">${p.name}</div><div class="txs txm">${[p.city,p.vehicle].filter(Boolean).join(' · ')||''}</div></td>
+      <td>${p.phone?fmtPhone(p.phone):'—'}${p.doc?`<div class="txs txm">${p.doc}</div>`:''}</td>
+      <td>${p.pix?`<span style="font-size:12px">${p.pix}</span>`:'<span class="txm">—</span>'}</td>
+      <td class="txc"><span class="badge b">${st.count}</span></td>
+      <td class="tsc fb">${R(st.repassado)}</td>
+      <td>${st.pendente>0?`<span class="badge y">📤 ${R(st.pendente)}</span>`:'<span class="badge gz">Em dia</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-gh btn-xs gestor-only" onclick="editProvider('${p.id}')">✏️</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('provider','${p.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+const PROV_FIELDS=['prov-name','prov-phone','prov-doc','prov-pix','prov-city','prov-vehicle','prov-notes'];
+function openProviderModal(prefillName){
+  document.getElementById('prov-id').value='';
+  document.getElementById('provider-modal-title').textContent='Novo Prestador de Serviço';
+  PROV_FIELDS.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  if(prefillName) document.getElementById('prov-name').value=prefillName;
+  openModal('modal-provider');
+}
+function editProvider(id){
+  const p=(DB.providers||[]).find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('prov-id').value=p.id;
+  document.getElementById('provider-modal-title').textContent='Editar Prestador';
+  document.getElementById('prov-name').value=p.name||'';
+  document.getElementById('prov-phone').value=p.phone?fmtPhone(p.phone):'';
+  document.getElementById('prov-doc').value=p.doc||'';
+  document.getElementById('prov-pix').value=p.pix||'';
+  document.getElementById('prov-city').value=p.city||'';
+  document.getElementById('prov-vehicle').value=p.vehicle||'';
+  document.getElementById('prov-notes').value=p.notes||'';
+  openModal('modal-provider');
+}
+function saveProvider(){
+  if(!requireEdit()) return;
+  const id=document.getElementById('prov-id').value;
+  const name=(document.getElementById('prov-name').value||'').trim();
+  if(!name){ alert('Informe o nome do prestador!'); return; }
+  const p={
+    id:id||uid(),
+    name,
+    phone:document.getElementById('prov-phone').value,
+    doc:document.getElementById('prov-doc').value.trim(),
+    pix:document.getElementById('prov-pix').value.trim(),
+    city:document.getElementById('prov-city').value.trim(),
+    vehicle:document.getElementById('prov-vehicle').value.trim(),
+    notes:document.getElementById('prov-notes').value
+  };
+  if(!Array.isArray(DB.providers)) DB.providers=[];
+  if(id) DB.providers=DB.providers.map(x=>x.id===id?{...x,...p}:x);
+  else DB.providers.push(p);
+  saveDB(); closeModal('modal-provider'); renderCurrentPage();
+  showToast('💾 Prestador salvo','ok');
+}
+// Autocomplete de prestador no modal de agenciamento (mesmo visual dos outros)
+function provAc(inputId){
+  const inp=document.getElementById(inputId);
+  const list=document.getElementById(inputId+'-ac');
+  if(!inp||!list) return;
+  const q=_norm(inp.value);
+  const all=(DB.providers||[]);
+  const matches=(q?all.filter(p=>_norm(p.name).includes(q)):all).slice(0,10);
+  if(!matches.length){ list.style.display='none'; return; }
+  list.innerHTML=matches.map((p,idx)=>`
+    <div class="ac-item${idx===0?' active':''}" data-name="${(p.name||'').replace(/"/g,'&quot;')}"
+         onmousedown="cityPick('${inputId}','${(p.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <span style="opacity:.55;margin-right:6px">🤝</span>${p.name}${p.city?` <span class="txm" style="font-size:11px">· ${p.city}</span>`:''}
+    </div>`).join('');
+  list.style.display='';
+  list._activeIdx=0;
+}
+
+// ── Situação financeira do agenciamento: receber do cliente → repassar ao prestador ──
+function toggleAgencyClientPaid(id){
+  if(!requireEdit()) return;
+  const a=(DB.agencyRevenue||[]).find(x=>x.id===id); if(!a) return;
+  if(a.clientPaid){
+    if(!confirm('Desfazer o recebimento do cliente?')) return;
+    a.clientPaid=false; a.clientPaidDate=null;
+  } else {
+    a.clientPaid=true; a.clientPaidDate=new Date().toISOString().split('T')[0];
+    showToast('📥 Recebimento de '+R(a.totalValue)+' registrado!','ok');
+  }
+  saveDB(); renderCurrentPage();
+}
+function toggleAgencyProviderPaid(id){
+  if(!requireEdit()) return;
+  const a=(DB.agencyRevenue||[]).find(x=>x.id===id); if(!a) return;
+  if(a.providerPaid){
+    if(!confirm('Desfazer o repasse ao prestador?')) return;
+    a.providerPaid=false; a.providerPaidDate=null;
+  } else {
+    // 🛡️ Trava do teu fluxo: só repassa depois de receber (avisa se tentar antes)
+    if(!a.clientPaid && !confirm('⚠️ Você AINDA NÃO recebeu do cliente ('+(a.client||'')+').\n\nTeu fluxo normal é: cliente paga → você repassa.\n\nConfirmar o repasse ao prestador mesmo assim?')) return;
+    a.providerPaid=true; a.providerPaidDate=new Date().toISOString().split('T')[0];
+    const rep=(a.providerPayout!=null)?a.providerPayout:Math.max(0,n(a.totalValue)-n(a.commissionValue));
+    showToast('📤 Repasse de '+R(rep)+' pra '+(a.operator||'prestador')+' registrado!','ok');
+  }
+  saveDB(); renderCurrentPage();
+}
+
 function calcAgencyCommission(){
+  // Modelo real do agenciamento: comissão = cobrado do cliente − repasse ao prestador.
+  // O % é derivado (informativo), não digitado.
   const total=n(document.getElementById('ag-total').value);
-  const rate=n(document.getElementById('ag-rate').value);
-  const comm=total*(rate/100);
+  const repasse=n(document.getElementById('ag-repasse')?.value);
+  const comm=Math.max(0, total-repasse);
+  const rate=total>0?(comm/total*100):0;
   document.getElementById('ag-commission').value=comm.toFixed(2);
+  const rateEl=document.getElementById('ag-rate');
+  if(rateEl) rateEl.value=rate.toFixed(1);
   const disp=document.getElementById('ag-result-display');
-  if(disp) disp.textContent=R(comm);
+  if(disp) disp.textContent=`${R(comm)}${total>0?' ('+rate.toFixed(1)+'%)':''}`;
+  // Sugestão automática das NFs (só preenche campo VAZIO — nunca sobrescreve o que você digitou)
+  const hasNFsel=document.getElementById('ag-nf').value==='sim';
+  const nfEl=document.getElementById('ag-nf-value');
+  if(hasNFsel && nfEl && !nfEl.value && total>0) nfEl.value=total.toFixed(2);
 
   // Fiscal panel: NF emitida - NF prestador
   const hasNF=document.getElementById('ag-nf').value==='sim';
@@ -9564,8 +9798,8 @@ function openAgencyModal(vId){
   document.getElementById('ag-id').value='';
   document.getElementById('agency-modal-title').textContent='Nova Comissão de Agenciamento';
   document.getElementById('ag-date').value=new Date().toISOString().split('T')[0];
-  ['ag-client','ag-origin','ag-dest','ag-operator','ag-total','ag-notes','ag-nf-value','ag-provider-nf-value'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('ag-rate').value='10';
+  ['ag-client','ag-origin','ag-dest','ag-operator','ag-total','ag-repasse','ag-notes','ag-nf-value','ag-provider-nf-value'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('ag-rate').value='';
   document.getElementById('ag-commission').value='';
   document.getElementById('ag-nf').value='nao';
   if(document.getElementById('ag-result-display')) document.getElementById('ag-result-display').textContent=R(0);
@@ -9585,6 +9819,9 @@ function editAgency(id){
   document.getElementById('ag-dest').value=a.destination||'';
   document.getElementById('ag-operator').value=a.operator||'';
   document.getElementById('ag-total').value=a.totalValue||'';
+  // Registros antigos não têm 'providerPayout' — deriva do total − comissão
+  const _rep=(a.providerPayout!=null)?a.providerPayout:(n(a.totalValue)-n(a.commissionValue));
+  const _repEl=document.getElementById('ag-repasse'); if(_repEl) _repEl.value=_rep>0?r2(_rep):'';
   document.getElementById('ag-rate').value=a.commissionRate||'';
   document.getElementById('ag-commission').value=a.commissionValue||'';
   document.getElementById('ag-nf').value=a.hasInvoice?'sim':'nao';
@@ -9608,6 +9845,7 @@ function saveAgency(){
     destination:document.getElementById('ag-dest').value,
     operator:document.getElementById('ag-operator').value,
     totalValue:n(document.getElementById('ag-total').value),
+    providerPayout:n(document.getElementById('ag-repasse')?.value),
     commissionRate:n(document.getElementById('ag-rate').value),
     commissionValue:n(document.getElementById('ag-commission').value),
     hasInvoice:document.getElementById('ag-nf').value==='sim',
@@ -9617,8 +9855,18 @@ function saveAgency(){
     notes:document.getElementById('ag-notes').value
   };
   if(!DB.agencyRevenue) DB.agencyRevenue=[];
-  if(id) DB.agencyRevenue=DB.agencyRevenue.map(x=>x.id===id?a:x);
+  // Preserva a situação financeira (recebido/repassado) ao editar — o form não tem esses campos
+  if(id) DB.agencyRevenue=DB.agencyRevenue.map(x=>x.id===id?{...x,...a}:x);
   else DB.agencyRevenue.push(a);
+  // Prestador novo? Oferece cadastro (1 clique) — assim a base cresce sozinha
+  const opName=(a.operator||'').trim();
+  if(opName && !(DB.providers||[]).some(p=>_norm(p.name)===_norm(opName))){
+    if(confirm(`"${opName}" ainda não está no cadastro de Prestadores.\n\nCadastrar agora? (depois você completa telefone/PIX na aba Prestadores)`)){
+      if(!Array.isArray(DB.providers)) DB.providers=[];
+      DB.providers.push({id:uid(), name:opName, phone:'', doc:'', pix:'', city:'', vehicle:'', notes:''});
+      showToast('🤝 Prestador "'+opName+'" cadastrado!','ok');
+    }
+  }
   saveDB();closeModal('modal-agency');renderCurrentPage();
 }
 
@@ -10154,7 +10402,25 @@ function getClientReportTrips(clientId){
     const d=t.date||t.departureDate||'';
     if(!d) return false;
     return d>=from && d<=to;
-  }).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  });
+  // ✈️ Agenciamentos do mesmo cliente entram no relatório de cobrança —
+  // pro cliente é tudo serviço prestado, tanto faz se executou frota própria ou terceiro.
+  if(!scFilter){
+    (DB.agencyRevenue||[]).forEach(a=>{
+      if(!a || !a.client) return;
+      if(a.client.toLowerCase().trim()!==cName) return;
+      const d=a.date||'';
+      if(!d || d<from || d>to) return;
+      trips.push({
+        _agency:true, id:a.id, date:a.date,
+        origin:a.origin, destination:a.destination,
+        grossRevenue:a.totalValue,
+        hasInvoice:!!a.hasInvoice, invoiceValue:a.invoiceValue,
+        driverName:a.operator||'', vehicleId:null
+      });
+    });
+  }
+  trips.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   return {trips, client:c, range:{from, to}, subclientFilter:scFilter};
 }
 
@@ -10244,9 +10510,9 @@ function renderClientReport(){
   const reportLabel = `${String(reportNum).padStart(3,'0')}-${new Date().getFullYear()}`;
 
   const rowsHtml=trips.length?trips.map((t,idx)=>{
-    const veh=getVehicle(t.vehicleId);
-    const vehModel = [veh?.brand, veh?.model].filter(Boolean).join(' ') || '—';
-    const plate = veh?.plate || '—';
+    const veh=t._agency?null:getVehicle(t.vehicleId);
+    const vehModel = t._agency ? '✈️ Parceiro credenciado' : ([veh?.brand, veh?.model].filter(Boolean).join(' ') || '—');
+    const plate = t._agency ? '—' : (veh?.plate || '—');
     const origin = t.origin || (t.description ? t.description.split(/\s*[>→]\s*|\s+→\s+/)[0] : '—') || '—';
     const destination = t.destination || (t.description && t.description.includes('>')||t.description?.includes('→') ? (t.description.split(/\s*[>→]\s*/)[1]||'—') : (t.description||'—'));
     return `<tr>
