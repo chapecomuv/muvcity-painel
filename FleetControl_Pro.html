@@ -5151,6 +5151,7 @@ function renderTrips(){
       <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span>${realTag}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-pr btn-xs gestor-only" onclick="sendTripToDriver('${t.id}')" title="Enviar para o motorista (gera link/código)" style="margin-right:2px">📤</button>
+        <button class="btn btn-gh btn-xs gestor-only" onclick="printTripVoucher('${t.id}')" title="Gerar Voucher de Transporte pro cliente (PDF)">🎫</button>
         <button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${t.id}')">✏️</button>
         <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('trip','${t.id}')">🗑️</button></td>
     </tr>`;
@@ -5689,6 +5690,74 @@ function renderCommitments(){
 // Relatório do parcelamento do vendedor — usa o motor padrão com cabeçalho da empresa.
 function printOwnerReport(){
   printCommitmentReport('fc_vendedor');
+}
+
+// ══════════ VOUCHER DE TRANSPORTE ══════════
+// Documento pro CLIENTE: confirma o serviço contratado (data, embarque, veículo,
+// motorista). Número sequencial fica gravado na viagem — regerar mantém o mesmo Nº.
+function printTripVoucher(tripId){
+  const t=DB.trips.find(x=>x.id===tripId);
+  if(!t){ alert('Viagem não encontrada.'); return; }
+  const withValue=confirm('Incluir o VALOR do serviço no voucher?\n\nOK = com valor  ·  Cancelar = sem valor (só a confirmação do serviço)');
+  // Nº sequencial persistente
+  if(!t.voucherNumber){
+    if(!DB.settings) DB.settings={};
+    const nseq=(DB.settings.lastVoucherNumber||0)+1;
+    DB.settings.lastVoucherNumber=nseq;
+    t.voucherNumber=`${String(nseq).padStart(4,'0')}/${new Date().getFullYear()}`;
+    saveDB();
+  }
+  const veh=getVehicle(t.vehicleId);
+  const vehLabel=[veh?.brand,veh?.model].filter(Boolean).join(' ')||'—';
+  const drv=(DB.drivers||[]).find(d=>_norm(d.name)===_norm(t.driverName||''));
+  const s=DB.settings||{};
+  const contato=[s.companyWhatsapp?('WhatsApp '+fmtPhone(s.companyWhatsapp)):'', s.companyPhone1?fmtPhone(s.companyPhone1):''].filter(Boolean).join(' · ');
+
+  const body=`<div class="cr-doc">
+    ${buildCompanyHeaderHTML()}
+    <div class="cr-section-title">🎫 Voucher de Transporte — Nº ${t.voucherNumber}</div>
+
+    <div class="cr-section-bar">Dados do Serviço</div>
+    <div class="cr-info-grid">
+      <div><div class="cr-lbl">Data da Viagem</div><div><strong>${fmtDate(t.date)}</strong></div></div>
+      ${t.returnDate&&t.returnDate!==t.date?`<div><div class="cr-lbl">Retorno</div><div><strong>${fmtDate(t.returnDate)}</strong></div></div>`:''}
+      ${t.pickupTime?`<div><div class="cr-lbl">Horário de Embarque</div><div><strong>${t.pickupTime}</strong></div></div>`:''}
+      <div><div class="cr-lbl">Origem</div><div>${t.origin||'—'}</div></div>
+      <div><div class="cr-lbl">Destino</div><div>${t.destination||'—'}</div></div>
+      ${t.passengers?`<div><div class="cr-lbl">Passageiros</div><div>${t.passengers}</div></div>`:''}
+    </div>
+
+    <div class="cr-section-bar">Cliente</div>
+    <div class="cr-info-grid">
+      <div><div class="cr-lbl">Nome</div><div><strong>${t.client||'—'}</strong></div></div>
+      ${t.subclient?`<div><div class="cr-lbl">Empresa / Setor</div><div>${t.subclient}</div></div>`:''}
+      ${t.clientPhone?`<div><div class="cr-lbl">Contato</div><div>${t.clientPhone}</div></div>`:''}
+    </div>
+
+    <div class="cr-section-bar">Veículo e Motorista</div>
+    <div class="cr-info-grid">
+      <div><div class="cr-lbl">Veículo</div><div>${vehLabel}</div></div>
+      <div><div class="cr-lbl">Placa</div><div><strong>${veh?.plate||'—'}</strong></div></div>
+      <div><div class="cr-lbl">Motorista</div><div>${t.driverName||'A definir'}</div></div>
+      ${drv?.phone?`<div><div class="cr-lbl">Contato do Motorista</div><div>${fmtPhone(drv.phone)}</div></div>`:''}
+    </div>
+
+    ${t.itinerary?`
+    <div class="cr-section-bar">Observações do Serviço</div>
+    <ul class="cr-bullets">
+      ${String(t.itinerary).split(/\r?\n/).filter(l=>l.trim()).map(l=>`<li>${l}</li>`).join('')}
+    </ul>`:''}
+
+    ${withValue?`
+    <div class="cr-section-bar">Valor</div>
+    <table class="cr-table"><tbody>
+      <tr class="cr-total-row"><td style="padding:12px"><strong>VALOR DO SERVIÇO</strong></td>
+      <td style="text-align:right;font-size:16px;font-weight:800;padding:12px">${R(t.grossRevenue)}</td></tr>
+    </tbody></table>`:''}
+
+    <div class="cr-thanks">Apresente este voucher ao embarcar. ${contato?'Dúvidas ou alterações: '+contato:''}</div>
+  </div>`;
+  printDocWindow(`Voucher ${t.voucherNumber} - ${t.client||'Cliente'}`, body);
 }
 
 // ══════════ INVESTORS ══════════
