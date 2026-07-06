@@ -66,6 +66,9 @@ body.role-socio::after{
   --shadow-btn:0 2px 12px rgba(59,130,246,.3)
 }
 *{margin:0;padding:0;box-sizing:border-box}
+/* 🛡️ Trava anti-scroll-horizontal do documento inteiro — nada estoura a largura da tela;
+   conteúdo largo (tabelas) rola DENTRO do próprio container (.wrap), não empurra a página. */
+html,body{max-width:100%;overflow-x:hidden}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);display:flex;min-height:100vh;font-size:14px}
 
 /* ── SIDEBAR ── */
@@ -90,7 +93,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .nav-ft{padding:12px 16px;border-top:1px solid var(--bd);font-size:10px;color:rgba(100,116,139,.5);line-height:1.8}
 
 /* ── MAIN ── */
-.main{margin-left:var(--sw);flex:1;min-height:100vh;display:flex;flex-direction:column}
+/* min-width:0 é ESSENCIAL: sem ele, uma tabela larga estica o .main além da tela
+   (flex-items têm min-width:auto por padrão) e cria o scroll horizontal que empurrava
+   o conteúdo pra trás da sidebar. max-width trava a largura à viewport menos a sidebar. */
+.main{margin-left:var(--sw);flex:1;min-width:0;max-width:calc(100% - var(--sw));min-height:100vh;display:flex;flex-direction:column}
+body.sidebar-collapsed .main{max-width:calc(100% - 64px)}
 .topbar{background:rgba(13,24,41,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .topbar h2{font-size:17px;font-weight:700;letter-spacing:-.2px}
 .topbar .sub{font-size:11px;color:var(--txm);margin-top:1px}
@@ -939,7 +946,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     box-shadow:0 0 60px rgba(0,0,0,.6)
   }
   .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}
+  .main{margin-left:0;max-width:100%}
   .topbar{padding:11px 14px}
   .topbar h2{font-size:15.5px}
   .topbar .sub{font-size:11px}
@@ -2213,13 +2220,33 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       <div class="fg"><label class="fl">Alimentação (R$)</label>
         <input type="number" class="fc" id="trip-food" placeholder="0,00" step="0.01" oninput="calcTripProfit()"></div>
       <div class="fg"><label class="fl">👤 Custo Motorista (R$)</label>
-        <input type="number" class="fc" id="trip-driver" placeholder="Auto ou manual" step="0.01" oninput="calcTripProfit()"></div>
+        <input type="number" class="fc" id="trip-driver" placeholder="Auto ou detalhado" step="0.01" oninput="calcTripProfit()"></div>
       <div class="fg"><label class="fl">Outros (R$)</label>
         <input type="number" class="fc" id="trip-other" placeholder="0,00" step="0.01" oninput="calcTripProfit()"></div>
     </div>
     <div class="fr">
       <div class="fg"><label class="fl">Descrição de Outros</label>
         <input type="text" class="fc" id="trip-other-desc" placeholder="Descreva outras despesas"></div>
+    </div>
+
+    <!-- 💰 Livro de pagamentos de motorista — vários motoristas/turnos, soma sozinho -->
+    <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:14px 16px;margin-top:12px">
+      <div class="fl-row ic jb" style="margin-bottom:6px">
+        <div class="fsec-t" style="color:#f59e0b;margin:0">👥 Pagamentos de Motorista <span class="txs txm" style="text-transform:none;letter-spacing:0">(vários motoristas ou turnos)</span></div>
+        <div class="fb" style="color:#f59e0b" id="driver-entries-total">R$ 0,00</div>
+      </div>
+      <div id="driver-entries-list" style="margin-bottom:10px"></div>
+      <div class="fr c4" style="gap:8px;align-items:end">
+        <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Quem</label>
+          <select class="fc" id="de-who" style="font-size:12.5px"></select></div>
+        <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Turno/Obs</label>
+          <input type="text" class="fc" id="de-note" placeholder="Ex: manhã" style="font-size:12.5px"></div>
+        <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Valor (R$)</label>
+          <input type="number" class="fc" id="de-amount" step="0.01" min="0" placeholder="0,00" style="font-size:12.5px"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();addDriverEntry();}"></div>
+        <div class="fg" style="margin:0"><button type="button" class="btn btn-pr btn-sm" style="width:100%" onclick="addDriverEntry()">➕ Adicionar</button></div>
+      </div>
+      <div class="txs txm mt1">💡 Use quando tiver mais de um motorista no serviço (ex: fretamento com um de manhã e outro contratado à tarde). O total entra automático no Custo Motorista.</div>
     </div>
     <!-- Painel de Consumo (populado por renderTripFuelStats no editTrip) -->
     <div id="trip-fuel-stats" style="margin-top:14px"></div>
@@ -6840,6 +6867,71 @@ function populateDriverSelect(currentVal){
   }
 }
 
+// ══════════ LIVRO DE PAGAMENTOS DE MOTORISTA (vários motoristas / turnos) ══════════
+// Cada lançamento: {id, who, note, amount}. O total alimenta driverCost (Custo Motorista).
+// Resolve: fretamento com 2 motoristas, contratado por turno, e somar sem apagar.
+let _driverEntriesTmp=[];
+function populateDriverEntryWho(){
+  const sel=document.getElementById('de-who');
+  if(!sel) return;
+  const motoristas=(DB.drivers||[]).filter(d=>d.active!==false).map(d=>d.name);
+  const prestadores=(DB.providers||[]).map(p=>p.name);
+  const opts=['<option value="">— quem —</option>'];
+  if(motoristas.length) opts.push('<optgroup label="Motoristas">'+motoristas.map(n=>`<option>${n}</option>`).join('')+'</optgroup>');
+  if(prestadores.length) opts.push('<optgroup label="Prestadores / Contratados">'+prestadores.map(n=>`<option>${n}</option>`).join('')+'</optgroup>');
+  opts.push('<option value="__outro__">✏️ Outro (digitar)…</option>');
+  sel.innerHTML=opts.join('');
+  sel.onchange=function(){
+    if(this.value==='__outro__'){
+      const nome=prompt('Nome do motorista/contratado:');
+      if(nome && nome.trim()){
+        const o=document.createElement('option'); o.textContent=nome.trim(); o.selected=true;
+        this.insertBefore(o, this.lastChild);
+      } else { this.value=''; }
+    }
+  };
+}
+function renderDriverEntries(){
+  const list=document.getElementById('driver-entries-list');
+  const totalEl=document.getElementById('driver-entries-total');
+  const driverField=document.getElementById('trip-driver');
+  if(!list) return;
+  const total=_driverEntriesTmp.reduce((s,e)=>s+n(e.amount),0);
+  if(_driverEntriesTmp.length){
+    list.innerHTML=_driverEntriesTmp.map(e=>`
+      <div class="fl-row ic jb" style="padding:7px 10px;border:1px solid rgba(251,191,36,.2);border-radius:9px;margin-bottom:5px;background:rgba(255,255,255,.02)">
+        <div style="min-width:0"><b style="font-size:13px">${e.who||'—'}</b>${e.note?`<span class="txs txm"> · ${e.note}</span>`:''}</div>
+        <div class="fl-row ic" style="gap:8px"><b style="color:#f59e0b">${R(e.amount)}</b>
+          <button type="button" class="btn btn-gh btn-xs gestor-only" onclick="removeDriverEntry('${e.id}')" title="Remover">🗑️</button></div>
+      </div>`).join('');
+    // Total manda no Custo Motorista (campo vira somatório, travado pra não conflitar)
+    if(driverField){ driverField.value=total.toFixed(2); driverField.readOnly=true; driverField.style.opacity='.7'; }
+  } else {
+    list.innerHTML='<div class="txs txm" style="padding:4px 0;font-style:italic">Nenhum pagamento detalhado — use o campo "Custo Motorista" acima, ou adicione motoristas aqui.</div>';
+    if(driverField){ driverField.readOnly=false; driverField.style.opacity='1'; }
+  }
+  if(totalEl) totalEl.textContent=R(total);
+  try{ calcTripProfit(); }catch(_){}
+}
+function addDriverEntry(){
+  const who=(document.getElementById('de-who').value||'').trim();
+  const note=(document.getElementById('de-note').value||'').trim();
+  const amount=n(document.getElementById('de-amount').value);
+  if(who==='__outro__'){ showToast('Escolha ou digite o nome','warn'); return; }
+  if(!who && !note){ showToast('Informe quem recebeu','warn'); document.getElementById('de-who').focus(); return; }
+  if(amount<=0){ showToast('Informe o valor do pagamento','warn'); document.getElementById('de-amount').focus(); return; }
+  _driverEntriesTmp.push({id:uid(), who:who||note, note:who?note:'', amount});
+  document.getElementById('de-who').value='';
+  document.getElementById('de-note').value='';
+  document.getElementById('de-amount').value='';
+  renderDriverEntries();
+  document.getElementById('de-who').focus();
+}
+function removeDriverEntry(id){
+  _driverEntriesTmp=_driverEntriesTmp.filter(e=>e.id!==id);
+  renderDriverEntries();
+}
+
 // Built-in revenue types (internal keys + display labels)
 const BUILTIN_REVENUE_TYPES=[
   {v:'fixo',  l:'Fretamento Contínuo'},
@@ -6885,6 +6977,7 @@ function openTripModal(vId){
   const dps=document.getElementById('driver-payment-section'); if(dps) dps.style.display='none';
   const qcp=document.getElementById('trip-quick-client-panel'); if(qcp) qcp.style.display='none';
   const rti=document.getElementById('trip-rateio-info'); if(rti){ rti.style.display='none'; rti.innerHTML=''; }
+  _driverEntriesTmp=[]; populateDriverEntryWho(); renderDriverEntries();
   const dli=document.getElementById('trip-dailylog-info'); if(dli){ dli.style.display='none'; dli.innerHTML=''; }
   const scw=document.getElementById('trip-subclient-wrap'); if(scw){ scw.style.display='none'; document.getElementById('trip-subclient').innerHTML=''; }
   document.getElementById('trip-nf').value='nao';
@@ -7185,7 +7278,7 @@ function renderTripDailyLog(t){
   const total=log.reduce((s,e)=>s+n(e.km),0);
   const rows=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
     <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(148,163,184,.1);font-size:12.5px">
-      <span><b>${fmtDate(e.date)}</b> <span class="txm">· ${e.period||''}${e.note?' · '+e.note:''}</span></span>
+      <span><b>${fmtDate(e.date)}</b> <span class="txm">· ${e.period||''}${e.who?' · 🚗 '+e.who.split(' ')[0]:''}${e.note?' · '+e.note:''}</span></span>
       <b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
     </div>`).join('');
   el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid rgba(6,182,212,.3);border-radius:12px;padding:13px 15px;margin:4px 0 10px">
@@ -7264,6 +7357,10 @@ function editTrip(id){
   if(driverTotalEl) driverTotalEl.value=t.driverCost||'';
   const dps=document.getElementById('driver-payment-section');
   if(dps) dps.style.display=t.driverName?'':'none';
+  // Livro de pagamentos de motorista (vários motoristas/turnos)
+  _driverEntriesTmp=Array.isArray(t.driverEntries)?t.driverEntries.map(e=>({...e})):[];
+  populateDriverEntryWho();
+  renderDriverEntries();
   // Aluguel fields
   if(document.getElementById('rental-days'))   document.getElementById('rental-days').value=t.rentalDays||'';
   if(document.getElementById('rental-daily-value')) document.getElementById('rental-daily-value').value=t.rentalDailyValue||'';
@@ -7693,7 +7790,9 @@ function saveTrip(){
     maintenanceCost:r2(n(document.getElementById('trip-maint').value)),
     accommodationCost:r2(n(document.getElementById('trip-hotel').value)),
     foodCost:r2(n(document.getElementById('trip-food').value)),
-    driverCost:r2(n(document.getElementById('trip-driver').value)),
+    // Custo motorista: se há lançamentos detalhados, o total deles manda; senão o campo
+    driverCost:r2(_driverEntriesTmp.length ? _driverEntriesTmp.reduce((s,e)=>s+n(e.amount),0) : n(document.getElementById('trip-driver').value)),
+    driverEntries:_driverEntriesTmp.length ? _driverEntriesTmp.map(e=>({...e})) : null,
     driverDailyRate:r2(n(document.getElementById('trip-driver-daily-rate').value))||null,
     driverDays:parseInt(document.getElementById('trip-driver-days').value)||null,
     otherCost:r2(n(document.getElementById('trip-other').value)),
