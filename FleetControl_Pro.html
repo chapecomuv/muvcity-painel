@@ -2066,11 +2066,12 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
           </div>
         </div>
       </div>
-      <div class="fg"><label class="fl">👤 Motorista</label>
-        <select class="fc" id="trip-driver-name" onchange="calcDriverPayment()">
-          <option value="">— Selecione o motorista —</option>
+      <div class="fg"><label class="fl">👤 Motorista(s)</label>
+        <select class="fc" id="trip-driver-name" onchange="onTripDriverPicked()">
+          <option value="">➕ Adicionar motorista…</option>
         </select>
-        <div class="txs txm" style="margin-top:3px">Cadastre motoristas na aba <strong>Motoristas</strong></div>
+        <div id="trip-drivers-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+        <div class="txs txm" style="margin-top:4px">Selecione um ou mais — cada motorista vê a viagem no próprio app e faz os lançamentos dele. Freelance pontual: você lança pelo painel.</div>
       </div>
     </div>
 
@@ -3834,8 +3835,14 @@ const cloudSync = {
           if(dTrip.startedAt) orig.startedAt=dTrip.startedAt;
           if(dTrip.finishedAt) orig.finishedAt=dTrip.finishedAt;
           if(dTrip.status) orig.driverStatus=dTrip.status;
-          // 📋 Diário de bordo (km por dia) — motorista é a fonte
-          if(Array.isArray(dTrip.dailyLog)) orig.dailyLog=dTrip.dailyLog;
+          // 📋 Diário de bordo (km por dia) — MERGE por id: junta o que o gestor
+          // lançou no painel com o que o motorista lançou no app, sem um apagar o outro.
+          if(Array.isArray(dTrip.dailyLog)){
+            const base=Array.isArray(orig.dailyLog)?orig.dailyLog.slice():[];
+            const ids=new Set(base.map(e=>e&&e.id));
+            dTrip.dailyLog.forEach(e=>{ if(e&&!ids.has(e.id)) base.push(e); });
+            orig.dailyLog=base;
+          }
           // 🛡️ BUG FIX (2026-07-02): lista de despesas VAZIA do motorista não pode
           // apagar lançamentos manuais do gestor. Só recalcula agregados quando o
           // motorista tem lançamentos de verdade — e SÓ nas categorias que ele lançou.
@@ -6852,19 +6859,51 @@ function quickSaveClient(){
   if(btn){btn.textContent='✅ '+name;setTimeout(()=>btn.textContent='➕ Novo cliente',2500);}
 }
 
+// ══════════ MÚLTIPLOS MOTORISTAS POR VIAGEM ══════════
+// _tripDriversTmp = lista de motoristas designados (chips). Cada um vê a viagem no
+// próprio app (isMyTrip reconhece a lista) e faz seus lançamentos.
+let _tripDriversTmp=[];
 function populateDriverSelect(currentVal){
+  // currentVal aceita string (legado) ou array (driverNames)
+  if(Array.isArray(currentVal)) _tripDriversTmp=currentVal.filter(Boolean).slice();
+  else _tripDriversTmp=currentVal?[currentVal]:[];
+  renderTripDrivers();
+}
+function renderTripDrivers(){
   const sel=document.getElementById('trip-driver-name');
-  if(!sel)return;
-  const drivers=(DB.drivers||[]).filter(d=>d.active!==false);
-  sel.innerHTML=`<option value="">— Selecione o motorista —</option>`+
-    drivers.map(d=>`<option value="${d.name}"
-      data-model="${d.payModel||'manual'}"
-      data-rate="${d.dailyRate||0}"
-      ${d.name===currentVal?'selected':''}
-    >${d.name}${d.type==='freelance'?' (Freelance)':''}${d.dailyRate>0?' · R$'+d.dailyRate+'/dia':''}</option>`).join('');
-  if(currentVal&&!drivers.find(d=>d.name===currentVal)){
-    sel.innerHTML+=`<option value="${currentVal}" selected>${currentVal} (não cadastrado)</option>`;
+  const chips=document.getElementById('trip-drivers-chips');
+  if(!sel) return;
+  const drivers=(DB.drivers||[]).filter(d=>d.active!==false).map(d=>d.name);
+  const disponiveis=drivers.filter(nm=>!_tripDriversTmp.some(x=>_norm(x)===_norm(nm)));
+  sel.innerHTML=`<option value="">➕ Adicionar motorista…</option>`+
+    disponiveis.map(nm=>`<option value="${nm.replace(/"/g,'&quot;')}">${nm}</option>`).join('')+
+    `<option value="__outro__">✏️ Outro / freelance (digitar)…</option>`;
+  if(chips){
+    chips.innerHTML=_tripDriversTmp.map(nm=>`
+      <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.35);color:#fcd34d;border-radius:999px;padding:5px 6px 5px 12px;font-size:12.5px;font-weight:600">
+        🚗 ${nm}
+        <button type="button" class="gestor-only" onclick="removeTripDriver('${nm.replace(/'/g,"\\'")}')" title="Remover"
+          style="background:rgba(239,68,68,.15);border:none;color:#fca5a5;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center">✕</button>
+      </span>`).join('');
   }
+}
+function onTripDriverPicked(){
+  const sel=document.getElementById('trip-driver-name');
+  let val=sel.value;
+  if(!val) return;
+  if(val==='__outro__'){
+    val=(prompt('Nome do motorista/freelance:')||'').trim();
+    if(!val){ sel.value=''; return; }
+  }
+  if(!_tripDriversTmp.some(x=>_norm(x)===_norm(val))) _tripDriversTmp.push(val);
+  sel.value='';
+  renderTripDrivers();
+  try{ calcDriverPayment(); }catch(_){}
+}
+function removeTripDriver(nm){
+  _tripDriversTmp=_tripDriversTmp.filter(x=>_norm(x)!==_norm(nm));
+  renderTripDrivers();
+  try{ calcDriverPayment(); }catch(_){}
 }
 
 // ══════════ LIVRO DE PAGAMENTOS DE MOTORISTA (vários motoristas / turnos) ══════════
@@ -6978,7 +7017,8 @@ function openTripModal(vId){
   const qcp=document.getElementById('trip-quick-client-panel'); if(qcp) qcp.style.display='none';
   const rti=document.getElementById('trip-rateio-info'); if(rti){ rti.style.display='none'; rti.innerHTML=''; }
   _driverEntriesTmp=[]; populateDriverEntryWho(); renderDriverEntries();
-  const dli=document.getElementById('trip-dailylog-info'); if(dli){ dli.style.display='none'; dli.innerHTML=''; }
+  _tripDailyLogTmp=[];
+  const dli=document.getElementById('trip-dailylog-info'); if(dli){ drawTripDailyLog(); dli.style.display=''; }
   const scw=document.getElementById('trip-subclient-wrap'); if(scw){ scw.style.display='none'; document.getElementById('trip-subclient').innerHTML=''; }
   document.getElementById('trip-nf').value='nao';
   populateTripTypeSelect();
@@ -7270,25 +7310,62 @@ function renderTripRateioInfo(t){
 }
 
 // 📋 Diário de Bordo do motorista (km por dia) — leitura no modal do gestor
+// 📋 Diário de Bordo — KM por dia/turno. EDITÁVEL pelo gestor (adiciona/remove
+// direto no painel, sem depender do app do motorista) e recebe o que o motorista lança.
+let _tripDailyLogTmp=[];
 function renderTripDailyLog(t){
   const el=document.getElementById('trip-dailylog-info');
   if(!el) return;
-  const log=Array.isArray(t?.dailyLog)?t.dailyLog:[];
-  if(!log.length){ el.style.display='none'; el.innerHTML=''; return; }
-  const total=log.reduce((s,e)=>s+n(e.km),0);
-  const rows=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
-    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(148,163,184,.1);font-size:12.5px">
-      <span><b>${fmtDate(e.date)}</b> <span class="txm">· ${e.period||''}${e.who?' · 🚗 '+e.who.split(' ')[0]:''}${e.note?' · '+e.note:''}</span></span>
-      <b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
-    </div>`).join('');
+  _tripDailyLogTmp=Array.isArray(t?.dailyLog)?t.dailyLog.map(e=>({...e})):[];
+  drawTripDailyLog();
+  el.style.display='';
+}
+function drawTripDailyLog(){
+  const el=document.getElementById('trip-dailylog-info');
+  if(!el) return;
+  const total=_tripDailyLogTmp.reduce((s,e)=>s+n(e.km),0);
+  const rows=_tripDailyLogTmp.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.1);font-size:12.5px">
+      <span><b>${fmtDate(e.date)}</b> <span class="txm">· ${e.period||''}${e.who?' · 🚗 '+String(e.who).split(' ')[0]:''}${e.note?' · '+e.note:''}</span></span>
+      <span style="display:flex;align-items:center;gap:8px"><b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
+        <button type="button" class="btn btn-gh btn-xs gestor-only" onclick="removeTripDailyKm('${e.id}')" title="Remover">🗑️</button></span>
+    </div>`).join('') || '<div class="txs txm" style="padding:4px 0;font-style:italic">Nenhum KM registrado ainda — use os campos abaixo pra lançar cada trecho do dia.</div>';
+  const today=new Date().toISOString().split('T')[0];
   el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid rgba(6,182,212,.3);border-radius:12px;padding:13px 15px;margin:4px 0 10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo do Motorista</span>
-      <b style="color:#67e8f9;font-size:13.5px">${total.toLocaleString('pt-BR')} km</b>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo — KM por dia</span>
+      <b style="color:#67e8f9;font-size:13.5px">${total.toLocaleString('pt-BR')} km no total</b>
     </div>
     ${rows}
+    <div class="fr c4 gestor-only" style="gap:8px;align-items:end;margin-top:10px">
+      <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Data</label>
+        <input type="date" class="fc" id="tdk-date" value="${today}" style="font-size:12px"></div>
+      <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Turno/Obs</label>
+        <input type="text" class="fc" id="tdk-note" placeholder="Ex: manhã" style="font-size:12px"></div>
+      <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">KM rodado</label>
+        <input type="number" class="fc" id="tdk-km" placeholder="Ex: 25" step="1" min="0" style="font-size:12px"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addTripDailyKm();}"></div>
+      <div class="fg" style="margin:0"><button type="button" class="btn btn-pr btn-sm" style="width:100%" onclick="addTripDailyKm()">➕ Lançar KM</button></div>
+    </div>
+    <input type="hidden" id="tdk-who-source">
   </div>`;
-  el.style.display='';
+}
+function addTripDailyKm(){
+  const km=n(document.getElementById('tdk-km').value);
+  if(km<=0){ showToast('Informe o KM rodado','warn'); document.getElementById('tdk-km').focus(); return; }
+  // "quem": se há só 1 motorista designado, usa ele; com vários, o gestor detalha na obs
+  const who=(typeof _tripDriversTmp!=='undefined' && _tripDriversTmp.length===1)?_tripDriversTmp[0]:'';
+  _tripDailyLogTmp.push({
+    id:uid(),
+    date:document.getElementById('tdk-date').value||new Date().toISOString().split('T')[0],
+    period:'', km, who,
+    note:(document.getElementById('tdk-note').value||'').trim()
+  });
+  drawTripDailyLog();
+}
+function removeTripDailyKm(id){
+  _tripDailyLogTmp=_tripDailyLogTmp.filter(e=>e.id!==id);
+  drawTripDailyLog();
 }
 
 function editTrip(id){
@@ -7299,7 +7376,7 @@ function editTrip(id){
   populateVehicleSelect('trip-vehicle',t.vehicleId);
   populateTripTypeSelect();
   populateClientDatalist();
-  populateDriverSelect(t.driverName||'');
+  populateDriverSelect(Array.isArray(t.driverNames)&&t.driverNames.length ? t.driverNames : (t.driverName||''));
   document.getElementById('trip-date').value=t.date||t.departureDate||'';
   document.getElementById('trip-return-date').value=t.returnDate||'';
   document.getElementById('trip-type').value=t.type||'avulso';
@@ -7356,7 +7433,7 @@ function editTrip(id){
   if(driverDaysEl){ driverDaysEl.value=t.driverDays||''; driverDaysEl.dataset.manual=t.driverDays?'1':'0'; }
   if(driverTotalEl) driverTotalEl.value=t.driverCost||'';
   const dps=document.getElementById('driver-payment-section');
-  if(dps) dps.style.display=t.driverName?'':'none';
+  if(dps) dps.style.display=_tripDriversTmp.length?'':'none';
   // Livro de pagamentos de motorista (vários motoristas/turnos)
   _driverEntriesTmp=Array.isArray(t.driverEntries)?t.driverEntries.map(e=>({...e})):[];
   populateDriverEntryWho();
@@ -7770,7 +7847,9 @@ function saveTrip(){
     description:_description,    // mantém pra retrocompatibilidade
     client:document.getElementById('trip-client').value,
     subclient:(document.getElementById('trip-subclient')?.value)||null,
-    driverName:document.getElementById('trip-driver-name').value||'',
+    // Múltiplos motoristas: driverNames é a lista; driverName (singular) = 1º, p/ retrocompat
+    driverNames:_tripDriversTmp.length?_tripDriversTmp.slice():null,
+    driverName:_tripDriversTmp[0]||'',
     pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
     returnTime:(document.getElementById('trip-return-time')?.value)||'',
     passengers:parseInt(document.getElementById('trip-passengers')?.value)||null,
@@ -7793,6 +7872,7 @@ function saveTrip(){
     // Custo motorista: se há lançamentos detalhados, o total deles manda; senão o campo
     driverCost:r2(_driverEntriesTmp.length ? _driverEntriesTmp.reduce((s,e)=>s+n(e.amount),0) : n(document.getElementById('trip-driver').value)),
     driverEntries:_driverEntriesTmp.length ? _driverEntriesTmp.map(e=>({...e})) : null,
+    dailyLog:_tripDailyLogTmp.length ? _tripDailyLogTmp.map(e=>({...e})) : null,
     driverDailyRate:r2(n(document.getElementById('trip-driver-daily-rate').value))||null,
     driverDays:parseInt(document.getElementById('trip-driver-days').value)||null,
     otherCost:r2(n(document.getElementById('trip-other').value)),
@@ -9780,12 +9860,10 @@ function calcDriverDays(startDate, endDate){
 }
 
 function calcDriverPayment(){
-  const selEl=document.getElementById('trip-driver-name');
   const section=document.getElementById('driver-payment-section');
-  if(!section||!selEl) return;
-
-  // Show/hide section
-  if(!selEl.value){ section.style.display='none'; return; }
+  if(!section) return;
+  // Seção de diária aparece quando há ao menos 1 motorista designado (lista de chips)
+  if(!(typeof _tripDriversTmp!=='undefined' && _tripDriversTmp.length)){ section.style.display='none'; return; }
   section.style.display='';
 
   const startDate=document.getElementById('trip-date').value;

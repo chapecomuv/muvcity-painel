@@ -387,6 +387,7 @@ const cloudSync = {
           passengers:t.passengers||null,
           itinerary:t.itinerary||'',
           driverName:t.driverName||'',
+          driverNames:Array.isArray(t.driverNames)?t.driverNames:null,
           driverPhone:t.driverPhone||'',
           status:t.driverStatus||'programada',
           expenses:t.driverExpenses||[],
@@ -408,7 +409,7 @@ const cloudSync = {
           // observações, horário etc e o motorista vê atualizado.
           const local=DB.trips[ex];
           const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
-            'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverPhone',
+            'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverNames','driverPhone',
             'date','returnDate','pickupTime','returnTime','passengers','clientPhone','itinerary'];
           adminFields.forEach(k=>{
             if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
@@ -771,10 +772,13 @@ function isMyTrip(trip){
   if(!DB.driver) return false;
   const myName = normalizeName(DB.driver.name);
   const myPhone = (DB.driver.phone||'').replace(/\D/g,'');
-  const tName = normalizeName(trip.driverName);
   const tPhone = (trip.driverPhone||'').replace(/\D/g,'');
-  if(myPhone && tPhone) return myPhone===tPhone;   // se ambos têm telefone, decide por ele
-  if(tName && myName) return tName===myName;         // senão, nome completo idêntico
+  if(myPhone && tPhone && myPhone===tPhone) return true;   // telefone bate
+  // Múltiplos motoristas: a viagem pode ter uma LISTA (driverNames) ou um nome único (legado).
+  // Se o meu nome está na lista, a viagem é minha (cada motorista designado a vê).
+  const names = (Array.isArray(trip.driverNames)&&trip.driverNames.length)
+    ? trip.driverNames : [trip.driverName];
+  if(myName) return names.some(nm=>normalizeName(nm)===myName);
   return false;   // sem identificação → não mostra (evita vazar viagem de outro)
 }
 
