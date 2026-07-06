@@ -2068,9 +2068,11 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
 
     <!-- Detalhes do embarque (vão pro app do motorista + mensagem WhatsApp) -->
-    <div class="fr c3">
-      <div class="fg"><label class="fl">🕐 Horário de embarque</label>
+    <div class="fr c4">
+      <div class="fg"><label class="fl">🕐 Ida (embarque)</label>
         <input type="time" class="fc" id="trip-pickup-time"></div>
+      <div class="fg"><label class="fl">🕔 Retorno (busca)</label>
+        <input type="time" class="fc" id="trip-return-time"></div>
       <div class="fg"><label class="fl">👥 Qtde passageiros</label>
         <input type="number" class="fc" id="trip-passengers" placeholder="0" min="1" step="1"></div>
       <div class="fg"><label class="fl">📞 Contato do cliente <span style="opacity:.6">(WhatsApp)</span></label>
@@ -2162,6 +2164,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       </div>
     </div>
     <div id="trip-rateio-info" style="display:none"></div>
+    <div id="trip-dailylog-info" style="display:none"></div>
     <div class="fr c3">
       <div class="fg"><label class="fl">KM Inicial</label>
         <input type="number" class="fc" id="trip-km-start" placeholder="0" oninput="calcKM()"></div>
@@ -3705,7 +3708,7 @@ const cloudSync = {
           const remoteTrips = (remote && Array.isArray(remote.trips)) ? remote.trips : [];
           const protectedFields = ['driverExpenses','driverLastSync','fuelEfficiency','driverStatus',
                                     'finishedAt','startedAt','_firebaseCode','autoFinalized',
-                                    'driverCode','driverPhone'];
+                                    'driverCode','driverPhone','dailyLog'];
           (DB.trips||[]).forEach((local,idx)=>{
             if(!local||!local.id) return;
             const rem = remoteTrips.find(r=>r&&r.id===local.id);
@@ -3804,6 +3807,8 @@ const cloudSync = {
           if(dTrip.startedAt) orig.startedAt=dTrip.startedAt;
           if(dTrip.finishedAt) orig.finishedAt=dTrip.finishedAt;
           if(dTrip.status) orig.driverStatus=dTrip.status;
+          // 📋 Diário de bordo (km por dia) — motorista é a fonte
+          if(Array.isArray(dTrip.dailyLog)) orig.dailyLog=dTrip.dailyLog;
           // 🛡️ BUG FIX (2026-07-02): lista de despesas VAZIA do motorista não pode
           // apagar lançamentos manuais do gestor. Só recalcula agregados quando o
           // motorista tem lançamentos de verdade — e SÓ nas categorias que ele lançou.
@@ -5232,11 +5237,18 @@ function renderAgenda(){
     const barsHtml=placed.filter(p=>p.row<=MAX_ROWS).map(p=>{
       const color=getVehColor(p.t.vehicleId);
       const status=p.t.driverStatus||'programada';
-      const hora=p.startsHere && p.t.pickupTime?p.t.pickupTime:'';
+      // Horário ida–retorno: em viagens longas (fretamento), o serviço se repete todo
+      // dia — então o horário aparece em TODOS os segmentos da barra, não só no 1º.
+      const isMultiDay=p.t.returnDate && p.t.returnDate>p.t.date;
+      const horaIda=p.t.pickupTime||'';
+      const horaVolta=p.t.returnTime||'';
+      const horaLabel=horaIda?(horaVolta?`${horaIda}–${horaVolta}`:horaIda):'';
+      const hora=(p.startsHere||isMultiDay)?horaLabel:'';
       const rota=(p.t.origin||p.t.destination)
         ? `${(p.t.origin||'?').split(/[,\-]/)[0].trim()} → ${(p.t.destination||'?').split(/[,\-]/)[0].trim()}`
         : (p.t.description||p.t.client||'Viagem');
-      const title=`${rota}${p.t.client?' · '+p.t.client:''}${p.t.driverName?' · '+p.t.driverName:''}`.replace(/"/g,'&quot;');
+      const diario=isMultiDay?` · diário${horaLabel?' '+horaLabel:''}`:'';
+      const title=`${rota}${p.t.client?' · '+p.t.client:''}${p.t.driverName?' · '+p.t.driverName:''}${diario}`.replace(/"/g,'&quot;');
       const continuation=!p.startsHere?' ← ':'';
       const continuationEnd=!p.endsHere?' →':'';
       return `<div class="agenda-bar status-${status}" style="grid-column:${p.colStart}/${p.colEnd+1};grid-row:${p.row};background:${color}22;border-left-color:${color}" onclick="event.stopPropagation();editTrip('${p.t.id}')" title="${title}">${continuation}${hora?`<span class="agenda-bar-time">${hora}</span>`:''}${rota}${continuationEnd}</div>`;
@@ -6864,7 +6876,7 @@ function openTripModal(vId){
   const _ppb=document.getElementById('trip-payment-plan-builder'); if(_ppb){_ppb.innerHTML='';_ppb._customCount=2;}
   document.getElementById('trip-payment-summary').textContent='';
   ['trip-return-date','trip-origin','trip-destination','trip-client','trip-revenue',
-   'trip-pickup-time','trip-passengers','trip-client-phone','trip-itinerary',
+   'trip-pickup-time','trip-return-time','trip-passengers','trip-client-phone','trip-itinerary',
    'trip-nf-value','trip-tax-rate','trip-tax-amount','trip-km-start','trip-km-end',
    'trip-km-total','trip-km-estimated','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
    'trip-food','trip-driver','trip-other','trip-other-desc','trip-notes',
@@ -6873,6 +6885,7 @@ function openTripModal(vId){
   const dps=document.getElementById('driver-payment-section'); if(dps) dps.style.display='none';
   const qcp=document.getElementById('trip-quick-client-panel'); if(qcp) qcp.style.display='none';
   const rti=document.getElementById('trip-rateio-info'); if(rti){ rti.style.display='none'; rti.innerHTML=''; }
+  const dli=document.getElementById('trip-dailylog-info'); if(dli){ dli.style.display='none'; dli.innerHTML=''; }
   const scw=document.getElementById('trip-subclient-wrap'); if(scw){ scw.style.display='none'; document.getElementById('trip-subclient').innerHTML=''; }
   document.getElementById('trip-nf').value='nao';
   populateTripTypeSelect();
@@ -7163,6 +7176,28 @@ function renderTripRateioInfo(t){
     → Diesel absorvido via rateio: <b style="color:#f59e0b">${R(km*info.costPerKm)}</b> (já entra no custo e na margem desta viagem — não lance o diesel de novo aqui)`);
 }
 
+// 📋 Diário de Bordo do motorista (km por dia) — leitura no modal do gestor
+function renderTripDailyLog(t){
+  const el=document.getElementById('trip-dailylog-info');
+  if(!el) return;
+  const log=Array.isArray(t?.dailyLog)?t.dailyLog:[];
+  if(!log.length){ el.style.display='none'; el.innerHTML=''; return; }
+  const total=log.reduce((s,e)=>s+n(e.km),0);
+  const rows=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(148,163,184,.1);font-size:12.5px">
+      <span><b>${fmtDate(e.date)}</b> <span class="txm">· ${e.period||''}${e.note?' · '+e.note:''}</span></span>
+      <b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
+    </div>`).join('');
+  el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid rgba(6,182,212,.3);border-radius:12px;padding:13px 15px;margin:4px 0 10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo do Motorista</span>
+      <b style="color:#67e8f9;font-size:13.5px">${total.toLocaleString('pt-BR')} km</b>
+    </div>
+    ${rows}
+  </div>`;
+  el.style.display='';
+}
+
 function editTrip(id){
   const t=DB.trips.find(t=>t.id===id);
   if(!t)return;
@@ -7181,6 +7216,7 @@ function editTrip(id){
   updateTripSubclientOptions(t.subclient||'');
   // Detalhes do embarque
   const _pt=document.getElementById('trip-pickup-time'); if(_pt) _pt.value=t.pickupTime||'';
+  const _rt=document.getElementById('trip-return-time'); if(_rt) _rt.value=t.returnTime||'';
   const _pa=document.getElementById('trip-passengers'); if(_pa) _pa.value=t.passengers||'';
   const _cp=document.getElementById('trip-client-phone'); if(_cp){
     // Pré-preenche com phone do cliente cadastrado se ainda vazio
@@ -7239,6 +7275,7 @@ function editTrip(id){
   loadPaymentPlanToModal(t.paymentPlan||null);
   renderTripFuelStats(t);
   renderTripRateioInfo(t);
+  renderTripDailyLog(t);
   refreshTripStatusSection(t);
   openModal('modal-trip');
 }
@@ -7638,6 +7675,7 @@ function saveTrip(){
     subclient:(document.getElementById('trip-subclient')?.value)||null,
     driverName:document.getElementById('trip-driver-name').value||'',
     pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
+    returnTime:(document.getElementById('trip-return-time')?.value)||'',
     passengers:parseInt(document.getElementById('trip-passengers')?.value)||null,
     clientPhone:(document.getElementById('trip-client-phone')?.value||'').trim(),
     itinerary:(document.getElementById('trip-itinerary')?.value||'').trim(),

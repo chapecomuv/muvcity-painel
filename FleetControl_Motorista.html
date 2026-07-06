@@ -380,6 +380,7 @@ const cloudSync = {
           client:t.client||'',
           clientPhone:t.clientPhone||'',
           pickupTime:t.pickupTime||'',
+          returnTime:t.returnTime||'',
           passengers:t.passengers||null,
           itinerary:t.itinerary||'',
           driverName:t.driverName||'',
@@ -405,7 +406,7 @@ const cloudSync = {
           const local=DB.trips[ex];
           const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
             'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverPhone',
-            'date','returnDate','pickupTime','passengers','clientPhone','itinerary'];
+            'date','returnDate','pickupTime','returnTime','passengers','clientPhone','itinerary'];
           adminFields.forEach(k=>{
             if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
           });
@@ -1042,6 +1043,95 @@ function backToHome(){
   window.scrollTo(0,0);
 }
 
+// ════════ DIÁRIO DE BORDO — KM por dia (fretamentos e serviços longos) ════════
+// O motorista registra quanto rodou em cada trecho do dia (manhã 25 km, tarde 25 km...).
+// Vira controle exato do km rodado no serviço, sincronizado pro gestor.
+function renderDailyLogCard(trip){
+  const log=Array.isArray(trip.dailyLog)?trip.dailyLog:[];
+  if(!log.length) return '';
+  const total=log.reduce((s,e)=>s+n(e.km),0);
+  const rows=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
+      <div>
+        <b style="color:#fff">${fmtDate(e.date)}</b>
+        <span class="txm"> · ${e.period||''}${e.note?' · '+e.note:''}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
+        ${trip.status==='andamento'?`<button onclick="deleteDailyKm('${trip.id}','${e.id}')" style="background:none;border:none;color:rgba(239,68,68,.6);cursor:pointer;font-size:13px" title="Excluir">🗑️</button>`:''}
+      </div>
+    </div>`).join('');
+  return `<div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid rgba(6,182,212,.25)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo</div>
+      <div style="font-size:13px;font-weight:800;color:#67e8f9">${total.toLocaleString('pt-BR')} km no total</div>
+    </div>
+    ${rows}
+  </div>`;
+}
+function openDailyKmModal(tripId){
+  const m=document.getElementById('overlay-host')||(()=>{const d=document.createElement('div');d.id='overlay-host';document.body.appendChild(d);return d;})();
+  const today=new Date().toISOString().split('T')[0];
+  const hora=new Date().getHours();
+  const periodoSugerido=hora<12?'Manhã':hora<18?'Tarde':'Noite';
+  m.innerHTML=`
+    <div class="overlay show" onclick="if(event.target===this)closeAllOverlays()">
+      <div class="modal">
+        <div class="modal-h">
+          <div class="modal-t">📋 Registrar KM do Dia</div>
+          <button class="modal-x" onclick="closeAllOverlays()">✕</button>
+        </div>
+        <div class="banner info">💡 <span>Registre quanto rodou em cada trecho — ex: levou os funcionários de manhã (25 km), buscou de tarde (25 km). Isso dá o controle exato do serviço.</span></div>
+        <div class="fr2">
+          <div class="fg"><label class="fl">Data</label>
+            <input type="date" class="fc" id="dk-date" value="${today}"></div>
+          <div class="fg"><label class="fl">Período</label>
+            <select class="fc" id="dk-period">
+              <option ${periodoSugerido==='Manhã'?'selected':''}>Manhã</option>
+              <option ${periodoSugerido==='Tarde'?'selected':''}>Tarde</option>
+              <option ${periodoSugerido==='Noite'?'selected':''}>Noite</option>
+              <option>Dia inteiro</option>
+            </select></div>
+        </div>
+        <div class="fg">
+          <label class="fl">KM rodado neste trecho *</label>
+          <input type="text" inputmode="numeric" class="fc" id="dk-km" placeholder="Ex: 25" style="font-size:18px;font-weight:700">
+        </div>
+        <div class="fg">
+          <label class="fl">Observação (opcional)</label>
+          <input type="text" class="fc" id="dk-note" placeholder="Ex: levar funcionários ICAVI">
+        </div>
+        <button class="btn btn-sc btn-lg" onclick="saveDailyKm('${tripId}')">💾 Salvar Registro</button>
+      </div>
+    </div>`;
+  setTimeout(()=>document.getElementById('dk-km')?.focus(),150);
+}
+function saveDailyKm(tripId){
+  const trip=DB.trips.find(t=>t.id===tripId); if(!trip) return;
+  const km=n(document.getElementById('dk-km').value);
+  if(km<=0){ showToast('Informe o KM rodado','warn'); return; }
+  if(!Array.isArray(trip.dailyLog)) trip.dailyLog=[];
+  trip.dailyLog.push({
+    id:uid('dk'),
+    date:document.getElementById('dk-date').value||new Date().toISOString().split('T')[0],
+    period:document.getElementById('dk-period').value,
+    km,
+    note:(document.getElementById('dk-note').value||'').trim()
+  });
+  trip._lastChange=Date.now();
+  saveDB();
+  closeAllOverlays();
+  showToast('📋 '+km+' km registrados no diário!','ok');
+  render();
+}
+function deleteDailyKm(tripId, entryId){
+  const trip=DB.trips.find(t=>t.id===tripId); if(!trip) return;
+  if(!confirm('Excluir este registro do diário?')) return;
+  trip.dailyLog=(trip.dailyLog||[]).filter(e=>e.id!==entryId);
+  trip._lastChange=Date.now();
+  saveDB(); render();
+}
+
 // Card de Meta de Consumo (km/L) — visível ao motorista para incentivo durante e após a viagem.
 function renderFuelMetaCard(trip){
   // Meta vem da trip; se faltar (ex: viagem importada por código), busca pela tabela de veículos sincronizada
@@ -1198,6 +1288,10 @@ function renderTripScreen(root, trip){
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Fazer Novo Lançamento
     </button>
+    <button class="btn btn-lg" style="margin-top:10px;background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff" onclick="openDailyKmModal('${trip.id}')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      📋 Registrar KM do Dia
+    </button>
     <button class="btn btn-dg btn-lg" style="margin-top:10px" onclick="openFinishTripModal('${trip.id}')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 6 20 20 12 6 4"/></svg>
       Finalizar Viagem
@@ -1236,7 +1330,8 @@ function renderTripScreen(root, trip){
       ${(trip.pickupTime||trip.itinerary||trip.passengers||trip.clientPhone)?`
       <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(99,102,241,.04));border:1px solid rgba(167,139,250,.25)">
         <div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase;margin-bottom:10px">📋 Informações do embarque</div>
-        ${trip.pickupTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕐 Horário de embarque</span><b style="color:#fff">${trip.pickupTime}</b></div>`:''}
+        ${trip.pickupTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕐 Horário de embarque (ida)</span><b style="color:#fff">${trip.pickupTime}</b></div>`:''}
+        ${trip.returnTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕔 Horário de retorno (busca)</span><b style="color:#fff">${trip.returnTime}</b></div>`:''}
         ${trip.itinerary?`<div style="padding:8px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
           <div class="txm" style="margin-bottom:6px;font-weight:700">📝 Detalhes da viagem</div>
           <div style="color:#fff;white-space:pre-wrap;line-height:1.55;background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;word-break:break-word">${linkifyText(trip.itinerary||'')}</div>
@@ -1272,6 +1367,8 @@ function renderTripScreen(root, trip){
       </div>`:''}
 
       ${trip.status!=='programada'?renderFuelMetaCard(trip):''}
+
+      ${renderDailyLogCard(trip)}
 
       ${mainAction}
 
@@ -1524,7 +1621,7 @@ function openFinishTripModal(tripId){
           <div class="modal-t">🏁 Finalizar Viagem</div>
           <button class="modal-x" onclick="closeAllOverlays()">✕</button>
         </div>
-        <div class="banner warn">⚠️ <span><b>Atenção:</b> para finalizar é OBRIGATÓRIO informar o <b>KM final</b> e o <b>último abastecimento</b> (mesmo que tenha sido só agora pra zerar). Isso garante que o tanque sempre saia cheio pra próxima viagem.</span></div>
+        <div class="banner warn">⚠️ <span><b>Só o KM final é obrigatório.</b> Abastecimento: preencha apenas se você abasteceu — em viagem curta sem abastecer, deixe em branco que o sistema calcula o consumo pela média do veículo.</span></div>
         <div class="fg">
           <label class="fl">KM Final * <span style="color:#67e8f9">(KM inicial: ${(trip.kmStart||0).toLocaleString('pt-BR')})</span></label>
           <input type="text" inputmode="numeric" class="fc" id="ft-km" placeholder="Ex: 146850" style="font-size:18px;font-weight:700">
@@ -1534,13 +1631,13 @@ function openFinishTripModal(tripId){
           <input type="datetime-local" class="fc" id="ft-when" value="${today}T${time}">
         </div>
 
-        <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.18);border-radius:12px;padding:14px;margin:14px 0">
-          <div style="font-size:12px;font-weight:800;letter-spacing:.4px;color:#fca5a5;text-transform:uppercase;margin-bottom:10px">⛽ Abastecimento Final * (obrigatório)</div>
+        <div style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.18);border-radius:12px;padding:14px;margin:14px 0">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.4px;color:#34d399;text-transform:uppercase;margin-bottom:10px">⛽ Abastecimento Final <span style="opacity:.7;text-transform:none;letter-spacing:0">(opcional — só se abasteceu)</span></div>
           <div class="fr2">
-            <div class="fg" style="margin-bottom:8px"><label class="fl">Litros *</label><input type="text" inputmode="decimal" class="fc" id="ft-fuel-liters" placeholder="0,00" oninput="calcFuelTotal('ft-fuel-liters','ft-fuel-pl','ft-fuel-total')"></div>
-            <div class="fg" style="margin-bottom:8px"><label class="fl">R$/Litro *</label><input type="text" inputmode="decimal" class="fc" id="ft-fuel-pl" placeholder="6,49" oninput="calcFuelTotal('ft-fuel-liters','ft-fuel-pl','ft-fuel-total')"></div>
+            <div class="fg" style="margin-bottom:8px"><label class="fl">Litros</label><input type="text" inputmode="decimal" class="fc" id="ft-fuel-liters" placeholder="0,00" oninput="calcFuelTotal('ft-fuel-liters','ft-fuel-pl','ft-fuel-total')"></div>
+            <div class="fg" style="margin-bottom:8px"><label class="fl">R$/Litro</label><input type="text" inputmode="decimal" class="fc" id="ft-fuel-pl" placeholder="6,49" oninput="calcFuelTotal('ft-fuel-liters','ft-fuel-pl','ft-fuel-total')"></div>
           </div>
-          <div class="fg" style="margin-bottom:0"><label class="fl">Total Pago (R$) *</label><input type="text" inputmode="decimal" class="fc" id="ft-fuel-total" placeholder="0,00"></div>
+          <div class="fg" style="margin-bottom:0"><label class="fl">Total Pago (R$)</label><input type="text" inputmode="decimal" class="fc" id="ft-fuel-total" placeholder="0,00"></div>
         </div>
 
         <button class="btn btn-dg btn-lg" onclick="finishTrip('${tripId}')">
@@ -1559,23 +1656,29 @@ function finishTrip(tripId){
   const fuelL=n(document.getElementById('ft-fuel-liters').value);
   const fuelP=n(document.getElementById('ft-fuel-pl').value);
   const fuelT=n(document.getElementById('ft-fuel-total').value);
-  if(fuelL<=0 || fuelT<=0){ showToast('⚠️ Informe o abastecimento final (litros + total)','err'); return; }
+  // Abastecimento é OPCIONAL (viagem curta sem abastecer é normal) —
+  // mas se começou a preencher, tem que completar (litros + total)
+  if((fuelL>0||fuelT>0) && (fuelL<=0||fuelT<=0)){
+    showToast('⚠️ Abastecimento incompleto: preencha litros E total (ou deixe os dois vazios)','err'); return;
+  }
   const when=document.getElementById('ft-when').value;
   trip.kmEnd=km;
   trip.finishedAt=when||new Date().toISOString();
   trip.status='finalizada';
   trip.expenses=trip.expenses||[];
-  trip.expenses.push({
-    id:uid('lanc'),
-    type:'combustivel',
-    date:when?when.split('T')[0]:new Date().toISOString().split('T')[0],
-    amount:fuelT,
-    liters:fuelL,
-    pricePerLiter:fuelP,
-    kmAtPump:km,
-    label:'Abastecimento final (tanque cheio)',
-    isFinalFuel:true
-  });
+  if(fuelL>0 && fuelT>0){
+    trip.expenses.push({
+      id:uid('lanc'),
+      type:'combustivel',
+      date:when?when.split('T')[0]:new Date().toISOString().split('T')[0],
+      amount:fuelT,
+      liters:fuelL,
+      pricePerLiter:fuelP,
+      kmAtPump:km,
+      label:'Abastecimento final (tanque cheio)',
+      isFinalFuel:true
+    });
+  }
   trip._lastChange=Date.now();
   saveDB();
   closeAllOverlays();
