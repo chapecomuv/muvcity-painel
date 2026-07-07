@@ -384,6 +384,8 @@ const cloudSync = {
           clientPhone:t.clientPhone||'',
           pickupTime:t.pickupTime||'',
           returnTime:t.returnTime||'',
+          waitToleranceMin:(t.waitToleranceMin!=null?t.waitToleranceMin:null),
+          waitHourRate:(t.waitHourRate!=null?t.waitHourRate:null),
           passengers:t.passengers||null,
           itinerary:t.itinerary||'',
           driverName:t.driverName||'',
@@ -410,7 +412,7 @@ const cloudSync = {
           const local=DB.trips[ex];
           const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
             'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverNames','driverPhone',
-            'date','returnDate','pickupTime','returnTime','passengers','clientPhone','itinerary'];
+            'date','returnDate','pickupTime','returnTime','waitToleranceMin','waitHourRate','passengers','clientPhone','itinerary'];
           adminFields.forEach(k=>{
             if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
           });
@@ -1050,49 +1052,117 @@ function backToHome(){
   window.scrollTo(0,0);
 }
 
-// ════════ DIÁRIO DE BORDO — KM por dia (fretamentos e serviços longos) ════════
-// O motorista registra quanto rodou em cada trecho do dia (manhã 25 km, tarde 25 km...).
-// Vira controle exato do km rodado no serviço, sincronizado pro gestor.
+// ════════ DIÁRIO DE BORDO — registros do dia (fretamentos e serviços longos) ════════
+// Cada registro tem um TIPO: trecho rodado (km), espera/hora extra, viagem extra,
+// ou ocorrência. Vira o comprovante do serviço (base pra cobrar adicionais do contrato).
+const DLOG_TYPES={
+  km:      {icon:'🚗', label:'Trecho rodado', color:'#67e8f9'},
+  espera:  {icon:'⏱️', label:'Espera / hora extra', color:'#fbbf24'},
+  extra:   {icon:'➕', label:'Viagem extra', color:'#34d399'},
+  ocorrencia:{icon:'📌', label:'Ocorrência', color:'#f87171'}
+};
+function calcWaitCharge(arrival, boarding, toleranceMin, hourRate){
+  const toMin=t=>{ const p=(t||'').split(':'); return (parseInt(p[0])||0)*60+(parseInt(p[1])||0); };
+  if(!arrival||!boarding) return {waitMin:0, billableMin:0, charge:0};
+  let wait=toMin(boarding)-toMin(arrival);
+  if(wait<0) wait+=1440;
+  const billable=Math.max(0, wait-(n(toleranceMin)||0));
+  const charge=(billable/60)*(n(hourRate)||0);
+  return {waitMin:wait, billableMin:billable, charge};
+}
+function _fmtMin(m){ const h=Math.floor(m/60), mm=m%60; return h>0?`${h}h${mm>0?(' '+mm+'min'):''}`:`${mm}min`; }
+function _dlogVal(e){
+  const ty=e.type||'km';
+  if(ty==='espera'){
+    const w=n(e.waitMin), b=n(e.billableMin);
+    return w>0 ? `${_fmtMin(w)}${b>0?' → '+R(n(e.charge)):''}` : `${n(e.hours).toLocaleString('pt-BR')} h`;
+  }
+  if(ty==='ocorrencia') return '';
+  return `${n(e.km).toLocaleString('pt-BR')} km`;
+}
 function renderDailyLogCard(trip){
   const log=Array.isArray(trip.dailyLog)?trip.dailyLog:[];
   if(!log.length) return '';
-  const total=log.reduce((s,e)=>s+n(e.km),0);
-  const rows=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
-      <div>
+  const totKm=log.reduce((s,e)=>s+((e.type||'km')==='ocorrencia'||(e.type||'km')==='espera'?0:n(e.km)),0);
+  const totCharge=log.reduce((s,e)=>s+(e.type==='espera'?n(e.charge):0),0);
+  const rows=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>{
+    const ty=DLOG_TYPES[e.type||'km']||DLOG_TYPES.km;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
+      <div style="min-width:0">
         <b style="color:#fff">${fmtDate(e.date)}</b>
-        <span class="txm"> · ${e.period||''}${e.who?' · 🚗 '+e.who.split(' ')[0]:''}${e.note?' · '+e.note:''}</span>
+        <span class="txm"> · ${ty.icon} ${e.period||ty.label}${e.who?' · '+e.who.split(' ')[0]:''}${e.note?' · '+e.note:''}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <b style="color:${ty.color}">${_dlogVal(e)}</b>
         ${trip.status==='andamento'?`<button onclick="deleteDailyKm('${trip.id}','${e.id}')" style="background:none;border:none;color:rgba(239,68,68,.6);cursor:pointer;font-size:13px" title="Excluir">🗑️</button>`:''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid rgba(6,182,212,.25)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo</div>
-      <div style="font-size:13px;font-weight:800;color:#67e8f9">${total.toLocaleString('pt-BR')} km no total</div>
+      <div style="font-size:12.5px;font-weight:800;color:#67e8f9">${totKm.toLocaleString('pt-BR')} km${totCharge>0?` · espera ${R(totCharge)}`:''}</div>
     </div>
     ${rows}
   </div>`;
 }
+let _dlogType='km';
+function setDailyType(ty){
+  _dlogType=ty;
+  document.querySelectorAll('#dk-type-btns .dk-tbtn').forEach(b=>{
+    const on=b.dataset.ty===ty;
+    b.style.background=on?'rgba(6,182,212,.22)':'rgba(255,255,255,.04)';
+    b.style.borderColor=on?'rgba(6,182,212,.6)':'rgba(148,163,184,.2)';
+    b.style.color=on?'#67e8f9':'#94a3b8';
+  });
+  // Mostra/esconde grupos por tipo
+  const show=(id,vis)=>{ const el=document.getElementById(id); if(el) el.style.display=vis?'':'none'; };
+  show('dk-grp-hodo', ty==='km');        // KM inicial/final (hodômetro)
+  show('dk-grp-kmsingle', ty==='extra'); // KM único (viagem extra)
+  show('dk-grp-period', ty==='km');
+  show('dk-grp-espera', ty==='espera');  // horário chegada/embarque
+  const noteLabel=document.getElementById('dk-note-label');
+  if(noteLabel) noteLabel.textContent = ty==='ocorrencia'?'O que aconteceu *':ty==='espera'?'Motivo (opcional)':ty==='extra'?'Descrição da viagem extra *':'Observação (opcional)';
+  if(ty==='espera') updateEsperaPreview();
+}
+function updateEsperaPreview(){
+  const box=document.getElementById('dk-espera-preview');
+  if(!box) return;
+  const a=document.getElementById('dk-arrival')?.value;
+  const b=document.getElementById('dk-boarding')?.value;
+  const trip=DB.trips.find(t=>t.id===_dlogTripId);
+  if(!a||!b){ box.innerHTML='Preencha os dois horários pra calcular.'; return; }
+  const w=calcWaitCharge(a,b, trip?.waitToleranceMin, trip?.waitHourRate);
+  const tol=n(trip?.waitToleranceMin), rate=n(trip?.waitHourRate);
+  box.innerHTML=`Esperou <b>${_fmtMin(w.waitMin)}</b>`+
+    (tol>0?` · tolerância ${tol}min`:'')+
+    (w.billableMin>0?` → <b style="color:#f59e0b">${_fmtMin(w.billableMin)} cobrável${rate>0?' = '+R(w.charge):''}</b>`:' → dentro da tolerância, sem cobrança');
+}
+let _dlogTripId=null;
 function openDailyKmModal(tripId){
+  _dlogTripId=tripId;
   const m=document.getElementById('overlay-host')||(()=>{const d=document.createElement('div');d.id='overlay-host';document.body.appendChild(d);return d;})();
   const today=new Date().toISOString().split('T')[0];
   const hora=new Date().getHours();
   const periodoSugerido=hora<12?'Manhã':hora<18?'Tarde':'Noite';
+  const tbtn=(ty)=>`<button type="button" class="dk-tbtn" data-ty="${ty}" onclick="setDailyType('${ty}')"
+    style="flex:1;min-width:72px;padding:9px 6px;border:1px solid rgba(148,163,184,.2);background:rgba(255,255,255,.04);color:#94a3b8;border-radius:10px;cursor:pointer;font-size:11.5px;font-weight:700">
+    ${DLOG_TYPES[ty].icon}<br>${DLOG_TYPES[ty].label}</button>`;
   m.innerHTML=`
     <div class="overlay show" onclick="if(event.target===this)closeAllOverlays()">
       <div class="modal">
         <div class="modal-h">
-          <div class="modal-t">📋 Registrar KM do Dia</div>
+          <div class="modal-t">📋 Registrar no Diário</div>
           <button class="modal-x" onclick="closeAllOverlays()">✕</button>
         </div>
-        <div class="banner info">💡 <span>Registre quanto rodou em cada trecho — ex: levou os funcionários de manhã (25 km), buscou de tarde (25 km). Isso dá o controle exato do serviço.</span></div>
+        <label class="fl">Tipo de registro</label>
+        <div id="dk-type-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          ${tbtn('km')}${tbtn('espera')}${tbtn('extra')}${tbtn('ocorrencia')}
+        </div>
         <div class="fr2">
           <div class="fg"><label class="fl">Data</label>
             <input type="date" class="fc" id="dk-date" value="${today}"></div>
-          <div class="fg"><label class="fl">Período</label>
+          <div class="fg" id="dk-grp-period"><label class="fl">Período</label>
             <select class="fc" id="dk-period">
               <option ${periodoSugerido==='Manhã'?'selected':''}>Manhã</option>
               <option ${periodoSugerido==='Tarde'?'selected':''}>Tarde</option>
@@ -1100,36 +1170,74 @@ function openDailyKmModal(tripId){
               <option>Dia inteiro</option>
             </select></div>
         </div>
-        <div class="fg">
-          <label class="fl">KM rodado neste trecho *</label>
-          <input type="text" inputmode="numeric" class="fc" id="dk-km" placeholder="Ex: 25" style="font-size:18px;font-weight:700">
+        <div id="dk-grp-hodo">
+          <div class="banner info" style="margin-bottom:10px">💡 <span>Só leia o hodômetro do painel: o número quando saiu e quando chegou. O sistema calcula o KM rodado.</span></div>
+          <div class="fr2">
+            <div class="fg"><label class="fl">KM inicial (hodômetro na saída) *</label>
+              <input type="text" inputmode="decimal" class="fc" id="dk-kmstart" placeholder="Ex: 124455" style="font-size:17px;font-weight:700"></div>
+            <div class="fg"><label class="fl">KM final (hodômetro na chegada) *</label>
+              <input type="text" inputmode="decimal" class="fc" id="dk-kmend" placeholder="Ex: 124481" style="font-size:17px;font-weight:700"></div>
+          </div>
+        </div>
+        <div class="fg" id="dk-grp-kmsingle" style="display:none">
+          <label class="fl">KM da viagem extra *</label>
+          <input type="text" inputmode="decimal" class="fc" id="dk-km" placeholder="Ex: 18" style="font-size:18px;font-weight:700">
+        </div>
+        <div id="dk-grp-espera" style="display:none">
+          <div class="fr2">
+            <div class="fg"><label class="fl">🕐 Cheguei às *</label>
+              <input type="time" class="fc" id="dk-arrival" oninput="updateEsperaPreview()" style="font-size:17px;font-weight:700"></div>
+            <div class="fg"><label class="fl">🕐 Embarcaram às *</label>
+              <input type="time" class="fc" id="dk-boarding" oninput="updateEsperaPreview()" style="font-size:17px;font-weight:700"></div>
+          </div>
+          <div id="dk-espera-preview" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:10px 12px;font-size:13px;color:#fcd34d;margin-bottom:4px">Preencha os dois horários pra calcular.</div>
         </div>
         <div class="fg">
-          <label class="fl">Observação (opcional)</label>
-          <input type="text" class="fc" id="dk-note" placeholder="Ex: levar funcionários ICAVI">
+          <label class="fl" id="dk-note-label">Observação (opcional)</label>
+          <input type="text" class="fc" id="dk-note" placeholder="Ex: colaboradores não apareceram">
         </div>
         <button class="btn btn-sc btn-lg" onclick="saveDailyKm('${tripId}')">💾 Salvar Registro</button>
       </div>
     </div>`;
-  setTimeout(()=>document.getElementById('dk-km')?.focus(),150);
+  setDailyType('km');
+  setTimeout(()=>document.getElementById('dk-kmstart')?.focus(),150);
 }
 function saveDailyKm(tripId){
   const trip=DB.trips.find(t=>t.id===tripId); if(!trip) return;
-  const km=n(document.getElementById('dk-km').value);
-  if(km<=0){ showToast('Informe o KM rodado','warn'); return; }
-  if(!Array.isArray(trip.dailyLog)) trip.dailyLog=[];
-  trip.dailyLog.push({
-    id:uid('dk'),
+  const ty=_dlogType||'km';
+  const note=(document.getElementById('dk-note').value||'').trim();
+  const base={ id:uid('dk'), type:ty,
     date:document.getElementById('dk-date').value||new Date().toISOString().split('T')[0],
-    period:document.getElementById('dk-period').value,
-    km,
-    who:(DB.driver&&DB.driver.name)||'',   // motorista que registrou o trecho
-    note:(document.getElementById('dk-note').value||'').trim()
-  });
+    period:ty==='km'?document.getElementById('dk-period').value:'',
+    who:(DB.driver&&DB.driver.name)||'', note };
+  let entry;
+  if(ty==='km'){
+    const ks=n(document.getElementById('dk-kmstart').value);
+    const ke=n(document.getElementById('dk-kmend').value);
+    if(ks<=0||ke<=0){ showToast('Informe KM inicial e final','warn'); return; }
+    if(ke<ks){ showToast('KM final não pode ser menor que o inicial','warn'); return; }
+    entry={...base, kmStart:ks, kmEnd:ke, km:Math.round((ke-ks)*100)/100};
+  } else if(ty==='extra'){
+    const km=n(document.getElementById('dk-km').value);
+    if(km<=0){ showToast('Informe o KM','warn'); return; }
+    if(!note){ showToast('Descreva a viagem extra','warn'); return; }
+    entry={...base, km};
+  } else if(ty==='espera'){
+    const a=document.getElementById('dk-arrival').value;
+    const b=document.getElementById('dk-boarding').value;
+    if(!a||!b){ showToast('Informe os dois horários','warn'); return; }
+    const w=calcWaitCharge(a,b, trip.waitToleranceMin, trip.waitHourRate);
+    entry={...base, arrivalTime:a, boardingTime:b, waitMin:w.waitMin, billableMin:w.billableMin, charge:w.charge, toleranceMin:n(trip.waitToleranceMin), hourRate:n(trip.waitHourRate)};
+  } else { // ocorrencia
+    if(!note){ showToast('Descreva a ocorrência','warn'); return; }
+    entry={...base};
+  }
+  if(!Array.isArray(trip.dailyLog)) trip.dailyLog=[];
+  trip.dailyLog.push(entry);
   trip._lastChange=Date.now();
   saveDB();
   closeAllOverlays();
-  showToast('📋 '+km+' km registrados no diário!','ok');
+  showToast('📋 Registrado no diário!','ok');
   render();
 }
 function deleteDailyKm(tripId, entryId){

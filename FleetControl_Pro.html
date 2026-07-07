@@ -2092,6 +2092,17 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         <div class="txs txm mt1">Aparece pro motorista no app e vai na mensagem do WhatsApp</div>
       </div>
     </div>
+    <!-- ⏱️ Regra de espera do contrato — usada pra calcular hora extra automaticamente -->
+    <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:12px 14px;margin-top:10px">
+      <div class="fsec-t" style="color:#f59e0b;margin-bottom:8px">⏱️ Regra de Espera do Contrato <span class="txs txm" style="text-transform:none;letter-spacing:0">(pra cobrar hora extra automática)</span></div>
+      <div class="fr c2">
+        <div class="fg" style="margin:0"><label class="fl">Tolerância (minutos)</label>
+          <input type="number" class="fc" id="trip-wait-tolerance" placeholder="Ex: 40" min="0" step="1"></div>
+        <div class="fg" style="margin:0"><label class="fl">Valor da hora de espera (R$)</label>
+          <input type="number" class="fc" id="trip-wait-rate" placeholder="Ex: 100" min="0" step="0.01"></div>
+      </div>
+      <div class="txs txm mt1">Quando o motorista registrar "espera" com horário de chegada e embarque, o sistema desconta a tolerância e calcula o valor a cobrar.</div>
+    </div>
   </div>
 
   <!-- Driver payment section — appears when driver is selected -->
@@ -7007,7 +7018,7 @@ function openTripModal(vId){
   const _ppb=document.getElementById('trip-payment-plan-builder'); if(_ppb){_ppb.innerHTML='';_ppb._customCount=2;}
   document.getElementById('trip-payment-summary').textContent='';
   ['trip-return-date','trip-origin','trip-destination','trip-client','trip-revenue',
-   'trip-pickup-time','trip-return-time','trip-passengers','trip-client-phone','trip-itinerary',
+   'trip-pickup-time','trip-return-time','trip-wait-tolerance','trip-wait-rate','trip-passengers','trip-client-phone','trip-itinerary',
    'trip-nf-value','trip-tax-rate','trip-tax-amount','trip-km-start','trip-km-end',
    'trip-km-total','trip-km-estimated','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
    'trip-food','trip-driver','trip-other','trip-other-desc','trip-notes',
@@ -7320,52 +7331,233 @@ function renderTripDailyLog(t){
   drawTripDailyLog();
   el.style.display='';
 }
+const DLOG_TYPES={
+  km:      {icon:'🚗', label:'Trecho rodado', color:'#67e8f9'},
+  espera:  {icon:'⏱️', label:'Espera / hora extra', color:'#f59e0b'},
+  extra:   {icon:'➕', label:'Viagem extra', color:'#10b981'},
+  ocorrencia:{icon:'📌', label:'Ocorrência', color:'#ef4444'}
+};
+// Calcula espera a partir dos horários: chegada→embarque, desconta tolerância, aplica R$/h
+function calcWaitCharge(arrival, boarding, toleranceMin, hourRate){
+  const toMin=t=>{ const p=(t||'').split(':'); return (parseInt(p[0])||0)*60+(parseInt(p[1])||0); };
+  if(!arrival||!boarding) return {waitMin:0, billableMin:0, charge:0};
+  let wait=toMin(boarding)-toMin(arrival);
+  if(wait<0) wait+=1440;   // passou da meia-noite
+  const billable=Math.max(0, wait-(n(toleranceMin)||0));
+  const charge=(billable/60)*(n(hourRate)||0);
+  return {waitMin:wait, billableMin:billable, charge};
+}
+function _fmtMin(m){ const h=Math.floor(m/60), mm=m%60; return h>0?`${h}h${mm>0?(' '+mm+'min'):''}`:`${mm}min`; }
+function _dlogVal(e){
+  const ty=e.type||'km';
+  if(ty==='espera'){
+    const w=n(e.waitMin), b=n(e.billableMin);
+    return w>0 ? `${_fmtMin(w)}${b>0?' → '+R(n(e.charge)):''}` : `${n(e.hours).toLocaleString('pt-BR')} h`;
+  }
+  if(ty==='ocorrencia') return '—';
+  return `${n(e.km).toLocaleString('pt-BR')} km`;
+}
+let _mgrDlogType='km';
+function setMgrDlogType(ty){
+  _mgrDlogType=ty;
+  document.querySelectorAll('#tdk-type-btns .tdk-tbtn').forEach(b=>{
+    const on=b.dataset.ty===ty;
+    b.style.background=on?'rgba(6,182,212,.2)':'rgba(255,255,255,.04)';
+    b.style.color=on?'#67e8f9':'#94a3b8';
+  });
+  const show=(id,v)=>{ const el=document.getElementById(id); if(el) el.style.display=v?'':'none'; };
+  show('tdk-grp-hodo', ty==='km');           // KM inicial/final (hodômetro) só no trecho
+  show('tdk-grp-kmsingle', ty==='extra');    // KM único na viagem extra
+  show('tdk-grp-espera', ty==='espera');     // horário chegada/embarque
+}
 function drawTripDailyLog(){
   const el=document.getElementById('trip-dailylog-info');
   if(!el) return;
-  const total=_tripDailyLogTmp.reduce((s,e)=>s+n(e.km),0);
-  const rows=_tripDailyLogTmp.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.1);font-size:12.5px">
-      <span><b>${fmtDate(e.date)}</b> <span class="txm">· ${e.period||''}${e.who?' · 🚗 '+String(e.who).split(' ')[0]:''}${e.note?' · '+e.note:''}</span></span>
-      <span style="display:flex;align-items:center;gap:8px"><b style="color:#67e8f9">${n(e.km).toLocaleString('pt-BR')} km</b>
+  const totKm=_tripDailyLogTmp.reduce((s,e)=>s+((e.type||'km')==='espera'||(e.type||'km')==='ocorrencia'?0:n(e.km)),0);
+  const totCharge=_tripDailyLogTmp.reduce((s,e)=>s+(e.type==='espera'?n(e.charge):0),0);
+  const rows=_tripDailyLogTmp.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>{
+    const ty=DLOG_TYPES[e.type||'km']||DLOG_TYPES.km;
+    const detail=e.type==='espera'&&e.arrivalTime?` <span class="txm">(${e.arrivalTime}→${e.boardingTime}${e.billableMin>0?', '+_fmtMin(e.billableMin)+' cobr.':''})</span>`:'';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.1);font-size:12.5px">
+      <span style="min-width:0"><b>${fmtDate(e.date)}</b> <span class="txm">· ${ty.icon} ${e.period||ty.label}${e.who?' · '+String(e.who).split(' ')[0]:''}${e.note?' · '+e.note:''}</span>${detail}</span>
+      <span style="display:flex;align-items:center;gap:8px;flex-shrink:0"><b style="color:${ty.color}">${_dlogVal(e)}</b>
         <button type="button" class="btn btn-gh btn-xs gestor-only" onclick="removeTripDailyKm('${e.id}')" title="Remover">🗑️</button></span>
-    </div>`).join('') || '<div class="txs txm" style="padding:4px 0;font-style:italic">Nenhum KM registrado ainda — use os campos abaixo pra lançar cada trecho do dia.</div>';
+    </div>`;
+  }).join('') || '<div class="txs txm" style="padding:4px 0;font-style:italic">Nenhum registro ainda — lance trechos, esperas, viagens extras ou ocorrências abaixo.</div>';
   const today=new Date().toISOString().split('T')[0];
+  const tbtn=(ty)=>`<button type="button" class="tdk-tbtn" data-ty="${ty}" onclick="setMgrDlogType('${ty}')"
+    style="padding:6px 10px;border:1px solid rgba(148,163,184,.2);background:rgba(255,255,255,.04);color:#94a3b8;border-radius:8px;cursor:pointer;font-size:11.5px;font-weight:700">${DLOG_TYPES[ty].icon} ${DLOG_TYPES[ty].label}</button>`;
   el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid rgba(6,182,212,.3);border-radius:12px;padding:13px 15px;margin:4px 0 10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo — KM por dia</span>
-      <b style="color:#67e8f9;font-size:13.5px">${total.toLocaleString('pt-BR')} km no total</b>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#67e8f9;text-transform:uppercase">📋 Diário de Bordo</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <b style="color:#67e8f9;font-size:13px">${totKm.toLocaleString('pt-BR')} km${totCharge>0?` · espera ${R(totCharge)}`:''}</b>
+        <button type="button" class="btn btn-gh btn-xs" onclick="printDailyLogReport()" title="Relatório assinável do diário (PDF)">📄 Relatório</button>
+      </span>
     </div>
     ${rows}
-    <div class="fr c4 gestor-only" style="gap:8px;align-items:end;margin-top:10px">
-      <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Data</label>
-        <input type="date" class="fc" id="tdk-date" value="${today}" style="font-size:12px"></div>
-      <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">Turno/Obs</label>
-        <input type="text" class="fc" id="tdk-note" placeholder="Ex: manhã" style="font-size:12px"></div>
-      <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">KM rodado</label>
-        <input type="number" class="fc" id="tdk-km" placeholder="Ex: 25" step="1" min="0" style="font-size:12px"
-               onkeydown="if(event.key==='Enter'){event.preventDefault();addTripDailyKm();}"></div>
-      <div class="fg" style="margin:0"><button type="button" class="btn btn-pr btn-sm" style="width:100%" onclick="addTripDailyKm()">➕ Lançar KM</button></div>
+    <div class="gestor-only" style="margin-top:10px">
+      <div id="tdk-type-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${tbtn('km')}${tbtn('espera')}${tbtn('extra')}${tbtn('ocorrencia')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+        <div class="fg" style="margin:0;min-width:120px"><label class="fl" style="font-size:10px">Data</label>
+          <input type="date" class="fc" id="tdk-date" value="${today}" style="font-size:12px"></div>
+        <!-- Trecho: hodômetro inicial/final (sistema calcula o rodado) -->
+        <div id="tdk-grp-hodo" style="display:flex;gap:8px">
+          <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">KM inicial</label>
+            <input type="text" inputmode="decimal" class="fc" id="tdk-kmstart" placeholder="hodômetro" style="font-size:12px;width:110px"></div>
+          <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">KM final</label>
+            <input type="text" inputmode="decimal" class="fc" id="tdk-kmend" placeholder="hodômetro" style="font-size:12px;width:110px"></div>
+        </div>
+        <!-- Viagem extra: KM único -->
+        <div class="fg" style="margin:0;display:none" id="tdk-grp-kmsingle"><label class="fl" style="font-size:10px">KM da viagem extra</label>
+          <input type="text" inputmode="decimal" class="fc" id="tdk-km" placeholder="Ex: 18" style="font-size:12px;width:130px"></div>
+        <!-- Espera: horário chegada/embarque (sistema calcula) -->
+        <div id="tdk-grp-espera" style="display:none;gap:8px">
+          <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">🕐 Chegada</label>
+            <input type="time" class="fc" id="tdk-arrival" style="font-size:12px"></div>
+          <div class="fg" style="margin:0"><label class="fl" style="font-size:10px">🕐 Embarque</label>
+            <input type="time" class="fc" id="tdk-boarding" style="font-size:12px"></div>
+        </div>
+        <div class="fg" style="margin:0;flex:1;min-width:120px"><label class="fl" style="font-size:10px">Turno / Motivo</label>
+          <input type="text" class="fc" id="tdk-note" placeholder="Ex: manhã / atraso" style="font-size:12px"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();addTripDailyKm();}"></div>
+        <div class="fg" style="margin:0"><button type="button" class="btn btn-pr btn-sm" onclick="addTripDailyKm()">➕ Lançar</button></div>
+      </div>
     </div>
-    <input type="hidden" id="tdk-who-source">
   </div>`;
+  setMgrDlogType(_mgrDlogType||'km');
 }
 function addTripDailyKm(){
-  const km=n(document.getElementById('tdk-km').value);
-  if(km<=0){ showToast('Informe o KM rodado','warn'); document.getElementById('tdk-km').focus(); return; }
-  // "quem": se há só 1 motorista designado, usa ele; com vários, o gestor detalha na obs
+  const ty=_mgrDlogType||'km';
+  const note=(document.getElementById('tdk-note').value||'').trim();
   const who=(typeof _tripDriversTmp!=='undefined' && _tripDriversTmp.length===1)?_tripDriversTmp[0]:'';
-  _tripDailyLogTmp.push({
-    id:uid(),
+  const base={ id:uid(), type:ty,
     date:document.getElementById('tdk-date').value||new Date().toISOString().split('T')[0],
-    period:'', km, who,
-    note:(document.getElementById('tdk-note').value||'').trim()
-  });
+    period:'', who, note };
+  if(ty==='km'){
+    // Trecho por hodômetro: km inicial e final → sistema calcula o rodado
+    const ks=n(document.getElementById('tdk-kmstart')?.value);
+    const ke=n(document.getElementById('tdk-kmend')?.value);
+    if(ks<=0||ke<=0){ showToast('Informe KM inicial e final','warn'); return; }
+    if(ke<ks){ showToast('KM final não pode ser menor que o inicial','warn'); return; }
+    _tripDailyLogTmp.push({...base, kmStart:ks, kmEnd:ke, km:r2(ke-ks)});
+  } else if(ty==='extra'){
+    const km=n(document.getElementById('tdk-km')?.value);
+    if(km<=0){ showToast('Informe o KM da viagem extra','warn'); return; }
+    if(!note){ showToast('Descreva a viagem extra','warn'); return; }
+    _tripDailyLogTmp.push({...base, km});
+  } else if(ty==='espera'){
+    // Espera por horários: chegada→embarque, desconta tolerância, calcula valor
+    const arrival=document.getElementById('tdk-arrival')?.value;
+    const boarding=document.getElementById('tdk-boarding')?.value;
+    if(!arrival||!boarding){ showToast('Informe horário de chegada e embarque','warn'); return; }
+    // Usa a tolerância/valor do FORMULÁRIO (valor atual, mesmo sem ter salvo ainda)
+    const tolStr=document.getElementById('trip-wait-tolerance')?.value;
+    const rateStr=document.getElementById('trip-wait-rate')?.value;
+    const t=DB.trips.find(x=>x.id===document.getElementById('trip-id').value);
+    const tol=(tolStr!=='' && tolStr!=null)?n(tolStr):(t?t.waitToleranceMin:0);
+    const rate=(rateStr!=='' && rateStr!=null)?n(rateStr):(t?t.waitHourRate:0);
+    const w=calcWaitCharge(arrival, boarding, tol, rate);
+    _tripDailyLogTmp.push({...base, arrivalTime:arrival, boardingTime:boarding, waitMin:w.waitMin, billableMin:w.billableMin, charge:w.charge, toleranceMin:n(tol), hourRate:n(rate)});
+  } else { // ocorrencia
+    if(!note){ showToast('Descreva a ocorrência','warn'); return; }
+    _tripDailyLogTmp.push({...base});
+  }
   drawTripDailyLog();
 }
 function removeTripDailyKm(id){
   _tripDailyLogTmp=_tripDailyLogTmp.filter(e=>e.id!==id);
   drawTripDailyLog();
+}
+// 📄 Relatório do Diário — imprimível/PDF com espaço de assinatura por dia (motorista + contratante)
+function printDailyLogReport(){
+  const id=document.getElementById('trip-id').value;
+  const t=DB.trips.find(x=>x.id===id);
+  if(!t){ alert('Salve a viagem antes de gerar o relatório.'); return; }
+  const log=_tripDailyLogTmp.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if(!log.length){ alert('Nenhum registro no diário ainda.'); return; }
+  const totKm=log.reduce((s,e)=>s+((e.type||'km')==='espera'||(e.type||'km')==='ocorrencia'?0:n(e.km)),0);
+  const totCharge=log.reduce((s,e)=>s+(e.type==='espera'?n(e.charge):0),0);
+  const totBillableMin=log.reduce((s,e)=>s+(e.type==='espera'?n(e.billableMin):0),0);
+  const veh=getVehicle(t.vehicleId);
+  const s=DB.settings||{};
+  const logo=s.companyLogo||null;
+  const cname=s.companyName||'MUVCITY TRANSFER';
+  const clegal=s.companyLegal||'';
+  const cnpj=s.companyCnpj?('CNPJ '+fmtCNPJ(s.companyCnpj)):'';
+  const contatoLinha=[s.companyPhone1?fmtPhone(s.companyPhone1):'', s.companyWhatsapp?fmtPhone(s.companyWhatsapp):'', s.companyEmail||''].filter(Boolean).join('  ·  ');
+  const endereco=[s.addrStreet, [s.addrDistrict,[s.addrCity,s.addrState].filter(Boolean).join('-')].filter(Boolean).join(', ')].filter(Boolean).join(' — ');
+  const osNum=(t.id||'').replace(/\D/g,'').slice(-6).padStart(6,'0');
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const tipoLabel={km:'Trecho rodado',espera:'Espera / hora extra',extra:'Viagem extra',ocorrencia:'Ocorrência'};
+  const rows=log.map((e,i)=>{
+    const ty=e.type||'km';
+    let val, desc=e.note||'—';
+    if(ty==='espera'){
+      val=e.charge>0?R(n(e.charge)):(e.billableMin>0?_fmtMin(e.billableMin):'—');
+      desc=`Chegada ${e.arrivalTime||'?'} · Embarque ${e.boardingTime||'?'} · esperou ${_fmtMin(n(e.waitMin))}${n(e.toleranceMin)>0?', tolerância '+n(e.toleranceMin)+'min':''}${e.billableMin>0?', cobrável '+_fmtMin(e.billableMin):''}${e.note?' — '+e.note:''}`;
+    } else if(ty==='ocorrencia'){ val='—'; }
+    else { val=`${n(e.km).toLocaleString('pt-BR')} km`; if(e.kmStart!=null) desc=`Hodômetro ${n(e.kmStart).toLocaleString('pt-BR')} a ${n(e.kmEnd).toLocaleString('pt-BR')}${e.note?' — '+e.note:''}`; }
+    return `<tr>
+      <td class="num">${String(i+1).padStart(2,'0')}</td>
+      <td style="white-space:nowrap">${fmtDate(e.date)}${e.period?' · '+e.period:''}</td>
+      <td style="white-space:nowrap">${tipoLabel[ty]||ty}</td>
+      <td>${desc}</td>
+      <td class="amt">${val}</td>
+      <td class="visto"></td>
+    </tr>`;
+  }).join('');
+  const servicoLabel=t.type==='fixo'?'Fretamento Contínuo':(t.type==='avulso'?'Viagem Eventual':(t.type||'—'));
+  const motoristas=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):(t.driverName||'—'));
+  const body=`<div class="os-doc">
+    <div class="os-title">Ordem de Serviço<small>${cname}${cnpj?' — '+cnpj:''}</small></div>
+
+    <table class="os-tbl"><tr class="os-hdr">
+      <td style="width:60%">
+        <div class="os-cname">${cname}</div>
+        <div class="os-cinfo">${[clegal,cnpj].filter(Boolean).join(' · ')}</div>
+        <div class="os-cinfo">${[endereco,contatoLinha].filter(Boolean).join(' · ')}</div>
+      </td>
+      <td style="text-align:right">
+        <div class="os-osnum">O.S. Nº ${osNum}</div>
+        <div class="os-cinfo">Emissão: ${hoje}</div>
+      </td>
+    </tr></table>
+
+    <table class="os-tbl">
+      <tr><td class="os-k">Contratante</td><td>${t.client||'—'}</td><td class="os-k">Serviço</td><td>${servicoLabel}</td></tr>
+      <tr><td class="os-k">Veículo</td><td>${veh?.plate||'—'}${veh?.model?' · '+veh.model:''}</td><td class="os-k">Período</td><td>${fmtDate(t.date)}${t.returnDate?' a '+fmtDate(t.returnDate):''}</td></tr>
+      <tr><td class="os-k">Trajeto</td><td>${t.origin||'—'} → ${t.destination||'—'}</td><td class="os-k">Motorista(s)</td><td>${motoristas}</td></tr>
+    </table>
+
+    <div class="os-sec">Registros do Serviço Prestado</div>
+    <table class="os-tbl os-data-tbl">
+      <thead><tr><th class="num">Nº</th><th style="width:110px">Data</th><th style="width:120px">Tipo</th><th>Descrição</th><th class="amt">Qtd / Valor</th><th class="visto">Visto</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <table class="os-tbl os-tot-tbl">
+      <tr>
+        <td class="lbl">KM Total Rodado</td><td class="big">${totKm.toLocaleString('pt-BR')} km</td>
+        <td class="lbl">Registros</td><td class="big">${log.length}</td>
+        ${totCharge>0?`<td class="lbl">Espera a Cobrar</td><td class="big">${R(totCharge)}</td>`:'<td></td><td></td>'}
+      </tr>
+    </table>
+
+    <div class="os-sec">Confirmação do Serviço</div>
+    <table class="os-sign-tbl">
+      <tr>
+        <td>Motorista Responsável<div class="sub">${(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:(t.driverName||'MUVCITY Transfer'))}</div></td>
+        <td>Responsável pelo Contratante<div class="sub">${t.client||'Cliente'}</div></td>
+      </tr>
+    </table>
+
+    <div class="os-foot">
+      Documento de comprovação de serviço prestado — válido como base para faturamento conforme contrato.<br>
+      ${cname}${cnpj?' · '+cnpj:''} · Gerado em ${hoje}
+    </div>
+  </div>`;
+  printDocWindow(`Ordem de Servico - ${t.client||'servico'} - ${new Date().toISOString().slice(0,10)}`, body);
 }
 
 function editTrip(id){
@@ -7387,6 +7579,8 @@ function editTrip(id){
   // Detalhes do embarque
   const _pt=document.getElementById('trip-pickup-time'); if(_pt) _pt.value=t.pickupTime||'';
   const _rt=document.getElementById('trip-return-time'); if(_rt) _rt.value=t.returnTime||'';
+  const _wt=document.getElementById('trip-wait-tolerance'); if(_wt) _wt.value=(t.waitToleranceMin!=null?t.waitToleranceMin:'');
+  const _wr=document.getElementById('trip-wait-rate'); if(_wr) _wr.value=(t.waitHourRate!=null?t.waitHourRate:'');
   const _pa=document.getElementById('trip-passengers'); if(_pa) _pa.value=t.passengers||'';
   const _cp=document.getElementById('trip-client-phone'); if(_cp){
     // Pré-preenche com phone do cliente cadastrado se ainda vazio
@@ -7852,6 +8046,8 @@ function saveTrip(){
     driverName:_tripDriversTmp[0]||'',
     pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
     returnTime:(document.getElementById('trip-return-time')?.value)||'',
+    waitToleranceMin:(document.getElementById('trip-wait-tolerance')?.value!=='')?n(document.getElementById('trip-wait-tolerance')?.value):null,
+    waitHourRate:(document.getElementById('trip-wait-rate')?.value!=='')?n(document.getElementById('trip-wait-rate')?.value):null,
     passengers:parseInt(document.getElementById('trip-passengers')?.value)||null,
     clientPhone:(document.getElementById('trip-client-phone')?.value||'').trim(),
     itinerary:(document.getElementById('trip-itinerary')?.value||'').trim(),
@@ -10925,6 +11121,33 @@ function printDocWindow(title, bodyHTML){
     .cr-sig-place{font-size:11.5px;color:#475569;margin-bottom:4px}
     .cr-sig-name{font-size:13px;color:#0f172a}
     .cr-sig-resp{font-size:11.5px;color:#475569;margin-top:2px}
+
+    /* ══ ORDEM DE SERVIÇO — estilo planilha (limpo, sem ícones) ══ */
+    .os-doc{padding:14mm 14mm 12mm;color:#111;font-size:11.5px}
+    .os-title{text-align:center;font-size:17px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding-bottom:2px}
+    .os-title small{display:block;font-size:11px;font-weight:600;letter-spacing:.5px;color:#444;margin-top:2px}
+    /* tabelas com grade completa, cara de Excel */
+    .os-tbl{width:100%;border-collapse:collapse;margin-bottom:10px}
+    .os-tbl th,.os-tbl td{border:1px solid #4a4a4a;padding:6px 9px;vertical-align:top}
+    .os-tbl th{background:#e6e6e6;font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;text-align:left;color:#111}
+    .os-k{background:#f2f2f2;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:#333;white-space:nowrap;width:1%}
+    .os-hdr td{border:1px solid #4a4a4a;padding:8px 10px;vertical-align:middle}
+    .os-cname{font-size:16px;font-weight:800;letter-spacing:-.2px}
+    .os-cinfo{font-size:10px;color:#333;line-height:1.5;margin-top:2px}
+    .os-osnum{font-size:15px;font-weight:800}
+    .os-data-tbl td{border:1px solid #4a4a4a;padding:6px 9px}
+    .os-data-tbl .num{text-align:center;color:#555;width:34px}
+    .os-data-tbl .amt{text-align:right;font-weight:700;white-space:nowrap;width:90px}
+    .os-data-tbl .visto{width:110px}
+    .os-data-tbl tr:nth-child(even) td{background:#fafafa}
+    .os-tot-tbl td{border:1px solid #4a4a4a;padding:7px 10px;font-weight:700}
+    .os-tot-tbl .lbl{background:#f2f2f2;text-transform:uppercase;font-size:10px;letter-spacing:.3px}
+    .os-tot-tbl .big{text-align:right;font-size:13px}
+    .os-sec{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin:14px 0 6px;color:#111}
+    .os-sign-tbl{width:100%;border-collapse:collapse;margin-top:34px}
+    .os-sign-tbl td{border:1px solid #4a4a4a;padding:30px 12px 8px;text-align:center;font-size:11px;font-weight:700;width:50%}
+    .os-sign-tbl .sub{font-weight:400;color:#555;font-size:10px}
+    .os-foot{margin-top:16px;text-align:center;font-size:9.5px;color:#666;line-height:1.6;border-top:1px solid #ccc;padding-top:8px}
   `;
   w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>${bodyHTML}</body></html>`);
   w.document.close();
