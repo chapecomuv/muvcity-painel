@@ -1993,9 +1993,9 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <div class="fr c4">
       <div class="fg"><label class="fl">Veículo</label>
         <select class="fc" id="trip-vehicle"></select></div>
-      <div class="fg"><label class="fl">📅 Data de Ida</label>
+      <div class="fg"><label class="fl" id="trip-date-label">📅 Data de Ida</label>
         <input type="date" class="fc" id="trip-date" onchange="calcDriverPayment()"></div>
-      <div class="fg"><label class="fl">📅 Data de Volta</label>
+      <div class="fg"><label class="fl" id="trip-return-date-label">📅 Data de Volta</label>
         <input type="date" class="fc" id="trip-return-date" onchange="calcDriverPayment()"></div>
       <div class="fg"><label class="fl">Tipo de Receita</label>
         <select class="fc" id="trip-type" onchange="handleTripTypeChange(this)">
@@ -2093,7 +2093,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       </div>
     </div>
     <!-- ⏱️ Regra de espera do contrato — usada pra calcular hora extra automaticamente -->
-    <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:12px 14px;margin-top:10px">
+    <div id="trip-wait-section" style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:12px 14px;margin-top:10px">
       <div class="fsec-t" style="color:#f59e0b;margin-bottom:8px">⏱️ Regra de Espera do Contrato <span class="txs txm" style="text-transform:none;letter-spacing:0">(pra cobrar hora extra automática)</span></div>
       <div class="fr c2">
         <div class="fg" style="margin:0"><label class="fl">Tolerância (minutos)</label>
@@ -4454,8 +4454,14 @@ async function loadCities(){
       const res=await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome');
       if(res.ok){
         const data=await res.json();
-        cities=data.map(m=>`${m.nome} - ${m['microrregiao']?.['mesorregiao']?.['UF']?.['sigla']||''}`).filter(Boolean);
-        try{ localStorage.setItem(KEY,JSON.stringify(cities)); }catch(_){}
+        cities=data.map(m=>{
+          // IBGE mudou a estrutura: alguns municípios trazem 'regiao-imediata' em vez de 'microrregiao'
+          const uf = m?.microrregiao?.mesorregiao?.UF?.sigla
+                  || m?.['regiao-imediata']?.['regiao-intermediaria']?.UF?.sigla
+                  || '';
+          return uf ? `${m.nome} - ${uf}` : m.nome;   // nunca descarta a cidade por falta de UF
+        }).filter(Boolean);
+        if(cities.length>=5000){ try{ localStorage.setItem(KEY,JSON.stringify(cities)); }catch(_){} }
       }
     }catch(_){ /* offline: usa só histórico */ }
   }
@@ -5299,14 +5305,58 @@ function renderAgenda(){
       return `<div class="agenda-bar status-${status}" style="grid-column:${p.colStart}/${p.colEnd+1};grid-row:${p.row};background:${color}22;border-left-color:${color}" onclick="event.stopPropagation();editTrip('${p.t.id}')" title="${title}">${continuation}${hora?`<span class="agenda-bar-time">${hora}</span>`:''}${rota}${continuationEnd}</div>`;
     }).join('');
 
-    // "+N mais" pra colunas com overflow
-    const moreHtml=Object.entries(overflowByCol).map(([c,n])=>
-      `<div class="agenda-bar-more" style="grid-column:${c}/${parseInt(c)+1};grid-row:${MAX_ROWS+1}" onclick="event.stopPropagation();nav('trips')">+${n} mais</div>`
-    ).join('');
+    // "+N mais" pra colunas com overflow → abre o detalhe do dia com TODAS as viagens
+    const moreHtml=Object.entries(overflowByCol).map(([c,cnt])=>{
+      const dt=new Date(weekStart.getFullYear(),weekStart.getMonth(),weekStart.getDate()+(parseInt(c)-1));
+      const dk=dayKey(dt);
+      return `<div class="agenda-bar-more" style="grid-column:${c}/${parseInt(c)+1};grid-row:${MAX_ROWS+1}" onclick="event.stopPropagation();openDayTrips('${dk}')">+${cnt} mais</div>`;
+    }).join('');
 
     html+=`<div class="agenda-week">${daysHtml}<div class="agenda-bars">${barsHtml}${moreHtml}</div></div>`;
   }
   document.getElementById('agenda-grid').innerHTML=html;
+}
+
+// Detalhe do dia — lista TODAS as viagens que tocam a data (clicável em "+N mais")
+function openDayTrips(dk){
+  const trips=(DB.trips||[]).filter(t=>{
+    const d=t.date||t.departureDate||''; if(!d) return false;
+    const rd=t.returnDate||d;
+    return dk>=d && dk<=rd;
+  }).sort((a,b)=>(a.pickupTime||'').localeCompare(b.pickupTime||'') || (a.date||'').localeCompare(b.date||''));
+  const dt=new Date(dk+'T00:00:00');
+  const titulo=dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const _vc=['#3b82f6','#a78bfa','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#84cc16'];
+  const _vi=Object.fromEntries((DB.vehicles||[]).map((v,i)=>[v.id,_vc[i%_vc.length]]));
+  const itens=trips.map(t=>{
+    const color=_vi[t.vehicleId]||'#64748b';
+    const st=t.driverStatus||'programada';
+    const stLabel={andamento:'🟢 Em andamento',finalizada:'✅ Finalizada'}[st]||'⏳ Programada';
+    const rota=t.origin&&t.destination?`${t.origin} → ${t.destination}`:(t.description||t.client||'Viagem');
+    const isMulti=t.returnDate&&t.returnDate>t.date;
+    const horaLbl=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):(isMulti?'diário':'—');
+    return `<div onclick="closeModal('modal-day');editTrip('${t.id}')" style="display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--bd);border-left:4px solid ${color};border-radius:10px;margin-bottom:8px;cursor:pointer;background:rgba(255,255,255,.02)">
+      <div style="min-width:64px;font-weight:800;color:#7ba9f9;font-size:13px">${horaLbl}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600">${rota}</div>
+        <div class="txs txm">${[vehicleName(t.vehicleId),t.client,(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)].filter(Boolean).join(' · ')}</div>
+      </div>
+      <span class="txs" style="white-space:nowrap">${stLabel}</span>
+    </div>`;
+  }).join('') || '<div class="txs txm txc" style="padding:20px">Nenhuma viagem neste dia.</div>';
+  let host=document.getElementById('modal-day');
+  if(!host){ host=document.createElement('div'); host.id='modal-day'; host.className='overlay'; document.body.appendChild(host); }
+  host.innerHTML=`<div class="modal" style="max-width:560px">
+    <div class="modal-h"><span class="modal-t" style="text-transform:capitalize">📅 ${titulo}</span>
+      <button class="xbtn" onclick="closeModal('modal-day')">✕</button></div>
+    <div class="txs txm mb3">${trips.length} viagem(ns) neste dia</div>
+    ${itens}
+    <div class="fl-row ic jb mt4">
+      <button class="btn btn-gh" onclick="closeModal('modal-day')">Fechar</button>
+      <button class="btn btn-pr gestor-only" onclick="closeModal('modal-day');openTripModalForDate('${dk}')">➕ Nova viagem neste dia</button>
+    </div>
+  </div>`;
+  openModal('modal-day');
 }
 
 function renderTrips(){
@@ -7006,6 +7056,8 @@ function populateTripTypeSelect(){
 }
 
 function openTripModal(vId){
+  // Rede de segurança: se a lista de cidades não carregou no boot, tenta de novo agora
+  if(!(window._citiesAll||[]).length){ try{ loadCities(); }catch(_){} }
   document.getElementById('trip-id').value='';
   document.getElementById('trip-modal-title').textContent='Nova Viagem / Receita';
   populateVehicleSelect('trip-vehicle',vId||DB.vehicles[0]?.id);
@@ -7044,6 +7096,7 @@ function openTripModal(vId){
   // Calcula imposto e totais (em caso de pré-preenchimento)
   try{ calcTripProfit(); }catch(_){}
   toggleRentalFields();
+  applyTripTypeUI();
   const rfEl=document.getElementById('rental-days'); if(rfEl) rfEl.value='';
   const rvEl=document.getElementById('rental-daily-value'); if(rvEl) rvEl.value='';
   const rtEl=document.getElementById('rental-total-display'); if(rtEl) rtEl.textContent='R$ 0,00';
@@ -7645,6 +7698,7 @@ function editTrip(id){
   renderTripRateioInfo(t);
   renderTripDailyLog(t);
   refreshTripStatusSection(t);
+  applyTripTypeUI();
   openModal('modal-trip');
 }
 
@@ -7662,6 +7716,23 @@ function handleTripTypeChange(sel){
     }
   }
   toggleRentalFields();
+  applyTripTypeUI();
+}
+
+// Adapta o modal ao tipo de serviço: Fretamento Contínuo mostra as ferramentas de
+// contrato (regra de espera + diário de bordo); Viagem Eventual fica enxuta.
+function applyTripTypeUI(){
+  const type=document.getElementById('trip-type')?.value||'';
+  const isFret=type==='fixo';
+  const waitSec=document.getElementById('trip-wait-section');
+  if(waitSec) waitSec.style.display=isFret?'':'none';
+  const dlog=document.getElementById('trip-dailylog-info');
+  if(dlog && !isFret){ dlog.style.display='none'; }   // diário só no fretamento
+  // Rótulos das datas conforme o tipo
+  const dIda=document.getElementById('trip-date-label');
+  const dVolta=document.getElementById('trip-return-date-label');
+  if(dIda) dIda.textContent=isFret?'📅 Início do Contrato':'📅 Data de Ida';
+  if(dVolta) dVolta.textContent=isFret?'📅 Fim do Contrato':'📅 Data de Volta';
 }
 
 function toggleRentalFields(){
@@ -10084,25 +10155,26 @@ function calcDriverPayment(){
     daysInfo.textContent='Ida e volta mesmo dia = 1 diária';
   }
 
-  // Pre-fill daily rate hint from driver's default
-  const selOpt=selEl.options[selEl.selectedIndex];
-  const defaultRate=parseFloat(selOpt?.dataset?.rate||0);
+  // Pré-preenche a diária padrão do 1º motorista designado (busca no cadastro)
+  const primeiro=(typeof _tripDriversTmp!=='undefined' && _tripDriversTmp.length)?_tripDriversTmp[0]:'';
+  const drvCad=(DB.drivers||[]).find(d=>_norm(d.name)===_norm(primeiro));
+  const defaultRate=parseFloat(drvCad?.dailyRate||0);
   const rateHint=document.getElementById('trip-driver-rate-hint');
   const rateEl=document.getElementById('trip-driver-daily-rate');
-  if(defaultRate>0&&!rateEl.value){
+  if(defaultRate>0 && !rateEl.value){
     rateEl.value=defaultRate.toFixed(2);
     if(rateHint) rateHint.textContent=`Padrão do motorista: ${R(defaultRate)}/dia`;
-  } else if(rateHint&&defaultRate>0){
+  } else if(rateHint && defaultRate>0){
     rateHint.textContent=`Padrão cadastrado: ${R(defaultRate)}/dia`;
   }
 
-  // Calculate total
+  // Calcula total = diária × nº de diárias (não sobrescreve o livro de pagamentos)
   const rate=n(rateEl.value);
-  if(rate>0){
+  if(rate>0 && !(typeof _driverEntriesTmp!=='undefined' && _driverEntriesTmp.length)){
     const total=rate*days;
     document.getElementById('trip-driver-total').value=total.toFixed(2);
     document.getElementById('trip-driver').value=total.toFixed(2);
-    calcTripProfit();
+    try{ calcTripProfit(); }catch(_){}
   }
 }
 
