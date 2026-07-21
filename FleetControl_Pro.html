@@ -2076,6 +2076,13 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
 
     <!-- Detalhes do embarque (vão pro app do motorista + mensagem WhatsApp) -->
+    <!-- 🙋 Passageiro: quem REALMENTE embarca (pode ser diferente do cliente que paga/fatura) -->
+    <div class="fr c2">
+      <div class="fg"><label class="fl">🙋 Passageiro <span style="opacity:.6">(quem embarca, se for diferente do cliente)</span></label>
+        <input type="text" class="fc" id="trip-passenger-name" placeholder="Ex: Maria Silva (funcionária da Editora)"></div>
+      <div class="fg"><label class="fl">📱 Telefone do passageiro <span style="opacity:.6">(WhatsApp)</span></label>
+        <input type="text" class="fc" id="trip-passenger-phone" placeholder="(00) 9 0000-0000" oninput="maskPhone(this)"></div>
+    </div>
     <div class="fr c4">
       <div class="fg"><label class="fl">🕐 Ida (embarque)</label>
         <input type="time" class="fc" id="trip-pickup-time"></div>
@@ -5989,11 +5996,13 @@ function printTripVoucher(tripId){
       ${t.passengers?`<div><div class="cr-lbl">Passageiros</div><div>${t.passengers}</div></div>`:''}
     </div>
 
-    <div class="cr-section-bar">Cliente</div>
+    <div class="cr-section-bar">${t.passengerName?'Passageiro e Contratante':'Cliente'}</div>
     <div class="cr-info-grid">
-      <div><div class="cr-lbl">Nome</div><div><strong>${t.client||'—'}</strong></div></div>
+      ${t.passengerName?`<div><div class="cr-lbl">🙋 Passageiro</div><div><strong>${t.passengerName}</strong></div></div>`:''}
+      ${t.passengerPhone?`<div><div class="cr-lbl">Contato do Passageiro</div><div>${t.passengerPhone}</div></div>`:''}
+      <div><div class="cr-lbl">${t.passengerName?'Contratante':'Nome'}</div><div><strong>${t.client||'—'}</strong></div></div>
       ${t.subclient?`<div><div class="cr-lbl">Empresa / Setor</div><div>${t.subclient}</div></div>`:''}
-      ${t.clientPhone?`<div><div class="cr-lbl">Contato</div><div>${t.clientPhone}</div></div>`:''}
+      ${t.clientPhone?`<div><div class="cr-lbl">${t.passengerName?'Contato do Contratante':'Contato'}</div><div>${t.clientPhone}</div></div>`:''}
     </div>
 
     <div class="cr-section-bar">Veículo e Motorista</div>
@@ -7070,7 +7079,7 @@ function openTripModal(vId){
   const _ppb=document.getElementById('trip-payment-plan-builder'); if(_ppb){_ppb.innerHTML='';_ppb._customCount=2;}
   document.getElementById('trip-payment-summary').textContent='';
   ['trip-return-date','trip-origin','trip-destination','trip-client','trip-revenue',
-   'trip-pickup-time','trip-return-time','trip-wait-tolerance','trip-wait-rate','trip-passengers','trip-client-phone','trip-itinerary',
+   'trip-pickup-time','trip-return-time','trip-wait-tolerance','trip-wait-rate','trip-passengers','trip-passenger-name','trip-passenger-phone','trip-client-phone','trip-itinerary',
    'trip-nf-value','trip-tax-rate','trip-tax-amount','trip-km-start','trip-km-end',
    'trip-km-total','trip-km-estimated','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
    'trip-food','trip-driver','trip-other','trip-other-desc','trip-notes',
@@ -7635,6 +7644,8 @@ function editTrip(id){
   const _wt=document.getElementById('trip-wait-tolerance'); if(_wt) _wt.value=(t.waitToleranceMin!=null?t.waitToleranceMin:'');
   const _wr=document.getElementById('trip-wait-rate'); if(_wr) _wr.value=(t.waitHourRate!=null?t.waitHourRate:'');
   const _pa=document.getElementById('trip-passengers'); if(_pa) _pa.value=t.passengers||'';
+  const _pn=document.getElementById('trip-passenger-name'); if(_pn) _pn.value=t.passengerName||'';
+  const _pp=document.getElementById('trip-passenger-phone'); if(_pp) _pp.value=t.passengerPhone||'';
   const _cp=document.getElementById('trip-client-phone'); if(_cp){
     // Pré-preenche com phone do cliente cadastrado se ainda vazio
     let phone=t.clientPhone||'';
@@ -7858,6 +7869,8 @@ async function sendTripToDriver(tripId){
     clientPhone,
     pickupTime:t.pickupTime||'',
     passengers:t.passengers||null,
+    passengerName:t.passengerName||'',
+    passengerPhone:t.passengerPhone||'',
     itinerary:t.itinerary||'',
     driverName:t.driverName||'',
     driverPhone:t.driverPhone||'',
@@ -7907,8 +7920,14 @@ async function sendTripToDriver(tripId){
     lines.push('📅 Data: '+fmtDate(tripPayload.date)+(tripPayload.returnDate?' (volta '+fmtDate(tripPayload.returnDate)+')':''));
     if(tripPayload.pickupTime) lines.push('🕐 Embarque: '+tripPayload.pickupTime);
     lines.push('🚐 Veículo: '+(tripPayload.vehiclePlate||'-')+(tripPayload.vehicleModel?' · '+tripPayload.vehicleModel:''));
-    if(tripPayload.passengers) lines.push('👥 Passageiros: '+tripPayload.passengers);
-    if(tripPayload.client) lines.push('👤 Cliente: '+tripPayload.client+(tripPayload.clientPhone?' ('+tripPayload.clientPhone+')':''));
+    if(tripPayload.passengerName){
+      lines.push('🙋 Passageiro: '+tripPayload.passengerName+(tripPayload.passengerPhone?' — '+tripPayload.passengerPhone:''));
+    }
+    if(tripPayload.passengers) lines.push('👥 Qtde: '+tripPayload.passengers);
+    if(tripPayload.client){
+      // Se tem passageiro nomeado, o cliente é só quem contrata/fatura
+      lines.push((tripPayload.passengerName?'🧾 Contratante: ':'👤 Cliente: ')+tripPayload.client+(tripPayload.clientPhone?' ('+tripPayload.clientPhone+')':''));
+    }
     // Detalhes/observações (textarea pode ter quebras de linha — preserva)
     if(tripPayload.itinerary){
       lines.push('');
@@ -8120,6 +8139,8 @@ function saveTrip(){
     waitToleranceMin:(document.getElementById('trip-wait-tolerance')?.value!=='')?n(document.getElementById('trip-wait-tolerance')?.value):null,
     waitHourRate:(document.getElementById('trip-wait-rate')?.value!=='')?n(document.getElementById('trip-wait-rate')?.value):null,
     passengers:parseInt(document.getElementById('trip-passengers')?.value)||null,
+    passengerName:(document.getElementById('trip-passenger-name')?.value||'').trim(),
+    passengerPhone:(document.getElementById('trip-passenger-phone')?.value||'').trim(),
     clientPhone:(document.getElementById('trip-client-phone')?.value||'').trim(),
     itinerary:(document.getElementById('trip-itinerary')?.value||'').trim(),
     grossRevenue:r2(n(document.getElementById('trip-revenue').value)),

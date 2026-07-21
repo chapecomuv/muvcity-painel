@@ -387,6 +387,8 @@ const cloudSync = {
           waitToleranceMin:(t.waitToleranceMin!=null?t.waitToleranceMin:null),
           waitHourRate:(t.waitHourRate!=null?t.waitHourRate:null),
           passengers:t.passengers||null,
+          passengerName:t.passengerName||'',
+          passengerPhone:t.passengerPhone||'',
           itinerary:t.itinerary||'',
           driverName:t.driverName||'',
           driverNames:Array.isArray(t.driverNames)?t.driverNames:null,
@@ -412,7 +414,7 @@ const cloudSync = {
           const local=DB.trips[ex];
           const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
             'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverNames','driverPhone',
-            'date','returnDate','pickupTime','returnTime','waitToleranceMin','waitHourRate','passengers','clientPhone','itinerary'];
+            'date','returnDate','pickupTime','returnTime','waitToleranceMin','waitHourRate','passengers','passengerName','passengerPhone','clientPhone','itinerary'];
           adminFields.forEach(k=>{
             if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
           });
@@ -846,7 +848,7 @@ function renderHome(root){
         <div class="trip-meta">
           <span>📅 <b>${fmtDate(t.date)}</b></span>
           ${t.vehiclePlate?`<span>🚐 <b>${t.vehiclePlate}</b></span>`:''}
-          ${t.client?`<span>👤 ${t.client}</span>`:''}
+          ${t.passengerName?`<span>🙋 ${t.passengerName}</span>`:(t.client?`<span>👤 ${t.client}</span>`:'')}
           ${(t.expenses&&t.expenses.length)?`<span>💸 ${t.expenses.length} lanç. · <b>${R(totalExp)}</b></span>`:''}
         </div>
       </div>`;
@@ -1020,6 +1022,8 @@ async function fetchTripByCode(){
       clientPhone:t.clientPhone||'',
       pickupTime:t.pickupTime||'',
       passengers:t.passengers||null,
+      passengerName:t.passengerName||'',
+      passengerPhone:t.passengerPhone||'',
       itinerary:t.itinerary||'',
       driverName:t.driverName||'',
       driverPhone:t.driverPhone||'',
@@ -1435,15 +1439,20 @@ function renderTripScreen(root, trip){
         <div class="trip-meta" style="margin:0">
           <span>📅 <b>${fmtDate(trip.date)}</b>${trip.returnDate?` → ${fmtDate(trip.returnDate)}`:''}</span>
           ${trip.vehiclePlate?`<span>🚐 <b>${trip.vehiclePlate}</b>${trip.vehicleModel?' · '+trip.vehicleModel:''}</span>`:''}
-          ${trip.client?`<span>👤 ${trip.client}</span>`:''}
+          ${trip.passengerName?`<span>🙋 ${trip.passengerName}</span>`:''}
+          ${trip.client?`<span>${trip.passengerName?'🧾':'👤'} ${trip.client}</span>`:''}
         </div>
         ${trip.description?`<div style="font-size:12.5px;color:var(--txm);margin-top:8px;font-style:italic">${trip.description}</div>`:''}
       </div>
 
       <!-- 🆕 Detalhes do embarque (vindos do gestor) -->
-      ${(trip.pickupTime||trip.itinerary||trip.passengers||trip.clientPhone)?`
+      ${(trip.pickupTime||trip.itinerary||trip.passengers||trip.clientPhone||trip.passengerName||trip.passengerPhone)?`
       <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(99,102,241,.04));border:1px solid rgba(167,139,250,.25)">
         <div style="font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase;margin-bottom:10px">📋 Informações do embarque</div>
+        ${trip.passengerName?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🙋 Passageiro</span><b style="color:#fff">${trip.passengerName}</b></div>`:''}
+        ${trip.passengerPhone?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">📱 Contato do passageiro</span>
+          <a href="https://wa.me/55${(trip.passengerPhone||'').replace(/\D/g,'')}" target="_blank" style="background:rgba(34,197,94,.18);color:#34d399;padding:5px 12px;border-radius:8px;font-weight:700;text-decoration:none;font-size:12.5px">💬 ${trip.passengerPhone}</a>
+        </div>`:''}
         ${trip.pickupTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕐 Horário de embarque (ida)</span><b style="color:#fff">${trip.pickupTime}</b></div>`:''}
         ${trip.returnTime?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">🕔 Horário de retorno (busca)</span><b style="color:#fff">${trip.returnTime}</b></div>`:''}
         ${trip.itinerary?`<div style="padding:8px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13px">
@@ -1451,8 +1460,8 @@ function renderTripScreen(root, trip){
           <div style="color:#fff;white-space:pre-wrap;line-height:1.55;background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;word-break:break-word">${linkifyText(trip.itinerary||'')}</div>
         </div>`:''}
         ${trip.passengers?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(148,163,184,.08);font-size:13.5px"><span class="txm">👥 Passageiros</span><b style="color:#fff">${trip.passengers}</b></div>`:''}
-        ${trip.clientPhone?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px"><span class="txm">📞 Contato do cliente</span>
-          <a href="https://wa.me/55${(trip.clientPhone||'').replace(/\\D/g,'')}" target="_blank" style="background:rgba(34,197,94,.18);color:#34d399;padding:5px 12px;border-radius:8px;font-weight:700;text-decoration:none;font-size:12.5px">💬 ${trip.clientPhone}</a>
+        ${trip.clientPhone?`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px"><span class="txm">📞 Contato do ${trip.passengerName?'contratante':'cliente'}</span>
+          <a href="https://wa.me/55${(trip.clientPhone||'').replace(/\D/g,'')}" target="_blank" style="background:rgba(34,197,94,.18);color:#34d399;padding:5px 12px;border-radius:8px;font-weight:700;text-decoration:none;font-size:12.5px">💬 ${trip.clientPhone}</a>
         </div>`:''}
       </div>`:''}
 
