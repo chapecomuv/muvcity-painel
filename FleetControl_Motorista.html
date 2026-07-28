@@ -857,16 +857,29 @@ function renderHome(root){
   else if(filterMode==='finalizada') trips = finalizadaList;
   else trips = [...andamentoList, ...programadaList, ...finalizadaList];
 
+  // 📆 Se o motorista clicou num dia da faixa "Minha semana", mostra SÓ as viagens dele nesse dia
+  const selDay = window._agWeekDay || null;
+  let dayBanner='';
+  if(selDay){
+    trips = myTrips.filter(t=>myCoversDay(t, selDay))
+      .sort((a,b)=>(a.pickupTime||'').localeCompare(b.pickupTime||'') || (a.date||'').localeCompare(b.date||''));
+    const dd=new Date(selDay+'T00:00:00');
+    dayBanner=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.4);border-radius:12px;padding:9px 13px;margin:2px 0 12px">
+      <span style="font-size:13px;font-weight:700;color:#c7d2fe;text-transform:capitalize">📆 ${dd.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span>
+      <button onclick="clearMyDay()" style="background:rgba(255,255,255,.08);border:1px solid rgba(148,163,184,.25);color:#cbd5f5;padding:4px 11px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">✕ ver todas</button>
+    </div>`;
+  }
+
   let tripsHtml;
   if(!trips.length){
-    // Mensagem contextual conforme o filtro ativo
+    // Mensagem contextual conforme o filtro ativo (ou o dia selecionado)
     const emptyMap = {
       andamento: { ic:'🚦', tx:'Nenhuma viagem em andamento', sub:'Quando você iniciar uma viagem, ela aparece aqui.' },
       programada:{ ic:'📭', tx:'Nenhuma viagem agendada', sub:'O gestor envia novas viagens pra você. Aguarde ou peça pra ele.' },
       finalizada:{ ic:'✅', tx:'Nenhuma viagem finalizada', sub:'Suas viagens concluídas vão aparecer aqui.' },
       all:       { ic:'🚐', tx:'Nenhuma viagem ainda', sub:'As viagens designadas pra você aparecem aqui automaticamente assim que o gestor cadastrar.' }
     };
-    const e = emptyMap[filterMode] || emptyMap.all;
+    const e = selDay ? { ic:'📆', tx:'Nenhuma viagem nesse dia', sub:'Toque em ✕ ver todas pra voltar.' } : (emptyMap[filterMode] || emptyMap.all);
     tripsHtml=`<div class="empty">
       <div class="empty-ic">${e.ic}</div>
       <div class="empty-tx">${e.tx}</div>
@@ -901,17 +914,21 @@ function renderHome(root){
   const _dkOf=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const _todK=_todayKey();
   const iCoverDay=(t,dk)=>myCoversDay(t,dk);
+  const _selDay=window._agWeekDay||null;
   let weekStripHtml='';
   for(let i=0;i<7;i++){
     const d=new Date(_ws.getFullYear(),_ws.getMonth(),_ws.getDate()+i);
-    const dk=_dkOf(d); const isT=dk===_todK;
+    const dk=_dkOf(d); const isT=dk===_todK; const isSel=dk===_selDay;
     const cnt=myTrips.filter(t=>iCoverDay(t,dk)).length;
-    const bg=isT?'rgba(99,102,241,.20)':(cnt?'rgba(52,211,153,.10)':'rgba(255,255,255,.03)');
-    const bd=isT?'rgba(99,102,241,.55)':(cnt?'rgba(52,211,153,.30)':'rgba(148,163,184,.12)');
-    weekStripHtml+=`<div style="flex:1;min-width:42px;text-align:center;border-radius:12px;padding:8px 3px;background:${bg};border:1px solid ${bd}">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.5px;color:${isT?'#a5b4fc':'#7689a1'}">${_wdAbbr[i]}</div>
-      <div style="font-size:16px;font-weight:800;color:${isT?'#c7d2fe':'#e2e8f0'};margin:1px 0">${d.getDate()}</div>
-      ${cnt?`<div style="font-size:10px;font-weight:800;color:#34d399">${cnt}🚐</div>`:`<div style="font-size:9.5px;color:#475569">livre</div>`}
+    const bg=isSel?'rgba(99,102,241,.34)':(isT?'rgba(99,102,241,.20)':(cnt?'rgba(52,211,153,.10)':'rgba(255,255,255,.03)'));
+    const bd=isSel?'#818cf8':(isT?'rgba(99,102,241,.55)':(cnt?'rgba(52,211,153,.30)':'rgba(148,163,184,.12)'));
+    // dias com viagem são clicáveis → filtram a lista abaixo
+    const base=`flex:1;min-width:42px;text-align:center;border-radius:12px;padding:8px 3px;background:${bg};border:1px solid ${bd}`;
+    const attr=cnt>0?`onclick="selectMyDay('${dk}')" style="${base};cursor:pointer"`:`style="${base}"`;
+    weekStripHtml+=`<div ${attr}>
+      <div style="font-size:9px;font-weight:800;letter-spacing:.5px;color:${isSel?'#c7d2fe':(isT?'#a5b4fc':'#7689a1')}">${_wdAbbr[i]}</div>
+      <div style="font-size:16px;font-weight:800;color:${isSel||isT?'#c7d2fe':'#e2e8f0'};margin:1px 0">${d.getDate()}</div>
+      ${cnt?`<div style="font-size:10px;font-weight:800;color:${isSel?'#c7d2fe':'#34d399'}">${cnt}🚐</div>`:`<div style="font-size:9.5px;color:#475569">livre</div>`}
     </div>`;
   }
 
@@ -954,13 +971,23 @@ function renderHome(root){
           return `<button onclick="setTripFilter('${f.key}')" style="background:${bg};border:1px solid ${bd};color:${cl};padding:7px 13px;border-radius:18px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px">${f.label}<span style="opacity:.7;font-weight:600">${f.count}</span></button>`;
         }).join('')}
       </div>
-      ${tripsHtml}
+      ${dayBanner}${tripsHtml}
     </div>
   `;
 }
 
 function setTripFilter(mode){
   window._tripFilter=mode;
+  window._agWeekDay=null;   // trocar de aba (status) sai do filtro por dia
+  render();
+}
+// 📆 Faixa "Minha semana": tocar num dia mostra só as viagens dele nesse dia (toca de novo = tira)
+function selectMyDay(dk){
+  window._agWeekDay = (window._agWeekDay===dk) ? null : dk;
+  render();
+}
+function clearMyDay(){
+  window._agWeekDay=null;
   render();
 }
 
