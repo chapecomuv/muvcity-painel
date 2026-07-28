@@ -5411,19 +5411,16 @@ function renderAgendaView(){
   if(agendaView==='drivers') renderAgendaDrivers();
   else renderAgenda();
 }
-// Janela de dias que um motorista cobre numa viagem (usa driverShifts; senão o contrato todo)
-function tripDriverWindow(t, name){
-  const sh=(Array.isArray(t.driverShifts)?t.driverShifts:[]).find(s=>s && _norm(s.name)===_norm(name) && (s.from||s.to));
-  const from=(sh&&sh.from)?sh.from:(t.date||t.departureDate||'');
-  const to=(sh&&sh.to)?sh.to:(t.returnDate||t.date||t.departureDate||'');
-  return {from, to:to||from};
-}
+// O motorista cobre esse dia? Usa a escala (days[] ou legado from/to). Sem escala = contrato todo.
 function tripDriverCoversDay(t, name, dk){
   const names=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]);
   if(!names.some(nm=>_norm(nm)===_norm(name))) return false;
-  const w=tripDriverWindow(t,name);
-  if(!w.from) return false;
-  return dk>=w.from && dk<=w.to;
+  const sh=(Array.isArray(t.driverShifts)?t.driverShifts:[]).find(s=>s && _norm(s.name)===_norm(name));
+  if(sh && Array.isArray(sh.days) && sh.days.length) return sh.days.includes(dk);   // dias específicos
+  if(sh && sh.from){ const to=sh.to||sh.from; return dk>=sh.from && dk<=to; }        // legado from/to
+  // sem escala → o contrato inteiro
+  const from=t.date||t.departureDate||''; const to=t.returnDate||from;
+  return !!from && dk>=from && dk<=(to||from);
 }
 function renderAgendaDrivers(){
   const grid=document.getElementById('agenda-drivers-grid');
@@ -7073,10 +7070,25 @@ function populateDriverSelect(currentVal){
   renderTripDrivers();
 }
 // Carrega a escala salva da viagem pro estado temporário do modal
+// Lista de dias 'YYYY-MM-DD' entre a e b (inclusive)
+function _daysBetween(a, b){
+  if(!a) return [];
+  const out=[]; const s=new Date(a+'T00:00:00'); const e=new Date((b||a)+'T00:00:00');
+  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){
+    out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  }
+  return out;
+}
+// Carrega a escala salva → _tripShiftsTmp = { nomeNorm: {name, days:[...]} }
+// Aceita formato novo (days[]) e o legado (from/to → expande em dias).
 function loadTripShifts(shifts){
   _tripShiftsTmp={};
   (Array.isArray(shifts)?shifts:[]).forEach(s=>{
-    if(s && s.name && (s.from||s.to)) _tripShiftsTmp[_norm(s.name)]={name:s.name, from:s.from||'', to:s.to||''};
+    if(!s || !s.name) return;
+    let days=[];
+    if(Array.isArray(s.days)) days=s.days.filter(Boolean);
+    else if(s.from) days=_daysBetween(s.from, s.to||s.from);
+    if(days.length) _tripShiftsTmp[_norm(s.name)]={name:s.name, days};
   });
 }
 // A viagem é de vários dias? (fretamento ou ida≠volta) → aí a escala por motorista faz sentido
@@ -7086,12 +7098,24 @@ function tripIsMultiDay(){
   const tp=document.getElementById('trip-type')?.value||'';
   return tp==='fixo' || (!!rd && !!d && rd>d);
 }
-function setTripShift(nm, field, val){
+// Marca/desmarca um dia pro motorista. Sem nenhum dia = cobre o contrato todo.
+function toggleShiftDay(nm, dk){
   const k=_norm(nm);
-  if(!_tripShiftsTmp[k]) _tripShiftsTmp[k]={name:nm, from:'', to:''};
-  _tripShiftsTmp[k][field]=val;
-  // se limpou os dois, remove (volta a valer o contrato todo)
-  if(!_tripShiftsTmp[k].from && !_tripShiftsTmp[k].to) delete _tripShiftsTmp[k];
+  if(!_tripShiftsTmp[k]) _tripShiftsTmp[k]={name:nm, days:[]};
+  const arr=_tripShiftsTmp[k].days;
+  const i=arr.indexOf(dk);
+  if(i>=0) arr.splice(i,1); else arr.push(dk);
+  if(!arr.length) delete _tripShiftsTmp[k];
+  renderTripDriverShifts();
+}
+// "Todos os dias" / "Limpar" pro motorista
+function setAllShiftDays(nm, all){
+  const k=_norm(nm);
+  if(!all){ delete _tripShiftsTmp[k]; renderTripDriverShifts(); return; }
+  const dMin=document.getElementById('trip-date')?.value||'';
+  const dMax=document.getElementById('trip-return-date')?.value||dMin;
+  _tripShiftsTmp[k]={name:nm, days:_daysBetween(dMin,dMax)};
+  renderTripDriverShifts();
 }
 function renderTripDrivers(){
   const sel=document.getElementById('trip-driver-name');
@@ -7112,29 +7136,45 @@ function renderTripDrivers(){
   }
   renderTripDriverShifts();
 }
-// 📆 Escala por motorista — só aparece em viagem de vários dias / fretamento
+// 📆 Escala por motorista — só aparece em viagem de vários dias / fretamento.
+// Você clica nos dias que cada motorista trabalha (1 dia, vários soltos, ou o período todo).
 function renderTripDriverShifts(){
   const box=document.getElementById('trip-driver-shifts');
   if(!box) return;
   if(!_tripDriversTmp.length || !tripIsMultiDay()){ box.innerHTML=''; box.style.display='none'; return; }
   box.style.display='';
   const dMin=document.getElementById('trip-date')?.value||'';
-  const dMax=document.getElementById('trip-return-date')?.value||'';
+  const dMax=document.getElementById('trip-return-date')?.value||dMin;
+  const contractDays=_daysBetween(dMin, dMax);
+  const wd=['dom','seg','ter','qua','qui','sex','sáb'];
   const rows=_tripDriversTmp.map(nm=>{
-    const s=_tripShiftsTmp[_norm(nm)]||{from:'',to:''};
     const esc=nm.replace(/'/g,"\\'");
-    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-      <span style="min-width:110px;font-size:12.5px;font-weight:600;color:#fcd34d">🚗 ${nm}</span>
-      <span class="txs txm">de</span>
-      <input type="date" class="fc" style="width:150px;padding:5px 8px;font-size:12.5px" min="${dMin}" max="${dMax}" value="${s.from||''}" onchange="setTripShift('${esc}','from',this.value)">
-      <span class="txs txm">até</span>
-      <input type="date" class="fc" style="width:150px;padding:5px 8px;font-size:12.5px" min="${dMin}" max="${dMax}" value="${s.to||''}" onchange="setTripShift('${esc}','to',this.value)">
+    const sel=new Set((_tripShiftsTmp[_norm(nm)]?.days)||[]);
+    const todosOn=sel.size>0;
+    const chips=contractDays.map(dk=>{
+      const on=sel.has(dk);
+      const d=new Date(dk+'T00:00:00');
+      const lbl=`${wd[d.getDay()]} ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+      const bg=on?'rgba(52,211,153,.20)':'rgba(255,255,255,.03)';
+      const bd=on?'rgba(52,211,153,.55)':'rgba(148,163,184,.18)';
+      const cl=on?'#6ee7b7':'#94a3b8';
+      return `<button type="button" onclick="toggleShiftDay('${esc}','${dk}')" title="${d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}" style="background:${bg};border:1px solid ${bd};color:${cl};border-radius:8px;padding:4px 7px;font-size:11px;font-weight:700;cursor:pointer;line-height:1.15;text-align:center;min-width:46px">${lbl}</button>`;
+    }).join('');
+    return `<div style="margin-bottom:10px">
+      <div class="fl-row ic jb" style="margin-bottom:5px">
+        <span style="font-size:12.5px;font-weight:700;color:#fcd34d">🚗 ${nm} <span class="txs txm" style="font-weight:400">${todosOn?`— ${sel.size} dia(s)`:'— contrato todo'}</span></span>
+        <span class="fl-row ic" style="gap:4px">
+          <button type="button" class="btn btn-gh btn-xs" style="font-size:10.5px;padding:2px 7px" onclick="setAllShiftDays('${esc}',true)">Todos</button>
+          <button type="button" class="btn btn-gh btn-xs" style="font-size:10.5px;padding:2px 7px" onclick="setAllShiftDays('${esc}',false)">Limpar</button>
+        </span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${chips}</div>
     </div>`;
   }).join('');
   box.innerHTML=`<div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.22);border-radius:10px;padding:11px 13px">
-    <div class="fsec-t" style="color:#7ba9f9;margin-bottom:8px">📆 Escala — quais dias cada motorista cobre <span class="txs txm" style="text-transform:none;letter-spacing:0">(deixe vazio = contrato todo)</span></div>
+    <div class="fsec-t" style="color:#7ba9f9;margin-bottom:8px">📆 Escala — clique nos dias que cada motorista trabalha <span class="txs txm" style="text-transform:none;letter-spacing:0">(nenhum = contrato todo)</span></div>
     ${rows}
-    <div class="txs txm" style="margin-top:4px">Quando os dias do motorista passarem, a viagem sai do "em andamento" dele automaticamente.</div>
+    <div class="txs txm" style="margin-top:2px">1 dia? clique só nele. Vários dias soltos? clique em cada um. Passou o último dia → sai do "em andamento" dele sozinho.</div>
   </div>`;
 }
 function onTripDriverPicked(){
@@ -7156,12 +7196,12 @@ function removeTripDriver(nm){
   renderTripDrivers();
   try{ calcDriverPayment(); }catch(_){}
 }
-// Monta o array driverShifts pra salvar (só motoristas designados que têm janela definida)
+// Monta o array driverShifts pra salvar (só motoristas com dias específicos marcados)
 function buildTripShifts(){
   return _tripDriversTmp
     .map(nm=>_tripShiftsTmp[_norm(nm)])
-    .filter(s=>s && (s.from||s.to))
-    .map(s=>({name:s.name, from:s.from||'', to:s.to||''}));
+    .filter(s=>s && Array.isArray(s.days) && s.days.length)
+    .map(s=>({name:s.name, days:s.days.slice().sort()}));
 }
 
 // ══════════ LIVRO DE PAGAMENTOS DE MOTORISTA (vários motoristas / turnos) ══════════

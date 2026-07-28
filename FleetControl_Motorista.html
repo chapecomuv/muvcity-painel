@@ -789,14 +789,25 @@ function isMyTrip(trip){
 
 // data de hoje em 'YYYY-MM-DD'
 function _todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-// 📆 Janela de dias que EU (motorista logado) cubro nesta viagem.
-// Usa a escala (driverShifts) do gestor; se eu não tenho janela definida, vale o contrato inteiro.
-function myShiftWindow(t){
+// 📆 Meu segmento de escala nesta viagem (o gestor marcou dias específicos pra mim?)
+function _mySeg(t){
   const myName=normalizeName(DB.driver?.name||'');
-  const sh=(Array.isArray(t.driverShifts)?t.driverShifts:[]).find(s=>s && normalizeName(s.name)===myName && (s.from||s.to));
-  const from=(sh&&sh.from)?sh.from:(t.date||'');
-  const to=(sh&&sh.to)?sh.to:(t.returnDate||t.date||'');
-  return {from, to:to||from, explicit:!!sh};
+  return (Array.isArray(t.driverShifts)?t.driverShifts:[]).find(s=>s && normalizeName(s.name)===myName);
+}
+// Eu cubro esse dia específico? (dias marcados; legado from/to; ou — sem escala — o contrato todo)
+function myCoversDay(t, dk){
+  const s=_mySeg(t);
+  if(s && Array.isArray(s.days) && s.days.length) return s.days.includes(dk);
+  if(s && s.from){ const to=s.to||s.from; return dk>=s.from && dk<=to; }
+  const from=t.date||''; const to=t.returnDate||from;
+  return !!from && dk>=from && dk<=(to||from);
+}
+// Minha janela (primeiro/último dia que eu cubro) — pra decidir a situação por data.
+function myShiftWindow(t){
+  const s=_mySeg(t);
+  if(s && Array.isArray(s.days) && s.days.length){ const ds=s.days.slice().sort(); return {from:ds[0], to:ds[ds.length-1], explicit:true}; }
+  if(s && s.from){ return {from:s.from, to:s.to||s.from, explicit:true}; }
+  return {from:t.date||'', to:t.returnDate||t.date||'', explicit:false};
 }
 // Situação da viagem PRA MIM, considerando minha janela de dias.
 // Resolve o "em andamento" preso: passou meu último dia → concluída pra mim (sai do andamento).
@@ -889,7 +900,7 @@ function renderHome(root){
   const _ws=new Date(); _ws.setHours(0,0,0,0); _ws.setDate(_ws.getDate()-_ws.getDay());
   const _dkOf=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const _todK=_todayKey();
-  const iCoverDay=(t,dk)=>{ const w=myShiftWindow(t); return w.from && dk>=w.from && dk<=(w.to||w.from); };
+  const iCoverDay=(t,dk)=>myCoversDay(t,dk);
   let weekStripHtml='';
   for(let i=0;i<7;i++){
     const d=new Date(_ws.getFullYear(),_ws.getMonth(),_ws.getDate()+i);
