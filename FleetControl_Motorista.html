@@ -392,6 +392,7 @@ const cloudSync = {
           itinerary:t.itinerary||'',
           driverName:t.driverName||'',
           driverNames:Array.isArray(t.driverNames)?t.driverNames:null,
+          driverShifts:Array.isArray(t.driverShifts)?t.driverShifts:null,
           driverPhone:t.driverPhone||'',
           status:t.driverStatus||'programada',
           expenses:t.driverExpenses||[],
@@ -413,7 +414,7 @@ const cloudSync = {
           // observações, horário etc e o motorista vê atualizado.
           const local=DB.trips[ex];
           const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
-            'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverNames','driverPhone',
+            'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverNames','driverShifts','driverPhone',
             'date','returnDate','pickupTime','returnTime','waitToleranceMin','waitHourRate','passengers','passengerName','passengerPhone','clientPhone','itinerary'];
           adminFields.forEach(k=>{
             if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
@@ -786,6 +787,31 @@ function isMyTrip(trip){
   return false;   // sem identificação → não mostra (evita vazar viagem de outro)
 }
 
+// data de hoje em 'YYYY-MM-DD'
+function _todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// 📆 Janela de dias que EU (motorista logado) cubro nesta viagem.
+// Usa a escala (driverShifts) do gestor; se eu não tenho janela definida, vale o contrato inteiro.
+function myShiftWindow(t){
+  const myName=normalizeName(DB.driver?.name||'');
+  const sh=(Array.isArray(t.driverShifts)?t.driverShifts:[]).find(s=>s && normalizeName(s.name)===myName && (s.from||s.to));
+  const from=(sh&&sh.from)?sh.from:(t.date||'');
+  const to=(sh&&sh.to)?sh.to:(t.returnDate||t.date||'');
+  return {from, to:to||from, explicit:!!sh};
+}
+// Situação da viagem PRA MIM, considerando minha janela de dias.
+// Resolve o "em andamento" preso: passou meu último dia → concluída pra mim (sai do andamento).
+function myTripStatus(t){
+  const isMulti=(t.returnDate && t.returnDate>t.date);
+  const w=myShiftWindow(t);
+  const hasWindow=w.explicit || isMulti;
+  if(hasWindow && w.to){
+    const today=_todayKey();
+    if(today>w.to) return 'finalizada';                 // meu período acabou
+    if(w.from && today<w.from) return 'programada';     // meu período ainda não começou
+  }
+  return t.status||'programada';
+}
+
 function renderHome(root){
   const driver=DB.driver;
   // Ordenações padronizadas:
@@ -797,10 +823,11 @@ function renderHome(root){
   // Filtra só as viagens designadas a este motorista
   const myTrips = DB.trips.filter(isMyTrip);
   // Separa por status
-  const andamentoList=myTrips.filter(t=>t.status==='andamento')
+  // Agrupa pela situação DE CADA UM (myTripStatus): respeita a janela de dias do motorista
+  const andamentoList=myTrips.filter(t=>myTripStatus(t)==='andamento')
     .sort((a,b)=>(b.startedAt||b.date||'').localeCompare(a.startedAt||a.date||''));
-  const programadaList=myTrips.filter(t=>t.status==='programada').sort(sortByDateAsc);
-  const finalizadaList=myTrips.filter(t=>t.status==='finalizada').sort(sortByDateDesc);
+  const programadaList=myTrips.filter(t=>myTripStatus(t)==='programada').sort(sortByDateAsc);
+  const finalizadaList=myTrips.filter(t=>myTripStatus(t)==='finalizada').sort(sortByDateDesc);
   const inProgress = andamentoList.length;
   const finished = finalizadaList.length;
   const programmedCount = programadaList.length;
@@ -836,8 +863,10 @@ function renderHome(root){
     </div>`;
   } else {
     tripsHtml=trips.map(t=>{
-      const stClass=t.status==='andamento'?'pill-and':t.status==='programada'?'pill-prog':'pill-fim';
-      const stLabel=t.status==='andamento'?'🟢 Em andamento':t.status==='programada'?'⏳ Programada':'✅ Finalizada';
+      const es=myTripStatus(t);
+      const autoDone=es==='finalizada' && t.status!=='finalizada';   // concluída pela data (não pelo motorista)
+      const stClass=es==='andamento'?'pill-and':es==='programada'?'pill-prog':'pill-fim';
+      const stLabel=es==='andamento'?'🟢 Em andamento':es==='programada'?'⏳ Programada':(autoDone?'✅ Concluída (seus dias)':'✅ Finalizada');
       const totalExp=(t.expenses||[]).reduce((s,e)=>s+n(e.amount),0);
       return `<div class="card click trip-card" onclick="openTrip('${t.id}')">
         <div class="trip-head">
@@ -853,6 +882,26 @@ function renderHome(root){
         </div>
       </div>`;
     }).join('');
+  }
+
+  // 📆 Minha semana — faixa visual da rotina (domingo→sábado da semana atual)
+  const _wdAbbr=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  const _ws=new Date(); _ws.setHours(0,0,0,0); _ws.setDate(_ws.getDate()-_ws.getDay());
+  const _dkOf=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const _todK=_todayKey();
+  const iCoverDay=(t,dk)=>{ const w=myShiftWindow(t); return w.from && dk>=w.from && dk<=(w.to||w.from); };
+  let weekStripHtml='';
+  for(let i=0;i<7;i++){
+    const d=new Date(_ws.getFullYear(),_ws.getMonth(),_ws.getDate()+i);
+    const dk=_dkOf(d); const isT=dk===_todK;
+    const cnt=myTrips.filter(t=>iCoverDay(t,dk)).length;
+    const bg=isT?'rgba(99,102,241,.20)':(cnt?'rgba(52,211,153,.10)':'rgba(255,255,255,.03)');
+    const bd=isT?'rgba(99,102,241,.55)':(cnt?'rgba(52,211,153,.30)':'rgba(148,163,184,.12)');
+    weekStripHtml+=`<div style="flex:1;min-width:42px;text-align:center;border-radius:12px;padding:8px 3px;background:${bg};border:1px solid ${bd}">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.5px;color:${isT?'#a5b4fc':'#7689a1'}">${_wdAbbr[i]}</div>
+      <div style="font-size:16px;font-weight:800;color:${isT?'#c7d2fe':'#e2e8f0'};margin:1px 0">${d.getDate()}</div>
+      ${cnt?`<div style="font-size:10px;font-weight:800;color:#34d399">${cnt}🚐</div>`:`<div style="font-size:9.5px;color:#475569">livre</div>`}
+    </div>`;
   }
 
   root.innerHTML=`
@@ -875,6 +924,9 @@ function renderHome(root){
         <div class="qs"><div class="qs-l">Finalizadas</div><div class="qs-v" style="color:#34d399">${finished}</div></div>
         <div class="qs"><div class="qs-l">Total Gasto</div><div class="qs-v" style="color:#fca5a5;font-size:13px">${R(totalToday)}</div></div>
       </div>
+
+      <div class="section-title" style="margin-top:2px">📆 Minha semana</div>
+      <div style="display:flex;gap:5px;margin:6px 0 16px">${weekStripHtml}</div>
 
       <div class="section-title">Suas viagens</div>
       <div style="display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap">
@@ -1026,6 +1078,8 @@ async function fetchTripByCode(){
       passengerPhone:t.passengerPhone||'',
       itinerary:t.itinerary||'',
       driverName:t.driverName||'',
+      driverNames:Array.isArray(t.driverNames)?t.driverNames:null,
+      driverShifts:Array.isArray(t.driverShifts)?t.driverShifts:null,
       driverPhone:t.driverPhone||'',
       status:'programada',
       expenses:[],

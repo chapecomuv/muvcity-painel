@@ -1307,15 +1307,29 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         </div>
       </div>
 
-      <!-- Legenda dos veículos -->
-      <div id="agenda-legend" class="fl-row ic mb3" style="gap:14px;flex-wrap:wrap;font-size:12px"></div>
+      <!-- Alternador de visão: Calendário (por veículo) × Motoristas (por pessoa) -->
+      <div class="fl-row ic mb3" style="gap:6px">
+        <button id="agv-cal" class="btn btn-sm btn-pr" onclick="setAgendaView('cal')">📅 Calendário</button>
+        <button id="agv-drv" class="btn btn-sm btn-gh" onclick="setAgendaView('drivers')">👤 Motoristas</button>
+      </div>
 
-      <!-- Calendário -->
-      <div class="agenda-grid-wrap card">
-        <div class="agenda-weekdays">
-          <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+      <!-- Visão CALENDÁRIO (por veículo) -->
+      <div id="agenda-cal-view">
+        <div id="agenda-legend" class="fl-row ic mb3" style="gap:14px;flex-wrap:wrap;font-size:12px"></div>
+        <div class="agenda-grid-wrap card">
+          <div class="agenda-weekdays">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+          </div>
+          <div class="agenda-grid" id="agenda-grid"></div>
         </div>
-        <div class="agenda-grid" id="agenda-grid"></div>
+      </div>
+
+      <!-- Visão MOTORISTAS (por pessoa, semana) -->
+      <div id="agenda-drivers-view" style="display:none">
+        <div class="card" style="padding:0;overflow-x:auto">
+          <div id="agenda-drivers-grid"></div>
+        </div>
+        <div class="txs txm mt2">🟩 livre · faixa colorida = ocupado (cor do veículo) · 🟥 vermelho = conflito de horário. Toque numa viagem pra abrir.</div>
       </div>
     </div>
 
@@ -1994,9 +2008,9 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
       <div class="fg"><label class="fl">Veículo</label>
         <select class="fc" id="trip-vehicle"></select></div>
       <div class="fg"><label class="fl" id="trip-date-label">📅 Data de Ida</label>
-        <input type="date" class="fc" id="trip-date" onchange="calcDriverPayment()"></div>
+        <input type="date" class="fc" id="trip-date" onchange="calcDriverPayment();try{renderTripDriverShifts()}catch(_){}"></div>
       <div class="fg"><label class="fl" id="trip-return-date-label">📅 Data de Volta</label>
-        <input type="date" class="fc" id="trip-return-date" onchange="calcDriverPayment()"></div>
+        <input type="date" class="fc" id="trip-return-date" onchange="calcDriverPayment();try{renderTripDriverShifts()}catch(_){}"></div>
       <div class="fg"><label class="fl">Tipo de Receita</label>
         <select class="fc" id="trip-type" onchange="handleTripTypeChange(this)">
           <option value="fixo">Fretamento Contínuo</option>
@@ -2072,6 +2086,8 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         </select>
         <div id="trip-drivers-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
         <div class="txs txm" style="margin-top:4px">Selecione um ou mais — cada motorista vê a viagem no próprio app e faz os lançamentos dele. Freelance pontual: você lança pelo painel.</div>
+        <!-- 📆 Escala: em fretamento/viagem de vários dias, define quais dias cada motorista cobre -->
+        <div id="trip-driver-shifts" style="margin-top:10px"></div>
       </div>
     </div>
 
@@ -4641,7 +4657,7 @@ function shiftMonth(d){
 
 function renderCurrentPage(){
   updateMonthLabels();
-  const r={dashboard:renderDashboard,fleet:renderFleet,agenda:renderAgenda,trips:renderTrips,
+  const r={dashboard:renderDashboard,fleet:renderFleet,agenda:renderAgendaView,trips:renderTrips,
     expenses:renderExpenses,commitments:renderCommitments,
     investors:renderInvestors,clients:renderClients,drivers:renderDrivers,
     providers:renderProviders,
@@ -5169,6 +5185,12 @@ function agendaCurrent(){
   return {y:agendaY, m:agendaM};
 }
 function agendaShift(delta){
+  if(agendaView==='drivers'){
+    const w=agendaWeekCurrent();
+    w.setDate(w.getDate()+delta*7);
+    renderAgendaDrivers();
+    return;
+  }
   agendaCurrent();
   agendaM += delta;
   while(agendaM<0){ agendaM+=12; agendaY--; }
@@ -5179,7 +5201,9 @@ function agendaGoToday(){
   const t = new Date();
   agendaY = t.getFullYear();
   agendaM = t.getMonth();
-  renderAgenda();
+  const w=new Date(); w.setHours(0,0,0,0); w.setDate(w.getDate()-w.getDay());   // domingo da semana atual
+  agendaWeekStart=w;
+  renderAgendaView();
 }
 // Abre Nova Viagem com a data pré-preenchida (clica num dia da agenda)
 function openTripModalForDate(dateStr){
@@ -5364,6 +5388,112 @@ function openDayTrips(dk){
     </div>
   </div>`;
   openModal('modal-day');
+}
+
+// ══════════ AGENDA POR MOTORISTA (visão semanal por pessoa) ══════════
+let agendaView='cal';           // 'cal' = calendário por veículo | 'drivers' = grade por motorista
+let agendaWeekStart=null;       // domingo da semana exibida na visão motoristas
+function agendaWeekCurrent(){
+  if(!agendaWeekStart){ const t=new Date(); t.setHours(0,0,0,0); t.setDate(t.getDate()-t.getDay()); agendaWeekStart=t; }
+  return agendaWeekStart;
+}
+function setAgendaView(v){
+  agendaView=v;
+  const c=document.getElementById('agv-cal'), d=document.getElementById('agv-drv');
+  if(c) c.className='btn btn-sm '+(v==='cal'?'btn-pr':'btn-gh');
+  if(d) d.className='btn btn-sm '+(v==='drivers'?'btn-pr':'btn-gh');
+  const cv=document.getElementById('agenda-cal-view'), dv=document.getElementById('agenda-drivers-view');
+  if(cv) cv.style.display=v==='cal'?'':'none';
+  if(dv) dv.style.display=v==='drivers'?'':'none';
+  renderAgendaView();
+}
+function renderAgendaView(){
+  if(agendaView==='drivers') renderAgendaDrivers();
+  else renderAgenda();
+}
+// Janela de dias que um motorista cobre numa viagem (usa driverShifts; senão o contrato todo)
+function tripDriverWindow(t, name){
+  const sh=(Array.isArray(t.driverShifts)?t.driverShifts:[]).find(s=>s && _norm(s.name)===_norm(name) && (s.from||s.to));
+  const from=(sh&&sh.from)?sh.from:(t.date||t.departureDate||'');
+  const to=(sh&&sh.to)?sh.to:(t.returnDate||t.date||t.departureDate||'');
+  return {from, to:to||from};
+}
+function tripDriverCoversDay(t, name, dk){
+  const names=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]);
+  if(!names.some(nm=>_norm(nm)===_norm(name))) return false;
+  const w=tripDriverWindow(t,name);
+  if(!w.from) return false;
+  return dk>=w.from && dk<=w.to;
+}
+function renderAgendaDrivers(){
+  const grid=document.getElementById('agenda-drivers-grid');
+  if(!grid) return;
+  const ws=new Date(agendaWeekCurrent());
+  const dayKey=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const days=[]; for(let i=0;i<7;i++){ days.push(new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+i)); }
+  const today=new Date(); today.setHours(0,0,0,0); const todayKey=dayKey(today);
+  const fmt=(d)=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const monthLabel=document.getElementById('agenda-month-label');
+  if(monthLabel) monthLabel.textContent=`${fmt(days[0])} – ${fmt(days[6])}`;
+  // cor por veículo (mesmo esquema do calendário)
+  const vehColors=['#3b82f6','#a78bfa','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#84cc16'];
+  const vcolor={}; (DB.vehicles||[]).forEach((v,i)=>vcolor[v.id]=vehColors[i%vehColors.length]);
+  // motoristas: cadastrados ativos + nomes usados nas viagens (pega terceiros/freelance)
+  const cad=(DB.drivers||[]).filter(d=>d.active!==false).map(d=>d.name).filter(Boolean);
+  const cadNorm=new Set(cad.map(_norm));
+  const usados=new Set();
+  (DB.trips||[]).forEach(t=>{
+    const names=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]);
+    names.forEach(nm=>{ if(nm && !cadNorm.has(_norm(nm))) usados.add(nm); });
+  });
+  const drivers=[...cad, ...usados];
+  const weekStartKey=dayKey(days[0]), weekEndKey=dayKey(days[6]);
+  const weekTrips=(DB.trips||[]).filter(t=>{
+    const s=t.date||t.departureDate||''; const e=t.returnDate||s; if(!s) return false;
+    return s<=weekEndKey && e>=weekStartKey;
+  });
+  const hm=(s)=>{ if(!s) return null; const m=String(s).match(/(\d{1,2}):(\d{2})/); return m?(+m[1]*60+ +m[2]):null; };
+  let busyCount=0, conflictCount=0;
+  const dayHead=days.map((d,i)=>{
+    const isT=dayKey(d)===todayKey;
+    return `<th style="padding:8px 6px;text-align:center;border-bottom:1px solid var(--bd);background:${isT?'rgba(59,130,246,.10)':'transparent'}">
+      <div style="text-transform:uppercase;letter-spacing:.5px;font-size:10.5px;font-weight:800;color:${isT?'#7ba9f9':'var(--txm)'}">${wd[i]}</div>
+      <div style="font-size:13px;font-weight:800;color:${isT?'#7ba9f9':'var(--tx)'}">${d.getDate()}</div></th>`;
+  }).join('');
+  const rowsHtml=drivers.map(nm=>{
+    const isCad=cadNorm.has(_norm(nm));
+    const cells=days.map(d=>{
+      const dk=dayKey(d); const isT=dk===todayKey;
+      const covering=weekTrips.filter(t=>tripDriverCoversDay(t,nm,dk))
+        .sort((a,b)=>(a.pickupTime||'').localeCompare(b.pickupTime||''));
+      let conflict=false;
+      for(let i=0;i<covering.length;i++) for(let j=i+1;j<covering.length;j++){
+        const a=covering[i], b=covering[j];
+        const as=hm(a.pickupTime)??0, ae=hm(a.returnTime)??(hm(a.pickupTime)!=null?hm(a.pickupTime)+60:1440);
+        const bs=hm(b.pickupTime)??0, be=hm(b.returnTime)??(hm(b.pickupTime)!=null?hm(b.pickupTime)+60:1440);
+        if(as<be && bs<ae) conflict=true;
+      }
+      if(covering.length) busyCount++;
+      if(conflict) conflictCount++;
+      const chips=covering.map(t=>{
+        const color=vcolor[t.vehicleId]||'#64748b';
+        const isMulti=t.returnDate&&t.returnDate>t.date;
+        const hora=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):(isMulti?'diário':'');
+        const rota=(t.origin||t.destination)?`${(t.origin||'?').split(/[,\-]/)[0].trim()}→${(t.destination||'?').split(/[,\-]/)[0].trim()}`:(t.client||t.description||'Viagem');
+        const title=`${rota}${t.client?' · '+t.client:''}${hora?' · '+hora:''}`.replace(/"/g,'&quot;');
+        return `<div onclick="editTrip('${t.id}')" title="${title}" style="cursor:pointer;background:${color}22;border-left:3px solid ${color};border-radius:6px;padding:3px 6px;margin-bottom:3px;font-size:10.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hora?`<b style="color:var(--tx)">${hora}</b> `:''}${rota}</div>`;
+      }).join('');
+      const bg=conflict?'rgba(239,68,68,.10)':(isT?'rgba(59,130,246,.04)':'transparent');
+      return `<td style="vertical-align:top;padding:4px;min-width:118px;border-left:1px solid var(--bd);border-bottom:1px solid var(--bd);background:${bg}">${conflict?'<div style="font-size:9px;color:#fca5a5;font-weight:800;margin-bottom:2px">⚠️ conflito</div>':''}${chips||'<div style="min-height:22px"></div>'}</td>`;
+    }).join('');
+    return `<tr><td style="position:sticky;left:0;z-index:1;background:var(--bg2);padding:8px 10px;min-width:118px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);font-weight:700;font-size:12.5px;white-space:nowrap">🚗 ${nm}${isCad?'':' <span class="txs txm" style="font-weight:400">ext.</span>'}</td>${cells}</tr>`;
+  }).join('') || `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--txm)">Nenhum motorista cadastrado ainda.</td></tr>`;
+  const summary=document.getElementById('agenda-summary');
+  if(summary) summary.textContent=`${drivers.length} motorista(s) • ${busyCount} dia(s) com viagem${conflictCount?` • ⚠️ ${conflictCount} conflito(s)`:''}`;
+  grid.innerHTML=`<table style="border-collapse:collapse;width:100%;min-width:820px">
+    <thead><tr><th style="position:sticky;left:0;z-index:2;background:var(--bg2);padding:8px 10px;text-align:left;font-size:10.5px;font-weight:800;color:var(--txm);border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)">MOTORISTA</th>${dayHead}</tr></thead>
+    <tbody>${rowsHtml}</tbody></table>`;
 }
 
 function renderTrips(){
@@ -6933,11 +7063,35 @@ function quickSaveClient(){
 // _tripDriversTmp = lista de motoristas designados (chips). Cada um vê a viagem no
 // próprio app (isMyTrip reconhece a lista) e faz seus lançamentos.
 let _tripDriversTmp=[];
+// 📆 Escala: por quais dias cada motorista responde (mapa nomeNormalizado → {name, from, to}).
+// Vazio = cobre o contrato inteiro. Só faz diferença em viagem de vários dias / fretamento.
+let _tripShiftsTmp={};
 function populateDriverSelect(currentVal){
   // currentVal aceita string (legado) ou array (driverNames)
   if(Array.isArray(currentVal)) _tripDriversTmp=currentVal.filter(Boolean).slice();
   else _tripDriversTmp=currentVal?[currentVal]:[];
   renderTripDrivers();
+}
+// Carrega a escala salva da viagem pro estado temporário do modal
+function loadTripShifts(shifts){
+  _tripShiftsTmp={};
+  (Array.isArray(shifts)?shifts:[]).forEach(s=>{
+    if(s && s.name && (s.from||s.to)) _tripShiftsTmp[_norm(s.name)]={name:s.name, from:s.from||'', to:s.to||''};
+  });
+}
+// A viagem é de vários dias? (fretamento ou ida≠volta) → aí a escala por motorista faz sentido
+function tripIsMultiDay(){
+  const d=document.getElementById('trip-date')?.value||'';
+  const rd=document.getElementById('trip-return-date')?.value||'';
+  const tp=document.getElementById('trip-type')?.value||'';
+  return tp==='fixo' || (!!rd && !!d && rd>d);
+}
+function setTripShift(nm, field, val){
+  const k=_norm(nm);
+  if(!_tripShiftsTmp[k]) _tripShiftsTmp[k]={name:nm, from:'', to:''};
+  _tripShiftsTmp[k][field]=val;
+  // se limpou os dois, remove (volta a valer o contrato todo)
+  if(!_tripShiftsTmp[k].from && !_tripShiftsTmp[k].to) delete _tripShiftsTmp[k];
 }
 function renderTripDrivers(){
   const sel=document.getElementById('trip-driver-name');
@@ -6956,6 +7110,32 @@ function renderTripDrivers(){
           style="background:rgba(239,68,68,.15);border:none;color:#fca5a5;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center">✕</button>
       </span>`).join('');
   }
+  renderTripDriverShifts();
+}
+// 📆 Escala por motorista — só aparece em viagem de vários dias / fretamento
+function renderTripDriverShifts(){
+  const box=document.getElementById('trip-driver-shifts');
+  if(!box) return;
+  if(!_tripDriversTmp.length || !tripIsMultiDay()){ box.innerHTML=''; box.style.display='none'; return; }
+  box.style.display='';
+  const dMin=document.getElementById('trip-date')?.value||'';
+  const dMax=document.getElementById('trip-return-date')?.value||'';
+  const rows=_tripDriversTmp.map(nm=>{
+    const s=_tripShiftsTmp[_norm(nm)]||{from:'',to:''};
+    const esc=nm.replace(/'/g,"\\'");
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      <span style="min-width:110px;font-size:12.5px;font-weight:600;color:#fcd34d">🚗 ${nm}</span>
+      <span class="txs txm">de</span>
+      <input type="date" class="fc" style="width:150px;padding:5px 8px;font-size:12.5px" min="${dMin}" max="${dMax}" value="${s.from||''}" onchange="setTripShift('${esc}','from',this.value)">
+      <span class="txs txm">até</span>
+      <input type="date" class="fc" style="width:150px;padding:5px 8px;font-size:12.5px" min="${dMin}" max="${dMax}" value="${s.to||''}" onchange="setTripShift('${esc}','to',this.value)">
+    </div>`;
+  }).join('');
+  box.innerHTML=`<div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.22);border-radius:10px;padding:11px 13px">
+    <div class="fsec-t" style="color:#7ba9f9;margin-bottom:8px">📆 Escala — quais dias cada motorista cobre <span class="txs txm" style="text-transform:none;letter-spacing:0">(deixe vazio = contrato todo)</span></div>
+    ${rows}
+    <div class="txs txm" style="margin-top:4px">Quando os dias do motorista passarem, a viagem sai do "em andamento" dele automaticamente.</div>
+  </div>`;
 }
 function onTripDriverPicked(){
   const sel=document.getElementById('trip-driver-name');
@@ -6972,8 +7152,16 @@ function onTripDriverPicked(){
 }
 function removeTripDriver(nm){
   _tripDriversTmp=_tripDriversTmp.filter(x=>_norm(x)!==_norm(nm));
+  delete _tripShiftsTmp[_norm(nm)];
   renderTripDrivers();
   try{ calcDriverPayment(); }catch(_){}
+}
+// Monta o array driverShifts pra salvar (só motoristas designados que têm janela definida)
+function buildTripShifts(){
+  return _tripDriversTmp
+    .map(nm=>_tripShiftsTmp[_norm(nm)])
+    .filter(s=>s && (s.from||s.to))
+    .map(s=>({name:s.name, from:s.from||'', to:s.to||''}));
 }
 
 // ══════════ LIVRO DE PAGAMENTOS DE MOTORISTA (vários motoristas / turnos) ══════════
@@ -7072,6 +7260,7 @@ function openTripModal(vId){
   populateVehicleSelect('trip-vehicle',vId||DB.vehicles[0]?.id);
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('trip-date').value=today;
+  _tripShiftsTmp={};
   populateDriverSelect('');
   document.getElementById('trip-payment-type').value='avista';
   const _epg=document.getElementById('entry-pct-grp'); if(_epg) _epg.style.display='none';
@@ -7630,6 +7819,7 @@ function editTrip(id){
   populateVehicleSelect('trip-vehicle',t.vehicleId);
   populateTripTypeSelect();
   populateClientDatalist();
+  loadTripShifts(t.driverShifts);
   populateDriverSelect(Array.isArray(t.driverNames)&&t.driverNames.length ? t.driverNames : (t.driverName||''));
   document.getElementById('trip-date').value=t.date||t.departureDate||'';
   document.getElementById('trip-return-date').value=t.returnDate||'';
@@ -7744,6 +7934,7 @@ function applyTripTypeUI(){
   const dVolta=document.getElementById('trip-return-date-label');
   if(dIda) dIda.textContent=isFret?'📅 Início do Contrato':'📅 Data de Ida';
   if(dVolta) dVolta.textContent=isFret?'📅 Fim do Contrato':'📅 Data de Volta';
+  try{ renderTripDriverShifts(); }catch(_){}   // escala aparece/some conforme o tipo
 }
 
 function toggleRentalFields(){
@@ -7873,7 +8064,9 @@ async function sendTripToDriver(tripId){
     passengerPhone:t.passengerPhone||'',
     itinerary:t.itinerary||'',
     driverName:t.driverName||'',
+    driverNames:Array.isArray(t.driverNames)?t.driverNames:null,
     driverPhone:t.driverPhone||'',
+    driverShifts:Array.isArray(t.driverShifts)?t.driverShifts:null,
     type:t.type||'avulso',
     status:'programada',
     expenses:[],
@@ -8134,6 +8327,7 @@ function saveTrip(){
     // Múltiplos motoristas: driverNames é a lista; driverName (singular) = 1º, p/ retrocompat
     driverNames:_tripDriversTmp.length?_tripDriversTmp.slice():null,
     driverName:_tripDriversTmp[0]||'',
+    driverShifts:buildTripShifts(),   // 📆 escala: quais dias cada motorista cobre (vazio = contrato todo)
     pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
     returnTime:(document.getElementById('trip-return-time')?.value)||'',
     waitToleranceMin:(document.getElementById('trip-wait-tolerance')?.value!=='')?n(document.getElementById('trip-wait-tolerance')?.value):null,
