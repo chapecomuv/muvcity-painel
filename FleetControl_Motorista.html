@@ -393,6 +393,8 @@ const cloudSync = {
           driverName:t.driverName||'',
           driverNames:Array.isArray(t.driverNames)?t.driverNames:null,
           driverShifts:Array.isArray(t.driverShifts)?t.driverShifts:null,
+          serviceMode:t.serviceMode||null,
+          requiresKm:t.requiresKm,
           driverPhone:t.driverPhone||'',
           status:t.driverStatus||'programada',
           expenses:t.driverExpenses||[],
@@ -415,7 +417,7 @@ const cloudSync = {
           const local=DB.trips[ex];
           const adminFields=['origin','destination','description','vehicleId','vehiclePlate',
             'vehicleModel','fuelTargetKmPerL','tankCapacityL','client','driverName','driverNames','driverShifts','driverPhone',
-            'date','returnDate','pickupTime','returnTime','waitToleranceMin','waitHourRate','passengers','passengerName','passengerPhone','clientPhone','itinerary'];
+            'date','returnDate','pickupTime','returnTime','waitToleranceMin','waitHourRate','passengers','passengerName','passengerPhone','clientPhone','itinerary','serviceMode','requiresKm'];
           adminFields.forEach(k=>{
             if(enriched[k]!==undefined && enriched[k]!==null) local[k]=enriched[k];
           });
@@ -1656,9 +1658,9 @@ function calcFuelTotal(idL,idP,idT){
 function startTrip(tripId){
   const trip=DB.trips.find(t=>t.id===tripId); if(!trip) return;
   const km=n(document.getElementById('st-km').value);
-  if(km<=0){ showToast('Informe o KM inicial','warn'); return; }
+  if(trip.requiresKm!==false && km<=0){ showToast('Informe o KM inicial','warn'); return; }
   const when=document.getElementById('st-when').value;
-  trip.kmStart=km;
+  if(km>0) trip.kmStart=km;
   trip.startedAt=when||new Date().toISOString();
   trip.status='andamento';
   // Abastecimento inicial (opcional)
@@ -1866,8 +1868,8 @@ function openFinishTripModal(tripId){
 function finishTrip(tripId){
   const trip=DB.trips.find(t=>t.id===tripId); if(!trip) return;
   const km=n(document.getElementById('ft-km').value);
-  if(km<=0){ showToast('Informe o KM final','warn'); return; }
-  if(km < n(trip.kmStart)){ showToast('KM final não pode ser menor que o inicial!','err'); return; }
+  if(trip.requiresKm!==false && km<=0){ showToast('Informe o KM final','warn'); return; }
+  if(km>0 && km < n(trip.kmStart)){ showToast('KM final não pode ser menor que o inicial!','err'); return; }
   const fuelL=n(document.getElementById('ft-fuel-liters').value);
   const fuelP=n(document.getElementById('ft-fuel-pl').value);
   const fuelT=n(document.getElementById('ft-fuel-total').value);
@@ -1877,7 +1879,7 @@ function finishTrip(tripId){
     showToast('⚠️ Abastecimento incompleto: preencha litros E total (ou deixe os dois vazios)','err'); return;
   }
   const when=document.getElementById('ft-when').value;
-  trip.kmEnd=km;
+  if(km>0) trip.kmEnd=km;
   trip.finishedAt=when||new Date().toISOString();
   trip.status='finalizada';
   trip.expenses=trip.expenses||[];
@@ -1984,6 +1986,23 @@ async function checkURLForTrip(){
 }
 
 // ════════ INIT ════════
+function injectTesteBannerM(){
+  if(document.getElementById('__teste_banner__')) return;
+  const css="#__teste_banner__{position:fixed;top:0;left:0;right:0;height:24px;line-height:24px;text-align:center;background:repeating-linear-gradient(45deg,#b45309,#b45309 14px,#92400e 14px,#92400e 28px);color:#fff;font:700 10.5px/24px 'Inter',system-ui,sans-serif;letter-spacing:.6px;z-index:100000}body{padding-top:24px !important}";
+  document.head.insertAdjacentHTML('beforeend','<style>'+css+'</style>');
+  document.body.insertAdjacentHTML('afterbegin','<div id="__teste_banner__">AMBIENTE DE TESTE — SEM CONEXÃO COM A PRODUÇÃO</div>');
+}
+function seedMotoristaTeste(){
+  try{
+    if(localStorage.getItem(KEY)) return;
+    const seed = { driver:{name:'Carlos Teste',phone:'(49) 91111-1111',cnh:'',doc:''}, trips:[
+      {id:'tt1',code:'#TESTE1',date:'2026-07-28',origin:'Chapecó - SC',destination:'Aeroporto (Chapecó)',vehiclePlate:'TST-2B22',vehicleModel:'Toyota Corolla',client:'João Particular',passengerName:'João Particular',passengerPhone:'(49) 90000-0003',pickupTime:'08:00',passengers:1,driverName:'Carlos Teste',driverNames:['Carlos Teste'],status:'programada',expenses:[]},
+      {id:'tt6',code:'#TESTE6',date:'2026-08-01',origin:'Chapecó - SC',destination:'Concórdia - SC',vehiclePlate:'TST-2B22',vehicleModel:'Toyota Corolla',client:'Agência Turismo Sol',pickupTime:'07:00',passengers:4,driverName:'Carlos Teste',driverNames:['Carlos Teste'],status:'programada',expenses:[]},
+      {id:'tt3',code:'#TESTE3',date:'2026-07-20',origin:'Chapecó - SC',destination:'Florianópolis - SC',vehiclePlate:'TST-1A11',vehicleModel:'Mercedes Sprinter',client:'Empresa ACME Ltda',pickupTime:'05:00',passengers:8,driverName:'Carlos Teste',driverNames:['Carlos Teste'],status:'finalizada',kmStart:81500,kmEnd:82000,finishedAt:'2026-07-20T18:00:00',expenses:[{type:'combustivel',amount:400,liters:55,date:'2026-07-20',description:'Abastecimento'}]}
+    ]};
+    localStorage.setItem(KEY, JSON.stringify(seed));
+  }catch(e){ console.warn('[TESTE] seed motorista falhou', e); }
+}
 loadDB();
 checkURLForTrip();
 render();

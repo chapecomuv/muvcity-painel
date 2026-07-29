@@ -1150,6 +1150,107 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
   background:linear-gradient(160deg,rgba(59,130,246,.08),rgba(139,92,246,.04));
   transform:scale(1.005)
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   ☀️ TEMA CLARO EMPRESARIAL — FASE 1 (camada de override por cascade)
+   Última no source → vence os blocos escuros acima sem apagá-los.
+   Sidebar azul-marinho + área principal clara + cartões brancos.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  /* superfícies */
+  --bg:#eef1f6;          /* fundo geral cinza muito claro */
+  --bg2:#ffffff;         /* superfície/inputs branco */
+  --bg3:#f4f6fa;         /* painel sutil */
+  --bg4:#e8edf4;
+  --surface:#ffffff;
+  /* texto */
+  --tx:#1e293b;          /* slate-800 */
+  --txm:#64748b;         /* slate-500 */
+  /* bordas */
+  --bd:rgba(15,23,42,.09);
+  --bd-strong:rgba(15,23,42,.16);
+  /* ação primária (azul) */
+  --pr:#2563eb;--prl:#3b82f6;--prd:#1d4ed8;
+  --inf:#6366f1;--vio:#7c3aed;
+  /* estados */
+  --sc:#16a34a;--sc2:#22c55e;--dg:#dc2626;--wn:#d97706;
+  /* navy da sidebar + dourado institucional discreto */
+  --navy:#12294d;--navy2:#0d1f3c;--gold:#c69749;--gold-soft:#e6c98a;
+  /* raios e sombras suaves */
+  --r-sm:8px;--r:12px;--r-lg:16px;
+  --shadow-card:0 1px 2px rgba(15,23,42,.04),0 2px 8px rgba(15,23,42,.06);
+  --shadow-elev:0 8px 24px rgba(15,23,42,.10);
+  --shadow-btn:0 1px 2px rgba(37,99,235,.25);
+  --grad-pr:linear-gradient(135deg,#2563eb,#3b82f6);
+}
+/* fundo claro liso (remove as luzes neon do body) */
+body{background:var(--bg);color:var(--tx)}
+
+/* ── SIDEBAR (azul-marinho) ── */
+.sidebar{background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%);border-right:1px solid rgba(255,255,255,.06);backdrop-filter:none;box-shadow:2px 0 18px -6px rgba(15,23,42,.25)}
+.logo{border-bottom:1px solid rgba(255,255,255,.09)}
+.logo-avatar{background:linear-gradient(135deg,#1d4ed8,#2563eb);box-shadow:0 6px 18px rgba(29,78,216,.35),inset 0 1px 0 rgba(255,255,255,.2)}
+.logo-avatar:hover{transform:none;box-shadow:0 8px 22px rgba(29,78,216,.45)}
+.logo-name{color:#fff;background:none;-webkit-text-fill-color:#fff}
+.logo-tag{color:rgba(255,255,255,.5);font-weight:600}
+.sidebar-toggle{color:rgba(255,255,255,.7)}
+.nav-grp{color:rgba(255,255,255,.4);letter-spacing:1.4px}
+.nav-item{color:#b3bed1;transition:background .15s,color .15s,border-color .15s}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;transform:none}
+.nav-item:hover .nav-ic{transform:none}
+.nav-item.active{background:rgba(37,99,235,.24);color:#fff;border-left-color:var(--gold);box-shadow:none}
+.nav-item.active .nav-ic{opacity:1}
+.nav-ft{color:rgba(255,255,255,.4);border-top:1px solid rgba(255,255,255,.08)}
+
+/* ── TOPBAR / CONTEÚDO (claro) ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--bd);backdrop-filter:none;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.topbar h2{color:var(--tx);background:none;-webkit-text-fill-color:var(--tx)}
+.topbar .sub{color:var(--txm);font-weight:500}
+
+/* ── CARTÕES (brancos) ── */
+.card{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r-lg);box-shadow:var(--shadow-card);backdrop-filter:none}
+.card:hover{border-color:var(--bd-strong)}
+.kpi{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--shadow-card);backdrop-filter:none}
+.kpi:hover{transform:translateY(-2px);border-color:var(--bd-strong);box-shadow:var(--shadow-elev)}
+.kpi::after{background:var(--pr);opacity:1;height:3px}
+.kpi::before{display:none}
+.kpi-lbl{color:var(--txm)}
+.kpi-val{color:var(--tx)}
+.kpi-sub{color:var(--txm)}
+
+/* ── INPUTS / SELECTS / TEXTAREA ── */
+.fc,input.fc,select.fc,textarea.fc{background:var(--surface);border:1px solid var(--bd-strong);color:var(--tx)}
+.fc:focus{border-color:var(--pr);box-shadow:0 0 0 3px rgba(37,99,235,.14);outline:none}
+.fl{color:var(--txm)}
+select option,select optgroup{background:#fff;color:var(--tx)}
+
+/* ── TABELAS ── */
+table{color:var(--tx)}
+th{color:var(--txm);border-bottom:1px solid var(--bd)}
+td{border-bottom:1px solid var(--bd)}
+tbody tr:hover{background:#f8fafc}
+
+/* ── BOTÕES ── */
+.btn-pr{background:var(--pr);color:#fff;box-shadow:var(--shadow-btn);border:none}
+.btn-pr:hover{background:var(--prd)}
+.btn-gh{background:var(--surface);border:1px solid var(--bd-strong);color:var(--tx)}
+.btn-gh:hover{background:var(--bg3)}
+.btn-ol{background:transparent;border:1px solid var(--bd-strong);color:var(--txm)}
+.btn-ol:hover{background:var(--bg3);color:var(--tx)}
+
+/* ── TABS (período / filtros) ── */
+.tab-g{background:var(--bg3);border:1px solid var(--bd);border-radius:10px}
+.tab{color:var(--txm)}
+.tab.active{background:var(--surface);color:var(--pr);box-shadow:var(--shadow-card)}
+.mnav{background:var(--bg3);border:1px solid var(--bd)}
+.mnav-l{color:var(--tx)}
+.mnav-b{color:var(--txm)}
+.mnav-b:hover{color:var(--pr)}
+
+/* ── SUPERFÍCIES SUTIS QUE ASSUMIAM FUNDO ESCURO ── */
+.agenda-weekdays{background:var(--bg3)}
+.sec-t,.fsb,.fsec-t{color:var(--tx)}
+.badge{border-color:var(--bd)}
 </style>
 </head>
 <body>
@@ -1177,40 +1278,45 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     </div>
   </div>
   <nav class="nav">
-    <div class="nav-grp">Principal</div>
+    <div class="nav-grp">Visão Geral</div>
     <div class="nav-item active" onclick="nav('dashboard')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></span>Dashboard</div>
-    <div class="nav-item" onclick="nav('fleet')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg></span>Frota</div>
     <div class="nav-item" onclick="nav('agenda')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Agenda</div>
-    <div class="nav-grp">Financeiro</div>
     <div class="nav-item" onclick="nav('trips')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg></span>Viagens & Receitas</div>
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg></span>Operação / Viagens</div>
+
+    <div class="nav-grp">Financeiro</div>
+    <div class="nav-item" onclick="nav('receivables')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>A Receber</div>
     <div class="nav-item" onclick="nav('expenses')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Despesas Variáveis</div>
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Despesas Operacionais</div>
     <div class="nav-item" onclick="nav('commitments')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Despesas Fixas</div>
-    <div class="nav-item" onclick="nav('investors')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>Investidores</div>
+    <div class="nav-item" onclick="nav('shared')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>Despesas Compartilhadas</div>
     <div class="nav-item" onclick="nav('agency')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></span>Agenciamento</div>
-    <div class="nav-item" onclick="nav('shared')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>Desp. Compartilhadas</div>
-    <div class="nav-grp gestor-only">Cadastros</div>
+    <div class="nav-item" onclick="nav('investors')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>Investidores</div>
+
+    <div class="nav-grp">Gestão</div>
+    <div class="nav-item" onclick="nav('fleet')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg></span>Frota</div>
     <div class="nav-item gestor-only" onclick="nav('clients')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clientes</div>
     <div class="nav-item gestor-only" onclick="nav('drivers')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></span>Motoristas</div>
     <div class="nav-item gestor-only" onclick="nav('providers')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Prestadores</div>
-    <div class="nav-item gestor-only" onclick="nav('admins')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M22 11l-3-3m0 0l-3 3m3-3v9"/></svg></span>Administradores</div>
+
     <div class="nav-grp">Análises</div>
-    <div class="nav-item" onclick="nav('receivables')">
-      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>A Receber</div>
     <div class="nav-item" onclick="nav('reports')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Relatórios</div>
+
+    <div class="nav-grp gestor-only">Sistema</div>
+    <div class="nav-item gestor-only" onclick="nav('admins')">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M22 11l-3-3m0 0l-3 3m3-3v9"/></svg></span>Administradores</div>
     <div class="nav-item gestor-only" onclick="nav('settings')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Configurações</div>
   </nav>
@@ -1240,49 +1346,109 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
   </div>
   <div class="content" id="content">
 
-    <!-- ── DASHBOARD ── -->
+    <!-- ── DASHBOARD (direcionado ao transporte) ── -->
     <div class="page active" id="page-dashboard">
-      <div class="fl-row ic jb mb4" style="flex-wrap:wrap;gap:12px">
+      <style>
+        .dash-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+        .dash-toolbar-r{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+        .dash-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--txm);margin-bottom:6px}
+        .dash-meta .dm{display:flex;align-items:center;gap:6px}
+        .dash-meta .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+        .dash-sec{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px}
+        .dash-sec-t{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--tx)}
+        .dash-sec-s{font-size:11.5px;color:var(--txm)}
+        .op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px}
+        .op-card{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;box-shadow:var(--shadow-card)}
+        .op-card:hover{border-color:var(--bd-strong);transform:translateY(-1px)}
+        .op-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+        .op-b{min-width:0}
+        .op-num{font-size:21px;font-weight:800;line-height:1;color:var(--tx)}
+        .op-lbl{font-size:12px;color:var(--txm);margin-top:3px;line-height:1.25}
+        .op-card.alert .op-num{color:var(--dg)} .op-card.alert .op-ic{background:var(--dg)}
+        .op-card.warn .op-num{color:var(--wn)} .op-card.warn .op-ic{background:var(--wn)}
+        .op-card.ok .op-ic{background:var(--sc)} .op-card.neutral .op-ic{background:var(--pr)}
+        .fin-kpi{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r);padding:15px 17px;box-shadow:var(--shadow-card)}
+        .fin-kpi.click{cursor:pointer;transition:border-color .15s,transform .15s} .fin-kpi.click:hover{border-color:var(--bd-strong);transform:translateY(-1px)}
+        .fin-kpi .k-l{font-size:11px;color:var(--txm);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+        .fin-kpi .k-v{font-size:22px;font-weight:800;margin-top:7px;color:var(--tx);letter-spacing:-.4px}
+        .fin-kpi .k-s{font-size:11px;color:var(--txm);margin-top:5px}
+        .km-warn{display:flex;align-items:center;gap:9px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.28);color:#9a5b06;border-radius:var(--r);padding:10px 14px;font-size:12.5px;font-weight:500;margin-bottom:4px}
+        #page-dashboard .tgold{color:var(--gold)}
+        @media(max-width:640px){ .op-grid{grid-template-columns:repeat(2,1fr)} }
+      </style>
+
+      <!-- Cabeçalho -->
+      <div class="dash-toolbar">
         <div class="tab-g">
           <button class="tab active" onclick="setVehicleFilter('all',this)">Toda a Frota</button>
           <span id="vehicle-tabs"></span>
         </div>
-        <div class="fl-row ic" style="gap:10px;flex-wrap:wrap">
-          <!-- Seletor de período -->
+        <div class="dash-toolbar-r">
           <div class="tab-g" id="dash-period-group">
-            <button class="tab active" data-period="month" onclick="setDashboardPeriod('month',this)">Este mês</button>
-            <button class="tab" data-period="3m" onclick="setDashboardPeriod('3m',this)">3 meses</button>
-            <button class="tab" data-period="6m" onclick="setDashboardPeriod('6m',this)">6 meses</button>
+            <button class="tab active" data-period="month" onclick="setDashboardPeriod('month',this)">Mês</button>
+            <button class="tab" data-period="3m" onclick="setDashboardPeriod('3m',this)">3m</button>
+            <button class="tab" data-period="6m" onclick="setDashboardPeriod('6m',this)">6m</button>
             <button class="tab" data-period="ytd" onclick="setDashboardPeriod('ytd',this)">Ano</button>
-            <button class="tab" data-period="all" onclick="setDashboardPeriod('all',this)">Total acumulado</button>
+            <button class="tab" data-period="all" onclick="setDashboardPeriod('all',this)">Total</button>
           </div>
           <div class="mnav" id="dash-mnav">
             <button class="mnav-b" onclick="shiftMonth(-1)">◀</button>
             <span class="mnav-l" id="mnav-label">—</span>
             <button class="mnav-b" onclick="shiftMonth(1)">▶</button>
           </div>
+          <button class="btn btn-pr btn-sm" onclick="openTripModal()" style="gap:6px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova viagem
+          </button>
         </div>
       </div>
-      <div class="g4 mb4" id="kpi-row"></div>
-      <div class="g3 mb4" id="rcv-kpi-row" style="display:none"></div>
-      <div class="g21 mb4">
+      <div class="dash-meta" id="dash-meta"></div>
+
+      <!-- OPERAÇÃO -->
+      <div class="dash-sec"><span class="dash-sec-t">Operação</span><span class="dash-sec-s">situação da frota agora · toque num card pra abrir</span></div>
+      <div class="op-grid" id="op-cards"></div>
+
+      <!-- FINANCEIRO -->
+      <div class="dash-sec"><span class="dash-sec-t">Financeiro</span><span class="dash-sec-s">previsto (competência) × recebido (caixa) — não é lucro em caixa</span></div>
+      <div class="g4 mb3" id="fin-cards"></div>
+      <div id="km-warning"></div>
+
+      <!-- GRÁFICOS -->
+      <div class="dash-sec"><span class="dash-sec-t">Gráficos</span></div>
+      <div class="g2 mb3">
         <div class="card">
-          <div class="fl-row ic jb mb3"><span class="fsb">Receita vs Despesas</span><span class="txs txm">últimos 6 meses</span></div>
-          <canvas id="chart-main" height="90"></canvas>
+          <div class="fl-row ic jb mb3"><span class="fsb">Receita prevista × recebida × despesas</span><span class="txs txm">por mês</span></div>
+          <canvas id="chart-main" height="92"></canvas>
         </div>
         <div class="card">
-          <div class="fl-row ic jb mb3"><span class="fsb">Despesas por Categoria</span></div>
+          <div class="fl-row ic jb mb3"><span class="fsb">Despesas por categoria</span></div>
           <canvas id="chart-donut" height="160"></canvas>
         </div>
       </div>
-      <div class="g2">
+      <div class="g2 mb3">
         <div class="card">
-          <div class="sec-h"><span class="sec-t">Próximos Vencimentos</span></div>
-          <div id="upcoming-list"></div>
+          <div class="fl-row ic jb mb3"><span class="fsb">Resultado por veículo</span><span class="txs txm">no período</span></div>
+          <canvas id="chart-vehicle" height="120"></canvas>
         </div>
         <div class="card">
-          <div class="sec-h"><span class="sec-t">Últimas Viagens</span></div>
-          <div id="recent-trips"></div>
+          <div class="fl-row ic jb mb3"><span class="fsb">Receita por tipo de serviço</span><span class="txs txm">no período</span></div>
+          <canvas id="chart-service" height="120"></canvas>
+        </div>
+      </div>
+
+      <!-- LISTAS -->
+      <div class="g3">
+        <div class="card">
+          <div class="sec-h"><span class="sec-t">Próximas viagens</span></div>
+          <div id="upcoming-trips"></div>
+        </div>
+        <div class="card">
+          <div class="sec-h"><span class="sec-t">Próximos recebimentos</span></div>
+          <div id="upcoming-receipts"></div>
+        </div>
+        <div class="card">
+          <div class="sec-h"><span class="sec-t">Compromissos próximos</span></div>
+          <div id="upcoming-list"></div>
         </div>
       </div>
     </div>
@@ -1307,15 +1473,54 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         </div>
       </div>
 
-      <!-- Alternador de visão: Calendário (por veículo) × Motoristas (por pessoa) -->
-      <div class="fl-row ic mb3" style="gap:6px">
-        <button id="agv-cal" class="btn btn-sm btn-pr" onclick="setAgendaView('cal')">📅 Calendário</button>
-        <button id="agv-drv" class="btn btn-sm btn-gh" onclick="setAgendaView('drivers')">👤 Motoristas</button>
+      <style>
+        .ag-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+        .ag-views{display:flex;gap:6px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:3px}
+        .ag-filters{display:flex;gap:8px;flex-wrap:wrap}
+        .ag-filters select{width:auto;min-width:150px}
+        .ag-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--txm);margin-bottom:14px}
+        .ag-legend .lg{display:flex;align-items:center;gap:6px}
+        .ag-legend .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+        /* Semana (7 colunas por dia) */
+        .agw{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));min-width:820px}
+        .agw-col{border-left:1px solid var(--bd)} .agw-col:first-child{border-left:none}
+        .agw-head{padding:9px 10px;text-align:center;border-bottom:1px solid var(--bd);background:var(--bg3);cursor:pointer}
+        .agw-head.today{background:rgba(37,99,235,.10)}
+        .agw-wd{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--txm)}
+        .agw-dn{font-size:16px;font-weight:800;color:var(--tx)}
+        .agw-body{padding:6px;min-height:90px;display:flex;flex-direction:column;gap:5px}
+        .agw-chip{border-left:3px solid #64748b;border-radius:6px;padding:5px 7px;font-size:11px;line-height:1.3;cursor:pointer;background:rgba(100,116,139,.06)}
+        .agw-chip .h{font-weight:800;color:var(--tx)} .agw-chip .r{color:var(--txm)}
+        .agw-chip.noDrv{border-left-color:var(--wn);background:rgba(217,119,6,.07)}
+        .agw-chip.conf{border-left-color:var(--dg);background:rgba(220,38,38,.07)}
+        /* Lista */
+        .agl-day{margin-bottom:16px}
+        .agl-dayh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;text-transform:capitalize}
+        .agl-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--bd);border-left:4px solid #64748b;border-radius:10px;margin-bottom:7px;cursor:pointer;background:var(--surface)}
+        .agl-item:hover{border-color:var(--bd-strong)}
+        .agl-item.noDrv{border-left-color:var(--wn)} .agl-item.conf{border-left-color:var(--dg)}
+        .agl-flag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px}
+        .agl-flag.no{background:rgba(217,119,6,.12);color:var(--wn)} .agl-flag.cf{background:rgba(220,38,38,.12);color:var(--dg)}
+      </style>
+      <div class="ag-toolbar">
+        <div class="ag-views">
+          <button id="agv-cal" class="btn btn-sm btn-pr" onclick="setAgendaView('cal')">Mensal</button>
+          <button id="agv-week" class="btn btn-sm btn-gh" onclick="setAgendaView('week')">Semanal</button>
+          <button id="agv-drv" class="btn btn-sm btn-gh" onclick="setAgendaView('drivers')">Motoristas</button>
+          <button id="agv-list" class="btn btn-sm btn-gh" onclick="setAgendaView('list')">Lista</button>
+        </div>
+        <div class="ag-filters">
+          <select class="fc" id="ag-veh" onchange="setAgendaFilter()"><option value="all">Todos os veículos</option></select>
+          <select class="fc" id="ag-drv" onchange="setAgendaFilter()"><option value="all">Todos os motoristas</option></select>
+          <select class="fc" id="ag-svc" onchange="setAgendaFilter()">
+            <option value="all">Todos os serviços</option><option value="transfer">Transfer</option><option value="fretamento">Fretamento/van</option><option value="corporativo">Corporativo</option><option value="diaria">Diária</option>
+          </select>
+        </div>
       </div>
+      <div id="agenda-legend" class="ag-legend"></div>
 
-      <!-- Visão CALENDÁRIO (por veículo) -->
+      <!-- Visão MENSAL (por veículo) -->
       <div id="agenda-cal-view">
-        <div id="agenda-legend" class="fl-row ic mb3" style="gap:14px;flex-wrap:wrap;font-size:12px"></div>
         <div class="agenda-grid-wrap card">
           <div class="agenda-weekdays">
             <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
@@ -1324,37 +1529,89 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
         </div>
       </div>
 
+      <!-- Visão SEMANAL (7 dias) -->
+      <div id="agenda-week-view" style="display:none">
+        <div class="card" style="padding:0;overflow-x:auto"><div class="agw" id="agenda-week-grid"></div></div>
+      </div>
+
       <!-- Visão MOTORISTAS (por pessoa, semana) -->
       <div id="agenda-drivers-view" style="display:none">
         <div class="card" style="padding:0;overflow-x:auto">
           <div id="agenda-drivers-grid"></div>
         </div>
-        <div class="txs txm mt2">🟩 livre · faixa colorida = ocupado (cor do veículo) · 🟥 vermelho = conflito de horário. Toque numa viagem pra abrir.</div>
+      </div>
+
+      <!-- Visão LISTA -->
+      <div id="agenda-list-view" style="display:none">
+        <div id="agenda-list"></div>
       </div>
     </div>
 
     <!-- ── VIAGENS ── -->
     <div class="page" id="page-trips">
-      <div class="fl-row ic jb mb4">
-        <div class="fl-row ic g2p">
-          <div class="mnav">
-            <button class="mnav-b" onclick="shiftMonth(-1)">◀</button>
-            <span class="mnav-l" id="mnav-trips">—</span>
-            <button class="mnav-b" onclick="shiftMonth(1)">▶</button>
-          </div>
-          <select class="fc" style="width:160px" id="trip-veh-filter" onchange="renderTrips()">
-            <option value="all">Todos os veículos</option>
-          </select>
+      <style>
+        .tl-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+        .tl-search{position:relative;flex:1;min-width:200px}
+        .tl-search input{width:100%;padding-left:34px}
+        .tl-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txm)}
+        .tl-toolbar select{width:auto;min-width:130px}
+        .tl-table-wrap{overflow-x:auto}
+        table.tl-table{width:100%;border-collapse:collapse;font-size:13px}
+        .tl-table th{text-align:left;padding:11px 12px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--txm);border-bottom:1px solid var(--bd);white-space:nowrap;background:var(--bg3)}
+        .tl-table th.tr,.tl-table td.tr{text-align:right}
+        .tl-table td{padding:11px 12px;border-bottom:1px solid var(--bd);vertical-align:middle}
+        .tl-table tbody tr:hover{background:#f8fafc}
+        .tl-route{font-weight:600;color:var(--tx)}
+        .st-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+        .st-prog{background:rgba(100,116,139,.12);color:#475569} .st-and{background:rgba(37,99,235,.12);color:var(--pr)} .st-fim{background:rgba(22,163,74,.12);color:var(--sc)}
+        .svc-badge{font-size:11px;font-weight:600;color:var(--txm);white-space:nowrap}
+        .rcv-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+        .rcv-ok{background:rgba(22,163,74,.12);color:var(--sc)} .rcv-part{background:rgba(217,119,6,.12);color:var(--wn)} .rcv-no{background:rgba(100,116,139,.1);color:#64748b}
+        .kebab{background:var(--surface);border:1px solid var(--bd-strong);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txm)}
+        .kebab:hover{border-color:var(--pr);color:var(--pr)}
+        #trip-row-menu{position:absolute;z-index:9500;background:var(--surface);border:1px solid var(--bd-strong);border-radius:10px;box-shadow:var(--shadow-elev);padding:5px;min-width:190px;display:none}
+        #trip-row-menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;padding:8px 11px;border-radius:7px;font-size:13px;color:var(--tx);cursor:pointer}
+        #trip-row-menu button:hover{background:var(--bg3)}
+        #trip-row-menu button.del{color:var(--dg)} #trip-row-menu button.del:hover{background:rgba(220,38,38,.08)}
+        #trip-row-menu .sep{height:1px;background:var(--bd);margin:4px 6px}
+        .tl-cards{display:none;flex-direction:column;gap:10px;padding:12px}
+        .tl-card{border:1px solid var(--bd);border-radius:12px;padding:13px 15px;background:var(--surface)}
+        .tl-card .tc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+        .tl-card .tc-route{font-weight:700;font-size:14px}
+        .tl-card .tc-meta{font-size:12px;color:var(--txm);display:flex;flex-wrap:wrap;gap:4px 10px;margin:6px 0}
+        .tl-card .tc-fin{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)}
+        @media(max-width:820px){ .tl-table-wrap{display:none} .tl-cards{display:flex} }
+      </style>
+      <div class="tl-toolbar">
+        <div class="mnav">
+          <button class="mnav-b" onclick="shiftMonth(-1)">◀</button>
+          <span class="mnav-l" id="mnav-trips">—</span>
+          <button class="mnav-b" onclick="shiftMonth(1)">▶</button>
         </div>
-        <!-- Botão "Nova Viagem" fica só no topo (renderTopbarActions) — sem duplicar -->
+        <div class="tl-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="fc" id="tl-search" placeholder="Buscar cliente, passageiro, rota, motorista…" oninput="renderTrips()">
+        </div>
+        <select class="fc" id="trip-veh-filter" onchange="renderTrips()"><option value="all">Todos os veículos</option></select>
+        <select class="fc" id="tl-status" onchange="renderTrips()">
+          <option value="all">Todos os status</option><option value="programada">Programada</option><option value="andamento">Em andamento</option><option value="finalizada">Finalizada</option>
+        </select>
+        <select class="fc" id="tl-svc" onchange="renderTrips()">
+          <option value="all">Todos os serviços</option><option value="transfer">Transfer</option><option value="fretamento">Fretamento/van</option><option value="corporativo">Corporativo</option><option value="diaria">Diária</option>
+        </select>
+        <select class="fc" id="tl-sort" onchange="renderTrips()">
+          <option value="date_desc">Data ↓ (recente)</option><option value="date_asc">Data ↑ (antiga)</option><option value="rev_desc">Maior receita</option><option value="margin_desc">Maior margem</option>
+        </select>
       </div>
-      <div class="card">
-        <div class="wrap"><table><thead><tr>
-          <th>Data</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>Receita Bruta</th><th>NF</th><th>KM</th><th>Despesas</th><th>Lucro</th><th>Margem</th><th>Ações</th>
-        </tr></thead><tbody id="trips-tbody"></tbody></table></div>
-        <div id="trips-summary" class="mt3"></div>
-        <div class="mt2 txs txm">* Clique em ✏️ para editar qualquer viagem lançada</div>
+      <div class="card" style="padding:0;overflow:visible">
+        <div class="tl-table-wrap">
+          <table class="tl-table"><thead><tr>
+            <th>Data</th><th>Serviço</th><th>Rota</th><th>Cliente / passageiro</th><th>Veículo</th><th>Motorista</th><th>Status</th><th class="tr">Receita</th><th>Recebimento</th><th class="tr">Margem</th><th></th>
+          </tr></thead><tbody id="trips-tbody"></tbody></table>
+        </div>
+        <div class="tl-cards" id="trips-cards"></div>
       </div>
+      <div id="trips-summary" class="mt3"></div>
     </div>
 
     <!-- ── DESPESAS VARIÁVEIS (premium single panel) ── -->
@@ -2001,6 +2258,81 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
     <button class="xbtn" onclick="closeModal('modal-trip')">✕</button>
   </div>
   <input type="hidden" id="trip-id">
+
+  <!-- 🚗 TIPO DE SERVIÇO (comanda o formulário) — Fase 3 -->
+  <style>
+    .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .svc-opt{text-align:left;background:var(--surface);border:1.5px solid var(--bd-strong);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;gap:3px}
+    .svc-opt:hover{border-color:var(--prl)}
+    .svc-opt.active{border-color:var(--pr);box-shadow:0 0 0 3px rgba(37,99,235,.14);background:rgba(37,99,235,.04)}
+    .svc-opt .svc-t{font-size:13.5px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:8px}
+    .svc-opt .svc-d{font-size:11.5px;color:var(--txm)}
+    .svc-opt.active .svc-ic{color:var(--pr)}
+    .chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--tx);cursor:pointer;user-select:none}
+    .chk input{width:16px;height:16px;accent-color:var(--pr);cursor:pointer}
+    .wd-opt{min-width:42px;text-align:center;background:var(--surface);border:1px solid var(--bd-strong);border-radius:8px;padding:6px 8px;font-size:12px;font-weight:700;color:var(--txm);cursor:pointer}
+    .wd-opt.active{background:rgba(37,99,235,.14);border-color:var(--pr);color:var(--pr)}
+    /* Wizard 3 etapas */
+    .wz-stepper{display:flex;gap:8px;margin:2px 0 18px;flex-wrap:wrap}
+    .wz-step-ind{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--txm);padding:7px 13px;border-radius:22px;background:var(--bg3);border:1px solid var(--bd)}
+    .wz-step-ind .wz-num{width:20px;height:20px;border-radius:50%;background:var(--bd-strong);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+    .wz-step-ind.active{color:var(--pr);border-color:var(--pr);background:rgba(37,99,235,.06)}
+    .wz-step-ind.active .wz-num{background:var(--pr)}
+    .wz-step-ind.done{color:var(--sc)} .wz-step-ind.done .wz-num{background:var(--sc)}
+    .wz-panel{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;align-items:start}
+    .wz-panel > .full,.wz-panel > .fsec,.wz-panel > #trip-servicemode-sec,.wz-panel > #trip-wait-section,.wz-panel > #wz-exec,.wz-panel > #wz-resumo{grid-column:1/-1}
+    .wz-panel .fg{margin:0}
+    .wz-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)}
+    #wz-resumo{background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px 18px}
+    #wz-resumo .rz-t{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--tx);margin-bottom:12px}
+    #wz-resumo .rz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 16px}
+    #wz-resumo .rz-l{font-size:10.5px;color:var(--txm);text-transform:uppercase;letter-spacing:.4px}
+    #wz-resumo .rz-v{font-size:13.5px;font-weight:600;color:var(--tx);margin-top:1px}
+    #wz-exec > .exec-h{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 14px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px}
+    #wz-exec.collapsed > .exec-body{display:none}
+    @media(max-width:640px){ .wz-panel{grid-template-columns:1fr} }
+  </style>
+  <div class="fsec" id="trip-servicemode-sec">
+    <div class="fsec-t">🚗 Tipo de serviço</div>
+    <div class="svc-grid" id="trip-servicemode">
+      <button type="button" class="svc-opt" data-svc="transfer" onclick="setServiceMode('transfer')">
+        <div class="svc-t"><span class="svc-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17H3V6a1 1 0 0 1 1-1h9v12M9 17h6M13 9h5l3 4v4h-2"/></svg></span> Transfer executivo</div>
+        <div class="svc-d">Carro · leva e traz passageiro</div></button>
+      <button type="button" class="svc-opt" data-svc="fretamento" onclick="setServiceMode('fretamento')">
+        <div class="svc-t"><span class="svc-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg></span> Fretamento / van</div>
+        <div class="svc-d">Grupo · turismo, evento, viagem</div></button>
+      <button type="button" class="svc-opt" data-svc="corporativo" onclick="setServiceMode('corporativo')">
+        <div class="svc-t"><span class="svc-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H3"/></svg></span> Corporativo recorrente</div>
+        <div class="svc-d">Contrato fixo · dias da semana</div></button>
+      <button type="button" class="svc-opt" data-svc="diaria" onclick="setServiceMode('diaria')">
+        <div class="svc-t"><span class="svc-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span> Diária / à disposição</div>
+        <div class="svc-d">Veículo à disposição por período</div></button>
+    </div>
+    <div class="fl-row ic" style="gap:20px;flex-wrap:wrap;margin-top:14px">
+      <label class="chk" id="trip-hasreturn-wrap"><input type="checkbox" id="trip-hasreturn" onchange="applyServiceModeUI()"> Possui retorno?</label>
+      <label class="chk" id="trip-requireskm-wrap"><input type="checkbox" id="trip-requireskm"> Controlar quilometragem nesta viagem</label>
+    </div>
+    <!-- Recorrência (só corporativo) — substitui a parede de datas -->
+    <div id="trip-recurring" style="display:none;margin-top:14px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:13px 15px">
+      <div class="fsec-t" style="margin-bottom:6px">🔁 Contrato recorrente</div>
+      <div class="txs txm" style="margin-bottom:10px">Defina o período em <b>Data de ida</b> (início) e <b>Data de volta</b> (fim), e marque os <b>dias da semana</b>. A escala é gerada automaticamente — sem escolher dezenas de datas.</div>
+      <div class="fl-row ic" style="gap:6px;flex-wrap:wrap" id="trip-weekdays">
+        <button type="button" class="wd-opt" data-wd="0" onclick="toggleWeekday(this)">Dom</button>
+        <button type="button" class="wd-opt" data-wd="1" onclick="toggleWeekday(this)">Seg</button>
+        <button type="button" class="wd-opt" data-wd="2" onclick="toggleWeekday(this)">Ter</button>
+        <button type="button" class="wd-opt" data-wd="3" onclick="toggleWeekday(this)">Qua</button>
+        <button type="button" class="wd-opt" data-wd="4" onclick="toggleWeekday(this)">Qui</button>
+        <button type="button" class="wd-opt" data-wd="5" onclick="toggleWeekday(this)">Sex</button>
+        <button type="button" class="wd-opt" data-wd="6" onclick="toggleWeekday(this)">Sáb</button>
+      </div>
+      <div class="fl-row ic" style="gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button type="button" class="btn btn-gh btn-xs" onclick="setWeekdaysPreset('weekdays')">Seg a Sex</button>
+        <button type="button" class="btn btn-gh btn-xs" onclick="setWeekdaysPreset('all')">Todos os dias</button>
+        <button type="button" class="btn btn-gh btn-xs" onclick="setWeekdaysPreset('clear')">Limpar</button>
+      </div>
+      <div id="trip-recurring-info" class="txs" style="margin-top:10px;font-weight:600;color:var(--pr)"></div>
+    </div>
+  </div>
 
   <div class="fsec">
     <div class="fsec-t">📌 Dados Gerais</div>
@@ -4607,9 +4939,9 @@ function nav(page){
   const titles={
     dashboard:['Dashboard','Visão geral da frota'],
     fleet:['Frota','Gerenciamento de veículos'],
-    trips:['Viagens & Receitas','Lançamentos de viagens'],
+    trips:['Operação / Viagens','Lançamentos de viagens'],
     admins:['Administradores','Pessoas com acesso ao Painel Gestor'],
-    expenses:['Despesas Variáveis','Gastos variáveis da operação · planos de pagamento e parcelas'],
+    expenses:['Despesas Operacionais','Gastos operacionais avulsos · combustível/motorista/pedágio ligados a uma viagem ficam na própria viagem'],
     commitments:['Despesas Fixas','Financiamentos, seguros e parcelamentos'],
     investors:['Investidores','Gestão de aportes e retornos'],
     clients:['Clientes','Cadastro e histórico de clientes'],
@@ -4685,10 +5017,185 @@ function setVehicleFilter(id,btn){
 // ══════════ DASHBOARD ══════════
 function renderDashboard(){
   renderVehicleTabs();
-  renderKPIs();
-  renderUpcoming();
-  renderRecentTrips();
-  setTimeout(()=>{renderMainChart();renderDonutChart();},50);
+  renderDashMeta();
+  renderOperacao();
+  renderFinanceiro();
+  renderUpcomingTrips();
+  renderUpcomingReceipts();
+  renderUpcoming();            // compromissos (despesas fixas)
+  setTimeout(()=>{ try{renderMainChart();renderDonutChart();renderVehicleChart();renderServiceChart();}catch(_){} },50);
+}
+
+/* ── Helpers de leitura do dashboard (NÃO alteram dados nem cálculos) ── */
+function _dashDK(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function _dashToday(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function _dashCoversDay(t, dk){ const s=t.date||t.departureDate||''; const e=t.returnDate||s; return !!s && dk>=s && dk<=e; }
+function _dashHasDriver(t){ return (Array.isArray(t.driverNames)&&t.driverNames.some(Boolean)) || !!t.driverName; }
+function _dashPeriodMonths(period){ return new Set(getPeriodRange(period).months.map(([y,m])=>y+'-'+m)); }
+// Receita RECEBIDA no período (caixa) — soma installments.receivedAt, ignora parcelas <= 0
+function getReceivedInPeriod(period, vFilter){
+  const set=_dashPeriodMonths(period); let total=0, count=0;
+  getAllInstallments(vFilter==='all'?null:vFilter).forEach(i=>{
+    if(!i.receivedAt || n(i.amount)<=0) return;
+    const d=new Date(i.receivedAt+'T00:00:00'); if(isNaN(d)) return;
+    if(set.has(d.getFullYear()+'-'+d.getMonth())){ total+=n(i.amount); count++; }
+  });
+  return {total, count};
+}
+// Comissão de agenciamento no período (indicador INDEPENDENTE — não entra no resultado da frota)
+function getAgencyCommissionInPeriod(period){
+  const set=_dashPeriodMonths(period); let total=0, count=0;
+  (DB.agencyRevenue||[]).forEach(a=>{
+    if(!a.date) return; const d=new Date(a.date+'T00:00:00'); if(isNaN(d)) return;
+    if(set.has(d.getFullYear()+'-'+d.getMonth())){ total+=n(a.commissionValue); count++; }
+  });
+  return {total, count};
+}
+// Dois períodos de viagem se sobrepõem? (data + horário quando mesmo dia único)
+function _dashOverlap(a,b){
+  const as=a.date||'', ae=a.returnDate||as, bs=b.date||'', be=b.returnDate||bs;
+  if(!(as && bs && as<=be && bs<=ae)) return false;
+  const aMulti=a.returnDate&&a.returnDate>a.date, bMulti=b.returnDate&&b.returnDate>b.date;
+  if(aMulti||bMulti) return true;
+  if(as!==bs) return false;
+  const hm=s=>{ const m=(s||'').match(/(\d{1,2}):(\d{2})/); return m?(+m[1]*60+ +m[2]):null; };
+  const a1=hm(a.pickupTime), b1=hm(b.pickupTime);
+  const A1=a1??0, A2=hm(a.returnTime)??(a1!=null?a1+60:1440), B1=b1??0, B2=hm(b.returnTime)??(b1!=null?b1+60:1440);
+  return A1<B2 && B1<A2;
+}
+// Snapshot operacional (sempre da FROTA inteira — situação agora)
+function getOperationSnapshot(){
+  const trips=(DB.trips||[]).filter(Boolean);
+  const now=_dashToday(); const todayKey=_dashDK(now);
+  const in7=new Date(now); in7.setDate(in7.getDate()+7); const in7Key=_dashDK(in7);
+  const active=trips.filter(t=>(t.driverStatus||'programada')!=='finalizada');
+  const hoje=trips.filter(t=>_dashCoversDay(t,todayKey));
+  const prox7=trips.filter(t=>{ const s=t.date||''; return s>todayKey && s<=in7Key; });
+  const andamento=trips.filter(t=>(t.driverStatus||'')==='andamento');
+  const semMotorista=active.filter(t=>{ const s=t.date||''; return s>=todayKey && !_dashHasDriver(t); });
+  // conflitos entre viagens ativas
+  const byVeh={}, byDrv={};
+  active.forEach(t=>{ if(t.vehicleId){ (byVeh[t.vehicleId]=byVeh[t.vehicleId]||[]).push(t); }
+    const drs=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]);
+    drs.forEach(d=>{ if(d){ const k=_norm(d); (byDrv[k]=byDrv[k]||[]).push(t); } }); });
+  const countConflicts=(groups)=>{ let c=0; Object.values(groups).forEach(list=>{ for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){ if(_dashOverlap(list[i],list[j])) c++; } }); return c; };
+  const confVeh=countConflicts(byVeh), confDrv=countConflicts(byDrv);
+  // veículos em viagem hoje (andamento) vs disponíveis
+  const emViagemIds=new Set(andamento.map(t=>t.vehicleId).filter(Boolean));
+  const ativos=(DB.vehicles||[]).filter(v=>v.active!==false);
+  const emViagem=ativos.filter(v=>emViagemIds.has(v.id)).length;
+  const disponiveis=ativos.length-emViagem;
+  const urgent=ativos.filter(v=>hasUrgentMaintenance(v)).length;
+  const warn=ativos.filter(v=>!hasUrgentMaintenance(v)&&hasWarnMaintenance(v)).length;
+  return {todayKey, hoje:hoje.length, prox7:prox7.length, andamento:andamento.length, semMotorista:semMotorista.length,
+    confVeh, confDrv, disponiveis, emViagem, urgent, warn, ativos:ativos.length};
+}
+function _opIcon(name){
+  const p={
+    cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    days:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01"/>',
+    play:'<polygon points="6 4 20 12 6 20 6 4"/>',
+    userx:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/>',
+    alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    truck:'<path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="12" height="10" rx="2"/><circle cx="12.5" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>',
+    wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
+  };
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;
+}
+function renderDashMeta(){
+  const el=document.getElementById('dash-meta'); if(!el) return;
+  const admin=(typeof getCurrentAdmin==='function')?getCurrentAdmin():null;
+  const who=admin?admin.name:'Gestor';
+  const range=getPeriodRange(dashboardPeriod);
+  let syncDot,syncTxt;
+  if(window.__TESTE__){ syncDot='#d97706'; syncTxt='Ambiente de teste — sem sincronização'; }
+  else {
+    const st=(typeof cloudSync!=='undefined')?cloudSync.status:'idle';
+    const m={idle:['#94a3b8','Ocioso'],syncing:['#3b82f6','Sincronizando…'],ok:['#16a34a','Sincronizado'],error:['#dc2626','Erro de sincronização'],offline:['#94a3b8','Offline']};
+    const d=m[st]||m.idle; syncDot=d[0]; syncTxt=d[1];
+  }
+  el.innerHTML=`
+    <span class="dm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg> ${who}</span>
+    <span class="dm"><span class="dot" style="background:${syncDot}"></span> ${syncTxt}</span>
+    <span class="dm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${range.label}</span>`;
+}
+function renderOperacao(){
+  const el=document.getElementById('op-cards'); if(!el) return;
+  const s=getOperationSnapshot();
+  const card=(cls,ic,num,lbl,onclick)=>`<div class="op-card ${cls}" onclick="${onclick}"><div class="op-ic">${_opIcon(ic)}</div><div class="op-b"><div class="op-num">${num}</div><div class="op-lbl">${lbl}</div></div></div>`;
+  const manutCls=s.urgent?'alert':s.warn?'warn':'ok';
+  const manutTxt=s.urgent?`${s.urgent} manutenção(ões) vencida(s)`:s.warn?`${s.warn} em breve`:'Manutenção em dia';
+  const manutNum=s.urgent||s.warn||'✓';
+  el.innerHTML=[
+    card('neutral','cal',s.hoje,'Viagens de hoje',`openDayTrips('${s.todayKey}')`),
+    card('neutral','days',s.prox7,'Próximos 7 dias',`nav('agenda')`),
+    card('neutral','play',s.andamento,'Em andamento',`nav('trips')`),
+    card(s.semMotorista?'warn':'ok','userx',s.semMotorista,'Sem motorista',`nav('agenda')`),
+    card(s.confVeh?'alert':'ok','alert',s.confVeh,'Conflitos de veículo',`nav('agenda')`),
+    card(s.confDrv?'alert':'ok','alert',s.confDrv,'Conflitos de motorista',`nav('agenda')`),
+    card('ok','check',s.disponiveis,'Veículos disponíveis',`nav('fleet')`),
+    card('neutral','truck',s.emViagem,'Veículos em viagem',`nav('fleet')`),
+    card(manutCls,'wrench',manutNum,manutTxt,`nav('fleet')`)
+  ].join('');
+}
+function renderFinanceiro(){
+  const el=document.getElementById('fin-cards'); if(!el) return;
+  const t=getPeriodTotals(dashboardPeriod,vehicleFilter);
+  const recv=getReceivedInPeriod(dashboardPeriod,vehicleFilter);
+  const comm=getAgencyCommissionInPeriod(dashboardPeriod);
+  const pend=getAllInstallments(vehicleFilter==='all'?null:vehicleFilter).filter(i=>i.status!=='received'&&n(i.amount)>0);
+  const overdue=pend.filter(i=>i.status==='overdue');
+  const totalPend=pend.reduce((s,i)=>s+n(i.amount),0);
+  const totalOver=overdue.reduce((s,i)=>s+n(i.amount),0);
+  const nextInst=pend.filter(i=>i.status!=='overdue'&&i.dueDate).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''))[0];
+  const sign=t.netProfit>=0?'tsc':'tdr';
+  const kpi=(cls,lbl,val,sub,onclick)=>`<div class="fin-kpi ${onclick?'click':''}" ${onclick?`onclick="${onclick}"`:''}><div class="k-l">${lbl}</div><div class="k-v ${cls||''}">${val}</div><div class="k-s">${sub}</div></div>`;
+  el.innerHTML=[
+    kpi('tpr','Receita prevista',R(t.grossRev),`${t.tripCount} viagem(ns) · competência`),
+    kpi('tsc','Receita recebida',R(recv.total),`${recv.count} parcela(s) · caixa (recebidas)`),
+    kpi('tdr','Total de despesas',R(t.totalExp),`fixas ${R(t.fixedExp)} + operacionais ${R(t.tripExp+t.varExp+t.sharedExp)}`),
+    kpi(sign,'Resultado projetado',R(t.netProfit),`margem ${Pct(t.margin)} · por competência (não é caixa)`),
+    kpi('tpr','Total a receber',R(totalPend),`${pend.length} parcela(s) em aberto`,`nav('receivables')`),
+    kpi(overdue.length?'tdr':'tsc','Total vencido',R(totalOver),overdue.length?`${overdue.length} parcela(s) vencida(s)`:'nada vencido',`nav('receivables')`),
+    kpi('twn','Próximo recebimento',nextInst?fmtDate(nextInst.dueDate):'—',nextInst?R(nextInst.amount):'sem vencimentos',`nav('receivables')`),
+    kpi('tgold','Comissão de agenciamento',R(comm.total),`${comm.count} agenciamento(s) · separado da frota`,`nav('agency')`)
+  ].join('');
+  // Aviso de R$/km parcial (viagens sem km no período)
+  const set=_dashPeriodMonths(dashboardPeriod);
+  const semKm=(DB.trips||[]).some(t2=>{ if(!t2.date) return false; const d=new Date(t2.date+'T00:00:00'); if(isNaN(d)) return false;
+    if(!set.has(d.getFullYear()+'-'+d.getMonth())) return false; if(vehicleFilter!=='all'&&t2.vehicleId!==vehicleFilter) return false;
+    return _tripKm(t2)<=0; });
+  const kw=document.getElementById('km-warning');
+  if(kw) kw.innerHTML = semKm ? `<div class="km-warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Indicador de R$/km indisponível ou parcial — existem viagens sem quilometragem no período.</div>` : '';
+}
+function renderUpcomingTrips(){
+  const el=document.getElementById('upcoming-trips'); if(!el) return;
+  const today=_dashDK(_dashToday());
+  const list=(DB.trips||[]).filter(t=>{ const s=t.date||''; return s>=today && (t.driverStatus||'programada')!=='finalizada' && (vehicleFilter==='all'||t.vehicleId===vehicleFilter); })
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.pickupTime||'').localeCompare(b.pickupTime||'')).slice(0,6);
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="empty-ic">📭</div><div class="empty-tx">Sem viagens futuras</div></div>'; return; }
+  el.innerHTML=list.map(t=>{
+    const rota=(t.origin||t.destination)?`${(t.origin||'?').split(/[,\-]/)[0].trim()} → ${(t.destination||'?').split(/[,\-]/)[0].trim()}`:(t.client||t.description||'Viagem');
+    const drv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'—';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="editTrip('${t.id}')">
+      <div style="min-width:0"><div style="font-weight:600;font-size:13px">${rota}</div><div class="txs txm">${vehicleName(t.vehicleId)} · ${drv}</div></div>
+      <div style="text-align:right;white-space:nowrap"><div style="font-weight:700;font-size:12.5px">${fmtDate(t.date)}</div><div class="txs txm">${t.pickupTime||''}</div></div></div>`;
+  }).join('');
+}
+function renderUpcomingReceipts(){
+  const el=document.getElementById('upcoming-receipts'); if(!el) return;
+  const list=getAllInstallments(vehicleFilter==='all'?null:vehicleFilter)
+    .filter(i=>i.status!=='received' && n(i.amount)>0 && i.dueDate)
+    .sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,6);
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="empty-ic">✅</div><div class="empty-tx">Nada a receber</div></div>'; return; }
+  el.innerHTML=list.map(i=>{
+    const cls=i.status==='overdue'?'tdr':i.status==='today'?'twn':'tsc';
+    const dtxt=i.status==='overdue'?'Vencido':i.status==='today'?'Vence hoje':fmtDate(i.dueDate);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="nav('receivables')">
+      <div style="min-width:0"><div style="font-weight:600;font-size:13px">${i.client||'Cliente'}</div><div class="txs txm">${i.plate||''} · ${i.label||''}</div></div>
+      <div style="text-align:right;white-space:nowrap"><div style="font-weight:700;font-size:12.5px">${R(i.amount)}</div><div class="txs ${cls}">${dtxt}</div></div></div>`;
+  }).join('');
 }
 
 function renderVehicleTabs(){
@@ -4810,28 +5317,63 @@ function renderRecentTrips(){
 }
 
 function renderMainChart(){
-  const ctx=document.getElementById('chart-main');
-  if(!ctx)return;
+  const ctx=document.getElementById('chart-main'); if(!ctx)return;
   if(charts.main){charts.main.destroy();}
-
-  const labels=[],rData=[],eData=[];
-  for(let i=5;i>=0;i--){
-    let mo=currentMonth-i, yr=currentYear;
-    while(mo<0){mo+=12;yr--;}
+  const {months}=getPeriodRange(dashboardPeriod);
+  const mm = months.length>12 ? months.slice(-12) : months;
+  const insts=getAllInstallments(vehicleFilter==='all'?null:vehicleFilter);
+  const labels=[],prev=[],desp=[],recv=[];
+  mm.forEach(([yr,mo])=>{
     labels.push(new Date(yr,mo,1).toLocaleDateString('pt-BR',{month:'short'}));
     const t=getMonthlyTotals(yr,mo,vehicleFilter);
-    rData.push(t.grossRev);
-    eData.push(t.totalExp);
-  }
-  charts.main=new Chart(ctx,{
-    type:'bar',
+    prev.push(t.grossRev); desp.push(t.totalExp);
+    let r=0; insts.forEach(i=>{ if(!i.receivedAt||n(i.amount)<=0)return; const d=new Date(i.receivedAt+'T00:00:00'); if(!isNaN(d)&&d.getFullYear()===yr&&d.getMonth()===mo) r+=n(i.amount); });
+    recv.push(r);
+  });
+  charts.main=new Chart(ctx,{ type:'bar',
     data:{labels,datasets:[
-      {label:'Receita',data:rData,backgroundColor:'rgba(59,130,246,.7)',borderRadius:4},
-      {label:'Despesas',data:eData,backgroundColor:'rgba(239,68,68,.7)',borderRadius:4}
+      {label:'Prevista',data:prev,backgroundColor:'rgba(37,99,235,.85)',borderRadius:4},
+      {label:'Recebida',data:recv,backgroundColor:'rgba(22,163,74,.85)',borderRadius:4},
+      {label:'Despesas',data:desp,backgroundColor:'rgba(220,38,38,.8)',borderRadius:4}
     ]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
-      scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,.05)'}},
-              y:{ticks:{color:'#94a3b8',callback:v=>R(v)},grid:{color:'rgba(255,255,255,.05)'}}}}
+    options:{responsive:true,plugins:{legend:{labels:{color:'#475569',font:{size:11}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{display:false}},
+              y:{ticks:{color:'#64748b',callback:v=>R(v)},grid:{color:'rgba(15,23,42,.06)'}}}}
+  });
+}
+// Rótulo do tipo de serviço (usa serviceMode quando existir — Fase 3 — senão o type legado)
+function _serviceLabel(t){ const map={fixo:'Fretamento / contínuo',avulso:'Viagem eventual',diaria:'Diária',aluguel:'Aluguel'}; return map[t.serviceMode||t.type]||'Outros'; }
+function renderVehicleChart(){
+  const ctx=document.getElementById('chart-vehicle'); if(!ctx)return;
+  if(charts.vehicle){charts.vehicle.destroy();}
+  const {months}=getPeriodRange(dashboardPeriod);
+  const vs=(DB.vehicles||[]).filter(v=>v.active!==false && (vehicleFilter==='all'||v.id===vehicleFilter));
+  const labels=[],data=[],colors=[];
+  vs.forEach(v=>{ let net=0; months.forEach(([y,m])=>{ net+=getMonthlyTotals(y,m,v.id).netProfit; });
+    labels.push(v.plate||v.model||'—'); data.push(Math.round(net));
+    colors.push(net>=0?'rgba(22,163,74,.85)':'rgba(220,38,38,.8)'); });
+  charts.vehicle=new Chart(ctx,{ type:'bar',
+    data:{labels,datasets:[{label:'Resultado',data,backgroundColor:colors,borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{display:false}},
+              y:{ticks:{color:'#64748b',callback:v=>R(v)},grid:{color:'rgba(15,23,42,.06)'}}}}
+  });
+}
+function renderServiceChart(){
+  const ctx=document.getElementById('chart-service'); if(!ctx)return;
+  if(charts.service){charts.service.destroy();}
+  const set=_dashPeriodMonths(dashboardPeriod); const agg={};
+  (DB.trips||[]).forEach(t=>{ if(!t.date)return; const d=new Date(t.date+'T00:00:00'); if(isNaN(d))return;
+    if(!set.has(d.getFullYear()+'-'+d.getMonth()))return; if(vehicleFilter!=='all'&&t.vehicleId!==vehicleFilter)return;
+    const k=_serviceLabel(t); agg[k]=(agg[k]||0)+n(t.grossRevenue); });
+  const keys=Object.keys(agg).filter(k=>agg[k]>0);
+  if(!keys.length){ charts.service=new Chart(ctx,{type:'bar',data:{labels:['Sem dados'],datasets:[{data:[0],backgroundColor:'#cbd5e1'}]},options:{plugins:{legend:{display:false}}}}); return; }
+  const colors=['#2563eb','#7c3aed','#0ea5e9','#16a34a','#d97706'];
+  charts.service=new Chart(ctx,{ type:'bar',
+    data:{labels:keys,datasets:[{label:'Receita',data:keys.map(k=>agg[k]),backgroundColor:keys.map((_,i)=>colors[i%colors.length]),borderRadius:4}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#64748b',callback:v=>R(v)},grid:{color:'rgba(15,23,42,.06)'}},
+              y:{ticks:{color:'#64748b'},grid:{display:false}}}}
   });
 }
 
@@ -4895,6 +5437,8 @@ function renderFleet(){
     const isWarn=!isUrgent&&hasWarnMaintenance(v);
     const borderStyle=isUrgent?'border-color:var(--dg)':isWarn?'border-color:var(--wn)':'';
     const caixa=v.cashReserve||0;
+    const km=vehCurrentKm(v);
+    const kmOk=km>0;
 
     return `<div class="vc" style="${borderStyle}">
       <div class="vc-acc" style="background:${isUrgent?'var(--dg)':isWarn?'var(--wn)':v.color}"></div>
@@ -4908,33 +5452,31 @@ function renderFleet(){
         <div class="vc-nm">${v.brand} ${v.model} ${v.year||''}</div>
 
         <div class="vc-st mb2">
-          <div class="vst"><div class="vst-l">Receita do mês</div><div class="vst-v tpr">${R(t.grossRev)}</div></div>
-          <div class="vst"><div class="vst-l">Lucro do mês</div><div class="vst-v ${sign}">${R(t.netProfit)}</div></div>
+          <div class="vst"><div class="vst-l">Receita prevista</div><div class="vst-v tpr">${R(t.grossRev)}</div></div>
+          <div class="vst"><div class="vst-l">Resultado projetado</div><div class="vst-v ${sign}">${R(t.netProfit)}</div></div>
           <div class="vst"><div class="vst-l">Viagens</div><div class="vst-v">${t.tripCount}</div></div>
-          <div class="vst"><div class="vst-l">KM Atual</div><div class="vst-v">${(v.currentKm||0).toLocaleString('pt-BR')} km</div></div>
+          <div class="vst"><div class="vst-l">KM atual</div><div class="vst-v">${kmOk?km.toLocaleString('pt-BR')+' km':'<span class="txm" style="font-size:11px;font-weight:500">não cadastrada</span>'}</div></div>
         </div>
         ${(()=>{
           const roll=getVehRollingCostPerKm(v.id);
-          if(!roll) return '';
-          return `<div class="fl-row ic jb" style="padding:6px 10px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:9px;margin-bottom:8px;font-size:11.5px">
-            <span style="color:#67e8f9">⛽ Custo/km real <span class="txm">(90 dias)</span></span>
-            <span class="fb" style="color:#67e8f9">${R(roll.costPerKm)}/km</span>
-          </div>`;
+          if(roll) return `<div class="fl-row ic jb" style="padding:7px 11px;background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.22);border-radius:9px;margin-bottom:8px;font-size:11.5px"><span style="color:var(--sc);font-weight:600">Custo/km confiável <span class="txm" style="font-weight:400">(90 dias)</span></span><span class="fb" style="color:var(--sc)">${R(roll.costPerKm)}/km</span></div>`;
+          return `<div style="padding:7px 11px;background:var(--bg3);border:1px solid var(--bd);border-radius:9px;margin-bottom:8px;font-size:11.5px;color:var(--txm)">Custo/km indisponível — amostra insuficiente (mín. 300 km e 1 abastecimento em 90 dias).</div>`;
         })()}
 
-        <div style="margin-bottom:8px">${chips}</div>
+        <div style="margin-bottom:8px">${kmOk?chips:'<div style="padding:8px 11px;background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.25);border-radius:9px;font-size:11.5px;color:#9a5b06">Quilometragem atual não cadastrada — cadastre pra ver os alertas de manutenção.</div>'}</div>
 
         <div class="fl-row ic jb" style="padding:8px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);margin-bottom:8px">
-          <span class="txs txm">💜 Caixinha</span>
+          <span class="txs txm">Caixinha</span>
           <span class="caixinha-badge">${R(caixa)}</span>
         </div>
 
         <div class="txs txm mb3">Compra: ${fmtDate(v.purchaseDate)} · ${R(v.purchaseValue)}</div>
         <div class="fl-row ic g2p" style="flex-wrap:wrap">
-          <button class="btn btn-ol btn-sm" onclick="event.stopPropagation();editVehicle('${v.id}')">✏️ Editar</button>
-          <button class="btn btn-pr btn-sm" onclick="event.stopPropagation();openTripModal('${v.id}')">➕ Viagem</button>
-          <button class="btn btn-sm" style="background:rgba(99,102,241,.2);color:#a78bfa;border:1px solid rgba(99,102,241,.3)" onclick="event.stopPropagation();openCaixinhaModal('${v.id}')">💜 Caixinha</button>
-          <button class="btn btn-sm" style="background:rgba(6,182,212,.15);color:#67e8f9;border:1px solid rgba(6,182,212,.3)" onclick="event.stopPropagation();openTiresModal('${v.id}')">🛞 Pneus</button>
+          <button class="btn btn-ol btn-sm" onclick="event.stopPropagation();editVehicle('${v.id}')">Editar</button>
+          <button class="btn btn-pr btn-sm" onclick="event.stopPropagation();openTripModal('${v.id}')">Nova viagem</button>
+          <button class="btn btn-gh btn-sm" onclick="event.stopPropagation();updateVehicleKm('${v.id}')">Atualizar km</button>
+          <button class="btn btn-gh btn-sm" onclick="event.stopPropagation();openCaixinhaModal('${v.id}')">Caixinha</button>
+          <button class="btn btn-gh btn-sm" onclick="event.stopPropagation();openTiresModal('${v.id}')">Pneus</button>
         </div>
       </div>
     </div>`;
@@ -4948,6 +5490,17 @@ function renderFleet(){
     </div>
   </div>`;
   el.innerHTML=html;
+}
+// Atualização rápida da quilometragem atual do veículo (Fase 6)
+function updateVehicleKm(id){
+  const v=DB.vehicles.find(x=>x.id===id); if(!v) return;
+  const cur=vehCurrentKm(v);
+  const inp=prompt(`Atualizar a quilometragem atual de ${v.plate}:`, cur>0?String(cur):'');
+  if(inp===null) return;
+  const km=n(inp);
+  if(km<=0){ alert('Informe uma quilometragem válida.'); return; }
+  v.currentKm=km; saveDB(); renderFleet();
+  if(typeof showToast==='function') showToast('Quilometragem atualizada.','ok');
 }
 
 // ══════════ PNEUS — mapa por posição, trocas parciais e rodízio ══════════
@@ -5185,17 +5738,17 @@ function agendaCurrent(){
   return {y:agendaY, m:agendaM};
 }
 function agendaShift(delta){
-  if(agendaView==='drivers'){
+  if(agendaView==='drivers' || agendaView==='week'){
     const w=agendaWeekCurrent();
     w.setDate(w.getDate()+delta*7);
-    renderAgendaDrivers();
+    renderAgendaView();
     return;
   }
   agendaCurrent();
   agendaM += delta;
   while(agendaM<0){ agendaM+=12; agendaY--; }
   while(agendaM>11){ agendaM-=12; agendaY++; }
-  renderAgenda();
+  renderAgendaView();
 }
 function agendaGoToday(){
   const t = new Date();
@@ -5242,7 +5795,7 @@ function renderAgenda(){
 
   // Pré-processa viagens: cada uma vira { trip, start, end, days }
   const dateOnly=(s)=>{ if(!s) return null; const p=String(s).split('T')[0].split('-'); return new Date(+p[0],+p[1]-1,+p[2]); };
-  const tripsAll=(DB.trips||[]).map(t=>{
+  const tripsAll=(DB.trips||[]).filter(agendaTripPasses).map(t=>{
     const s=dateOnly(t.date||t.departureDate);
     if(!s) return null;
     const e=dateOnly(t.returnDate)||s;
@@ -5397,19 +5950,117 @@ function agendaWeekCurrent(){
   if(!agendaWeekStart){ const t=new Date(); t.setHours(0,0,0,0); t.setDate(t.getDate()-t.getDay()); agendaWeekStart=t; }
   return agendaWeekStart;
 }
+// ── Filtros da agenda (Fase 5) ──
+let agendaVehFilter='all', agendaDrvFilter='all', agendaSvcFilter='all';
+function setAgendaFilter(){
+  agendaVehFilter=document.getElementById('ag-veh')?.value||'all';
+  agendaDrvFilter=document.getElementById('ag-drv')?.value||'all';
+  agendaSvcFilter=document.getElementById('ag-svc')?.value||'all';
+  renderAgendaView();
+}
+function populateAgendaFilters(){
+  const veh=document.getElementById('ag-veh');
+  if(veh){ const cur=veh.value||agendaVehFilter; veh.innerHTML='<option value="all">Todos os veículos</option>'+(DB.vehicles||[]).map(v=>`<option value="${v.id}">${v.plate}</option>`).join(''); veh.value=[...veh.options].some(o=>o.value===cur)?cur:'all'; }
+  const drv=document.getElementById('ag-drv');
+  if(drv){ const cur=drv.value||agendaDrvFilter;
+    const cad=(DB.drivers||[]).filter(d=>d.active!==false).map(d=>d.name).filter(Boolean); const cadN=new Set(cad.map(_norm)); const extra=[];
+    (DB.trips||[]).forEach(t=>{ const ns=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]); ns.forEach(nm=>{ if(nm&&!cadN.has(_norm(nm))&&!extra.some(x=>_norm(x)===_norm(nm))) extra.push(nm); }); });
+    drv.innerHTML='<option value="all">Todos os motoristas</option>'+[...cad,...extra].map(nm=>`<option value="${nm.replace(/"/g,'&quot;')}">${nm}</option>`).join(''); drv.value=[...drv.options].some(o=>o.value===cur)?cur:'all'; }
+}
+function agendaTripPasses(t){
+  if(agendaVehFilter!=='all' && t.vehicleId!==agendaVehFilter) return false;
+  if(agendaSvcFilter!=='all' && _tripSvcKey(t)!==agendaSvcFilter) return false;
+  if(agendaDrvFilter!=='all'){ const ns=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]); if(!ns.some(nm=>_norm(nm)===_norm(agendaDrvFilter))) return false; }
+  return true;
+}
+// Dias em que a viagem aparece: escala (driverShifts.days) quando houver; senão o intervalo ida→volta
+function tripServiceDays(t){ const sh=(Array.isArray(t.driverShifts)?t.driverShifts:[]).filter(s=>s&&Array.isArray(s.days)&&s.days.length); if(!sh.length) return null; const set=new Set(); sh.forEach(s=>s.days.forEach(d=>set.add(d))); return set; }
+function tripOnDay(t, dk){ const sd=tripServiceDays(t); if(sd) return sd.has(dk); const from=t.date||t.departureDate||''; const to=t.returnDate||from; return !!from && dk>=from && dk<=(to||from); }
+function tripHasDriver(t){ return (Array.isArray(t.driverNames)&&t.driverNames.some(Boolean))||!!t.driverName; }
+function _agVehColorMap(){ const cs=['#3b82f6','#a78bfa','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#84cc16']; const m={}; (DB.vehicles||[]).forEach((v,i)=>m[v.id]=cs[i%cs.length]); return m; }
+// Conjunto de ids de viagens em conflito num mesmo dia (mesmo veículo OU mesmo motorista com horário sobreposto)
+function _dayConflicts(dayTrips){
+  const conf=new Set();
+  for(let i=0;i<dayTrips.length;i++) for(let j=i+1;j<dayTrips.length;j++){
+    const a=dayTrips[i], b=dayTrips[j]; if(!_dashOverlap(a,b)) continue;
+    const sameVeh=a.vehicleId&&a.vehicleId===b.vehicleId;
+    const da=(Array.isArray(a.driverNames)&&a.driverNames.length)?a.driverNames:(a.driverName?[a.driverName]:[]);
+    const db=(Array.isArray(b.driverNames)&&b.driverNames.length)?b.driverNames:(b.driverName?[b.driverName]:[]);
+    const sameDrv=da.some(x=>x&&db.some(y=>_norm(x)===_norm(y)));
+    if(sameVeh||sameDrv){ conf.add(a.id); conf.add(b.id); }
+  }
+  return conf;
+}
 function setAgendaView(v){
   agendaView=v;
-  const c=document.getElementById('agv-cal'), d=document.getElementById('agv-drv');
-  if(c) c.className='btn btn-sm '+(v==='cal'?'btn-pr':'btn-gh');
-  if(d) d.className='btn btn-sm '+(v==='drivers'?'btn-pr':'btn-gh');
-  const cv=document.getElementById('agenda-cal-view'), dv=document.getElementById('agenda-drivers-view');
-  if(cv) cv.style.display=v==='cal'?'':'none';
-  if(dv) dv.style.display=v==='drivers'?'':'none';
+  const btns={cal:'agv-cal',week:'agv-week',drivers:'agv-drv',list:'agv-list'};
+  Object.entries(btns).forEach(([view,id])=>{ const b=document.getElementById(id); if(b) b.className='btn btn-sm '+(view===v?'btn-pr':'btn-gh'); });
+  const views={cal:'agenda-cal-view',week:'agenda-week-view',drivers:'agenda-drivers-view',list:'agenda-list-view'};
+  Object.entries(views).forEach(([view,id])=>{ const el=document.getElementById(id); if(el) el.style.display=(view===v)?'':'none'; });
   renderAgendaView();
 }
 function renderAgendaView(){
+  populateAgendaFilters();
   if(agendaView==='drivers') renderAgendaDrivers();
+  else if(agendaView==='week') renderAgendaWeek();
+  else if(agendaView==='list') renderAgendaList();
   else renderAgenda();
+  renderAgendaLegend();
+}
+function renderAgendaLegend(){
+  const el=document.getElementById('agenda-legend'); if(!el) return;
+  const cmap=_agVehColorMap();
+  const veh=(DB.vehicles||[]).filter(v=>v.active!==false).map(v=>`<span class="lg"><span class="dot" style="background:${cmap[v.id]}"></span>${v.plate}</span>`).join('');
+  el.innerHTML=veh+`<span class="lg"><span class="dot" style="background:var(--wn)"></span>sem motorista</span><span class="lg"><span class="dot" style="background:var(--dg)"></span>conflito</span>`;
+}
+function renderAgendaWeek(){
+  const grid=document.getElementById('agenda-week-grid'); if(!grid) return;
+  const ws=new Date(agendaWeekCurrent());
+  const dkf=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const days=[]; for(let i=0;i<7;i++) days.push(new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+i));
+  const today=new Date(); today.setHours(0,0,0,0); const todayKey=dkf(today);
+  const wd=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']; const cmap=_agVehColorMap();
+  const trips=(DB.trips||[]).filter(agendaTripPasses);
+  const ml=document.getElementById('agenda-month-label'); const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  if(ml) ml.textContent=`${fmt(days[0])} – ${fmt(days[6])}`;
+  let total=0;
+  grid.innerHTML=days.map(d=>{
+    const key=dkf(d); const isT=key===todayKey;
+    const dayTrips=trips.filter(t=>tripOnDay(t,key)).sort((a,b)=>(a.pickupTime||'').localeCompare(b.pickupTime||'')); total+=dayTrips.length;
+    const conf=_dayConflicts(dayTrips);
+    const chips=dayTrips.map(t=>{
+      const color=cmap[t.vehicleId]||'#64748b'; const noDrv=!tripHasDriver(t); const isConf=conf.has(t.id);
+      const cls=isConf?'conf':(noDrv?'noDrv':''); const hora=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):'';
+      const rota=(t.origin||t.destination)?`${(t.origin||'?').split(/[,\-]/)[0].trim()}→${(t.destination||'?').split(/[,\-]/)[0].trim()}`:(t.client||'Viagem');
+      return `<div class="agw-chip ${cls}" style="${cls?'':`border-left-color:${color}`}" onclick="editTrip('${t.id}')" title="${(rota+(hora?' · '+hora:'')).replace(/"/g,'&quot;')}"><div class="h">${hora||tripServiceLabel(t)}${noDrv?' ⚠️':''}${isConf?' ⛔':''}</div><div class="r">${rota}</div></div>`;
+    }).join('')||'<div class="txs txm" style="padding:8px;text-align:center">livre</div>';
+    return `<div class="agw-col"><div class="agw-head ${isT?'today':''}" onclick="openDayTrips('${key}')"><div class="agw-wd">${wd[d.getDay()]}</div><div class="agw-dn">${d.getDate()}</div></div><div class="agw-body">${chips}</div></div>`;
+  }).join('');
+  const sm=document.getElementById('agenda-summary'); if(sm) sm.textContent=`${total} viagem(ns) na semana`;
+}
+function renderAgendaList(){
+  const el=document.getElementById('agenda-list'); if(!el) return;
+  const {y,m}=agendaCurrent(); const dim=new Date(y,m+1,0).getDate();
+  const dkf=(d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const trips=(DB.trips||[]).filter(agendaTripPasses); const cmap=_agVehColorMap();
+  const ml=document.getElementById('agenda-month-label'); if(ml) ml.textContent=monthName(y,m);
+  let html='', total=0;
+  for(let d=1;d<=dim;d++){
+    const key=dkf(d); const dayTrips=trips.filter(t=>tripOnDay(t,key)).sort((a,b)=>(a.pickupTime||'').localeCompare(b.pickupTime||''));
+    if(!dayTrips.length) continue; total+=dayTrips.length;
+    const conf=_dayConflicts(dayTrips); const dayLabel=new Date(y,m,d).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    const items=dayTrips.map(t=>{
+      const color=cmap[t.vehicleId]||'#64748b'; const noDrv=!tripHasDriver(t); const isConf=conf.has(t.id); const cls=isConf?'conf':(noDrv?'noDrv':'');
+      const hora=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):'—';
+      const rota=(t.origin||t.destination)?`${t.origin||'?'} → ${t.destination||'?'}`:(t.client||t.description||'Viagem');
+      const dv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)||'—';
+      const flags=(noDrv?'<span class="agl-flag no">sem motorista</span>':'')+(isConf?'<span class="agl-flag cf">conflito</span>':'');
+      return `<div class="agl-item ${cls}" style="${cls?'':`border-left-color:${color}`}" onclick="editTrip('${t.id}')"><div style="min-width:70px;font-weight:800;color:var(--pr);font-size:13px">${hora}</div><div style="flex:1;min-width:0"><div style="font-weight:600">${rota}</div><div class="txs txm">${tripServiceLabel(t)} · ${vehicleName(t.vehicleId)} · ${dv}${t.client?' · '+t.client:''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${flags}</div></div>`;
+    }).join('');
+    html+=`<div class="agl-day"><div class="agl-dayh"><span style="font-weight:700">${dayLabel}</span><button class="btn btn-gh btn-xs gestor-only" onclick="event.stopPropagation();openTripModalForDate('${key}')">➕ neste dia</button></div>${items}</div>`;
+  }
+  el.innerHTML=html||`<div class="empty"><div class="empty-ic">📭</div><div class="empty-tx">Nenhuma viagem no mês com esses filtros</div></div>`;
+  const sm=document.getElementById('agenda-summary'); if(sm) sm.textContent=`${total} viagem(ns) no mês`;
 }
 // O motorista cobre esse dia? Usa a escala (days[] ou legado from/to). Sem escala = contrato todo.
 function tripDriverCoversDay(t, name, dk){
@@ -5444,9 +6095,10 @@ function renderAgendaDrivers(){
     const names=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]);
     names.forEach(nm=>{ if(nm && !cadNorm.has(_norm(nm))) usados.add(nm); });
   });
-  const drivers=[...cad, ...usados];
+  let drivers=[...cad, ...usados];
+  if(agendaDrvFilter!=='all') drivers=drivers.filter(nm=>_norm(nm)===_norm(agendaDrvFilter));
   const weekStartKey=dayKey(days[0]), weekEndKey=dayKey(days[6]);
-  const weekTrips=(DB.trips||[]).filter(t=>{
+  const weekTrips=(DB.trips||[]).filter(agendaTripPasses).filter(t=>{
     const s=t.date||t.departureDate||''; const e=t.returnDate||s; if(!s) return false;
     return s<=weekEndKey && e>=weekStartKey;
   });
@@ -5493,81 +6145,128 @@ function renderAgendaDrivers(){
     <tbody>${rowsHtml}</tbody></table>`;
 }
 
+// ── Helpers da lista de viagens (Fase 4) ──
+function tripServiceLabel(t){
+  const m={transfer:'Transfer',fretamento:'Fretamento / van',corporativo:'Corporativo',diaria:'Diária'};
+  if(t.serviceMode&&m[t.serviceMode]) return m[t.serviceMode];
+  const tm={fixo:'Fretamento',avulso:'Viagem eventual',diaria:'Diária',aluguel:'Aluguel'};
+  return tm[t.type]||(t.type||'—');
+}
+function _tripSvcKey(t){ return t.serviceMode || ({fixo:'corporativo',diaria:'diaria',aluguel:'diaria'}[t.type]) || 'transfer'; }
+function tripStatusInfo(t){ const s=t.driverStatus||'programada';
+  if(s==='andamento') return {cls:'st-and',label:'Em andamento'};
+  if(s==='finalizada') return {cls:'st-fim',label:'Finalizada'};
+  return {cls:'st-prog',label:'Programada'};
+}
+function tripReceivedInfo(t){
+  const insts=(t.paymentPlan&&Array.isArray(t.paymentPlan.installments))?t.paymentPlan.installments:[];
+  const total=insts.reduce((s,i)=>s+n(i.amount),0);
+  const rec=insts.filter(i=>i.receivedAt&&n(i.amount)>0).reduce((s,i)=>s+n(i.amount),0);
+  if(total<=0) return {cls:'rcv-no',label:'—'};
+  if(rec<=0) return {cls:'rcv-no',label:'A receber'};
+  if(rec>=total-0.001) return {cls:'rcv-ok',label:'Recebido'};
+  return {cls:'rcv-part',label:R(rec)+' de '+R(total)};
+}
 function renderTrips(){
-  // Populate vehicle filter — preserva seleção atual ao re-renderizar
-  const vf=document.getElementById('trip-veh-filter');
-  const prevValue=vf?.value||'all';
-  if(vf){
-    vf.innerHTML='<option value="all">Todos os veículos</option>'+
-      DB.vehicles.map(v=>`<option value="${v.id}">${v.plate} — ${v.model}</option>`).join('');
-    // Restaura a seleção se o veículo ainda existir
-    if(Array.from(vf.options).some(o=>o.value===prevValue)) vf.value=prevValue;
-  }
+  const vf=document.getElementById('trip-veh-filter'); const prev=vf?.value||'all';
+  if(vf){ vf.innerHTML='<option value="all">Todos os veículos</option>'+DB.vehicles.map(v=>`<option value="${v.id}">${v.plate} — ${v.model}</option>`).join(''); if([...vf.options].some(o=>o.value===prev)) vf.value=prev; }
   const vFilter=vf?.value||'all';
-  // Ordenação: 🟢 em andamento fixas no topo; todo o resto em ordem DECRESCENTE
-  // de data (mais recente primeiro) — simples e previsível de localizar.
-  const trips=DB.trips.filter(t=>inMonth(t.date||t.departureDate,currentYear,currentMonth)&&(vFilter==='all'||t.vehicleId===vFilter))
-    .sort((a,b)=>{
-      const aAnd=(a.driverStatus||'')==='andamento'?0:1;
-      const bAnd=(b.driverStatus||'')==='andamento'?0:1;
-      if(aAnd!==bAnd) return aAnd-bAnd;
-      const da=(a.date||a.departureDate||''), db=(b.date||b.departureDate||'');
-      return db.localeCompare(da);   // DESC: últimas realizadas primeiro
-    });
+  const q=(document.getElementById('tl-search')?.value||'').trim().toLowerCase();
+  const stFilter=document.getElementById('tl-status')?.value||'all';
+  const svcFilter=document.getElementById('tl-svc')?.value||'all';
+  const sort=document.getElementById('tl-sort')?.value||'date_desc';
 
-  let totalRev=0,totalExp=0,totalProfit=0,anyReal=false;
-  const rows=trips.map(t=>{
-    // Colunas de valores: visão CONTÁBIL (exatamente o que você lançou — nada "some").
-    // Margem real (diesel por custo/km móvel) aparece como indicação secundária.
-    const c=calcTrip(t);
-    const cr=calcTripReal(t);
-    if(cr.real) anyReal=true;
-    totalRev+=n(t.grossRevenue);totalExp+=c.totalExpenses;totalProfit+=c.netProfit;
+  let trips=DB.trips.filter(t=>inMonth(t.date||t.departureDate,currentYear,currentMonth)&&(vFilter==='all'||t.vehicleId===vFilter));
+  if(stFilter!=='all') trips=trips.filter(t=>(t.driverStatus||'programada')===stFilter);
+  if(svcFilter!=='all') trips=trips.filter(t=>_tripSvcKey(t)===svcFilter);
+  if(q) trips=trips.filter(t=>[t.client,t.passengerName,t.origin,t.destination,t.driverName,(t.driverNames||[]).join(' '),tripServiceLabel(t)].filter(Boolean).join(' ').toLowerCase().includes(q));
+  trips.sort((a,b)=>{
+    if(sort==='date_asc') return (a.date||'').localeCompare(b.date||'');
+    if(sort==='rev_desc') return n(b.grossRevenue)-n(a.grossRevenue);
+    if(sort==='margin_desc') return calcTrip(b).profitMargin-calcTrip(a).profitMargin;
+    const aa=(a.driverStatus||'')==='andamento'?0:1, bb=(b.driverStatus||'')==='andamento'?0:1;
+    if(aa!==bb) return aa-bb;
+    return (b.date||'').localeCompare(a.date||'');
+  });
+
+  let totalRev=0,totalExp=0,totalProfit=0;
+  const rows=[], cards=[];
+  trips.forEach(t=>{
+    const c=calcTrip(t); totalRev+=n(t.grossRevenue); totalExp+=c.totalExpenses; totalProfit+=c.netProfit;
     const mc=c.profitMargin>=50?'g':c.profitMargin>=20?'y':'r';
-    const km=n(t.kmEnd)-n(t.kmStart);
-    const depDate=fmtDate(t.date||t.departureDate);
-    const retDate=t.returnDate?`<div class="txs txm">↩ ${fmtDate(t.returnDate)}</div>`:'';
-    // Indicador: diesel atribuído por média (viagem sem abastecimento próprio)
-    const fuelTag=cr.real&&!n(t.fuelCost)&&_tripKm(t)>0
-      ?`<span title="Sem abastecimento nesta viagem — diesel estimado pela média do veículo: ${R(cr.fuelAttr)} (${R(cr.costPerKm)}/km). A margem real ao lado já considera esse custo." style="cursor:help;font-size:10px;opacity:.8"> ⛽~</span>`:'';
-    // Margem real como linha secundária quando difere da contábil em 3+ pontos
-    const realTag=cr.real&&Math.abs(cr.profitMargin-c.profitMargin)>=3
-      ?`<div class="txs" style="color:#67e8f9;margin-top:2px" title="Margem real: diesel pelo custo/km do veículo (média móvel 90 dias), independente de onde o tanque foi cheio">real ${Pct(cr.profitMargin)}</div>`:'';
-    return `<tr>
-      <td><div>${depDate}</div>${retDate}</td>
+    const st=tripStatusInfo(t), rcv=tripReceivedInfo(t);
+    const rota=(t.origin||t.destination)?`${t.origin||'?'} <span class="txm">→</span> ${t.destination||'?'}`:(t.description||'—');
+    const cliPax=t.passengerName?`${t.passengerName} <span class="txs txm">· pax</span>`:(t.client||'—');
+    const drv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)||'—';
+    const datas=fmtDate(t.date||t.departureDate)+(t.returnDate&&t.returnDate!==t.date?`<div class="txs txm">↩ ${fmtDate(t.returnDate)}</div>`:'');
+    rows.push(`<tr>
+      <td style="white-space:nowrap">${datas}</td>
+      <td><span class="svc-badge">${tripServiceLabel(t)}</span></td>
+      <td style="min-width:170px;max-width:270px"><div class="tl-route">${rota}</div></td>
+      <td style="min-width:120px">${cliPax}</td>
       <td><span class="badge b">${vehicleName(t.vehicleId)}</span></td>
-      <td>${tripTypeBadge(t.type)}</td>
-      <td style="min-width:230px;max-width:340px"><div style="font-weight:500">${t.origin&&t.destination?`${t.origin} <span class="txm">→</span> ${t.destination}`:(t.description||'—')}${fuelTag}</div>
-        <div class="txs txm">${[t.client,t.subclient?'🏷️ '+t.subclient:'',t.driverName?'🚗 '+t.driverName:''].filter(Boolean).join(' · ')}</div></td>
-      <td class="tpr fb">${R(t.grossRevenue)}</td>
-      <td><span class="badge ${t.hasInvoice?'g':'gz'}">${t.hasInvoice?'Sim':'Não'}</span></td>
-      <td>${km>0?km.toLocaleString('pt-BR')+' km':'—'}</td>
-      <td class="tdr" style="cursor:help" onmouseenter="showExpPop(event,'${t.id}')" onmousemove="showExpPop(event,'${t.id}')" onmouseleave="hideExpPop()" onclick="showExpPop(event,'${t.id}')">${R(c.totalExpenses)}</td>
-      <td class="${c.netProfit>=0?'tsc':'tdr'} fb">${R(c.netProfit)}</td>
-      <td><span class="badge ${mc}">${Pct(c.profitMargin)}</span>${realTag}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-pr btn-xs gestor-only" onclick="sendTripToDriver('${t.id}')" title="Enviar para o motorista (gera link/código)" style="margin-right:2px">📤</button>
-        <button class="btn btn-gh btn-xs gestor-only" onclick="printTripVoucher('${t.id}')" title="Gerar Voucher de Transporte pro cliente (PDF)">🎫</button>
-        <button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${t.id}')">✏️</button>
-        <button class="btn btn-gh btn-xs gestor-only" onclick="confirmDelete('trip','${t.id}')">🗑️</button></td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('trips-tbody').innerHTML=rows||`<tr><td colspan="11"><div class="empty"><div class="empty-ic">🗺️</div><div class="empty-tx">Nenhuma viagem neste período</div></div></td></tr>`;
-
-  if(trips.length){
-    const avgM=totalRev>0?(totalProfit/totalRev)*100:0;
-    document.getElementById('trips-summary').innerHTML=`
-      <div style="display:flex;gap:24px;padding:10px 13px;background:var(--bg3);border-radius:8px;font-size:13px;flex-wrap:wrap">
-        <div><span class="txm">Total Receita:</span> <span class="fb tpr">${R(totalRev)}</span></div>
-        <div><span class="txm">Total Despesas:</span> <span class="fb tdr">${R(totalExp)}</span></div>
-        <div><span class="txm">Lucro Total:</span> <span class="fb ${totalProfit>=0?'tsc':'tdr'}">${R(totalProfit)}</span></div>
-        <div><span class="txm">Margem Média:</span> <span class="fb twn">${Pct(avgM)}</span></div>
-      </div>
-      ${anyReal?`<div class="txs txm" style="padding:6px 13px 0">💡 Valores das colunas = o que foi lançado (contábil). A linha "real %" na margem usa o diesel pelo custo/km do veículo (média móvel 90 dias) — útil quando o tanque de uma viagem foi pago em outra. ⛽~ = viagem sem abastecimento próprio.</div>`:''}`;
-  } else {
-    document.getElementById('trips-summary').innerHTML='';
-  }
+      <td style="white-space:nowrap">${drv}</td>
+      <td><span class="st-badge ${st.cls}">${st.label}</span></td>
+      <td class="tr tpr fb">${R(t.grossRevenue)}</td>
+      <td><span class="rcv-badge ${rcv.cls}">${rcv.label}</span></td>
+      <td class="tr"><span class="badge ${mc}">${Pct(c.profitMargin)}</span></td>
+      <td style="text-align:right"><button class="kebab gestor-only" onclick="toggleTripMenu('${t.id}',event)" title="Ações">⋯</button></td></tr>`);
+    cards.push(`<div class="tl-card">
+      <div class="tc-h"><div class="tc-route">${rota}</div><span class="st-badge ${st.cls}">${st.label}</span></div>
+      <div class="tc-meta"><span>📅 ${fmtDate(t.date||t.departureDate)}</span><span>${tripServiceLabel(t)}</span><span>🚐 ${vehicleName(t.vehicleId)}</span><span>👤 ${drv}</span></div>
+      <div class="txs txm">${cliPax}</div>
+      <div class="tc-fin"><div style="font-size:12.5px"><span class="fb tpr">${R(t.grossRevenue)}</span> · <span class="badge ${mc}">${Pct(c.profitMargin)}</span> · <span class="rcv-badge ${rcv.cls}">${rcv.label}</span></div>
+        <button class="kebab gestor-only" onclick="toggleTripMenu('${t.id}',event)">⋯</button></div></div>`);
+  });
+  const empty=`<div class="empty"><div class="empty-ic">🗺️</div><div class="empty-tx">Nenhuma viagem encontrada</div></div>`;
+  document.getElementById('trips-tbody').innerHTML=rows.join('')||`<tr><td colspan="11">${empty}</td></tr>`;
+  const cardsEl=document.getElementById('trips-cards'); if(cardsEl) cardsEl.innerHTML=cards.join('')||empty;
+  const sumEl=document.getElementById('trips-summary');
+  if(trips.length){ const avgM=totalRev>0?(totalProfit/totalRev)*100:0;
+    sumEl.innerHTML=`<div style="display:flex;gap:22px;padding:11px 15px;background:var(--surface);border:1px solid var(--bd);border-radius:12px;font-size:13px;flex-wrap:wrap;box-shadow:var(--shadow-card)"><div><span class="txm">${trips.length} viagem(ns) ·</span> Receita <span class="fb tpr">${R(totalRev)}</span></div><div>Despesas <span class="fb tdr">${R(totalExp)}</span></div><div>Lucro <span class="fb ${totalProfit>=0?'tsc':'tdr'}">${R(totalProfit)}</span></div><div>Margem <span class="fb twn">${Pct(avgM)}</span></div></div>`;
+  } else sumEl.innerHTML='';
+}
+// Menu de ações com TEXTO (Fase 4)
+function toggleTripMenu(id, ev){
+  ev.stopPropagation();
+  let m=document.getElementById('trip-row-menu');
+  if(!m){ m=document.createElement('div'); m.id='trip-row-menu'; document.body.appendChild(m); document.addEventListener('click',()=>{ m.style.display='none'; }); window.addEventListener('resize',()=>{ m.style.display='none'; }); }
+  if(m.style.display==='block'&&m._id===id){ m.style.display='none'; return; }
+  m._id=id;
+  const a=(lbl,call,cls)=>`<button class="${cls||''}" onclick="event.stopPropagation();document.getElementById('trip-row-menu').style.display='none';${call}">${lbl}</button>`;
+  m.innerHTML=a('Visualizar',`viewTrip('${id}')`)+a('Execução / fechamento',`openTripExecution('${id}')`)+a('Editar',`editTrip('${id}')`)+a('Voucher',`printTripVoucher('${id}')`)+a('Duplicar',`duplicateTrip('${id}')`)+`<div class="sep"></div>`+a('Excluir',`confirmDelete('trip','${id}')`,'del');
+  const r=ev.currentTarget.getBoundingClientRect(); const mw=196;
+  m.style.display='block';
+  m.style.top=(r.bottom+window.scrollY+4)+'px';
+  m.style.left=(Math.max(8, r.right+window.scrollX-mw))+'px';
+}
+function duplicateTrip(id){
+  editTrip(id);
+  document.getElementById('trip-id').value='';
+  document.getElementById('trip-modal-title').textContent='Duplicar viagem';
+  const ex=document.getElementById('wz-exec'); if(ex) ex.style.display='none';
+  try{ wzGoStep(1); }catch(_){}
+}
+function openTripExecution(id){
+  editTrip(id);
+  const ex=document.getElementById('wz-exec'); if(ex){ ex.style.display=''; ex.classList.remove('collapsed'); }
+  try{ wzGoStep(3); }catch(_){}
+  setTimeout(()=>{ const e2=document.getElementById('wz-exec'); if(e2) e2.scrollIntoView({block:'start',behavior:'smooth'}); },140);
+}
+function viewTrip(id){
+  const t=DB.trips.find(x=>x.id===id); if(!t) return;
+  const c=calcTrip(t), st=tripStatusInfo(t), rcv=tripReceivedInfo(t);
+  const rota=(t.origin||t.destination)?`${t.origin||'?'} → ${t.destination||'?'}`:(t.description||'—');
+  const drv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)||'—';
+  const row=(l,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--bd)"><span class="txm">${l}</span><span style="font-weight:600;text-align:right">${v}</span></div>`;
+  let host=document.getElementById('modal-view-trip');
+  if(!host){ host=document.createElement('div'); host.id='modal-view-trip'; host.className='overlay'; document.body.appendChild(host); }
+  host.innerHTML=`<div class="modal" style="max-width:520px"><div class="modal-h"><span class="modal-t">Viagem · ${fmtDate(t.date||t.departureDate)}</span><button class="xbtn" onclick="closeModal('modal-view-trip')">✕</button></div>
+    <div style="margin-bottom:10px"><span class="st-badge ${st.cls}">${st.label}</span> <span class="svc-badge" style="margin-left:8px">${tripServiceLabel(t)}</span></div>
+    ${row('Rota',rota)}${row('Cliente',t.client||'—')}${t.passengerName?row('Passageiro',t.passengerName):''}${row('Veículo',vehicleName(t.vehicleId))}${row('Motorista',drv)}
+    ${row('Receita',R(t.grossRevenue))}${row('Despesas',R(c.totalExpenses))}${row('Lucro',R(c.netProfit)+' · '+Pct(c.profitMargin))}${row('Recebimento',rcv.label)}
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-view-trip')">Fechar</button><button class="btn btn-pr" onclick="closeModal('modal-view-trip');editTrip('${t.id}')">Editar</button></div></div>`;
+  openModal('modal-view-trip');
 }
 
 // ══════════ EXPENSES ══════════
@@ -7343,7 +8042,186 @@ function openTripModal(vId){
   const kmRow=document.getElementById('calc-km-row'); if(kmRow) kmRow.style.display='none';
   const fuelStatsEl=document.getElementById('trip-fuel-stats'); if(fuelStatsEl){ fuelStatsEl.innerHTML=''; fuelStatsEl.style.display='none'; }
   const stSec=document.getElementById('trip-status-section'); if(stSec) stSec.style.display='none';
+  // Fase 3 — tipo de serviço padrão + reset dos controles
+  const _hr=document.getElementById('trip-hasreturn'); if(_hr) _hr.checked=false;
+  const _rk=document.getElementById('trip-requireskm'); if(_rk) _rk.checked=false;
+  _wizManualKm=false;
+  setWeekdaysPreset('clear');
+  setServiceMode('transfer');
+  buildTripWizard();
+  const _ex=document.getElementById('wz-exec'); if(_ex) _ex.style.display='none';   // nova viagem: execução escondida
   openModal('modal-trip');
+}
+
+/* ══════════ FASE 3 — MOTOR DE TIPO DE SERVIÇO ══════════ */
+let _wizManualKm=false;   // gestor mexeu manualmente no "controlar km"?
+document.addEventListener('change',e=>{ if(e.target && e.target.id==='trip-requireskm') _wizManualKm=true; });
+function setServiceMode(mode){
+  window._serviceMode=mode;
+  const typeMap={transfer:'avulso',fretamento:'avulso',corporativo:'fixo',diaria:'diaria'};
+  const sel=document.getElementById('trip-type');
+  if(sel){ sel.value=typeMap[mode]||'avulso'; try{ handleTripTypeChange(sel); }catch(_){} }
+  const rk=document.getElementById('trip-requireskm');
+  if(rk && !_wizManualKm) rk.checked=(mode==='corporativo'||mode==='fretamento');
+  applyServiceModeUI();
+}
+function applyServiceModeUI(){
+  const mode=window._serviceMode;
+  if(!mode){   // viagem com categoria custom legada → mostra o dropdown de tipo, sem modo de serviço
+    const tf=document.getElementById('trip-type')?.closest('.fg'); if(tf) tf.style.display='';
+    document.querySelectorAll('#trip-servicemode .svc-opt').forEach(b=>b.classList.remove('active'));
+    return;
+  }
+  document.querySelectorAll('#trip-servicemode .svc-opt').forEach(b=>b.classList.toggle('active',b.dataset.svc===mode));
+  const isCorp=mode==='corporativo';
+  const hasReturn=!!document.getElementById('trip-hasreturn')?.checked;
+  const show=(el,on)=>{ if(el) el.style.display=on?'':'none'; };
+  const fgOf=id=>document.getElementById(id)?.closest('.fg');
+  show(document.getElementById('trip-recurring'), isCorp);
+  show(document.getElementById('trip-hasreturn-wrap'), !isCorp);
+  const showReturn = isCorp || hasReturn;
+  show(fgOf('trip-return-date'), showReturn);
+  show(fgOf('trip-return-time'), showReturn && !isCorp);
+  const shiftsBox=document.getElementById('trip-driver-shifts');
+  if(shiftsBox && isCorp) shiftsBox.style.display='none';
+  const dL=document.getElementById('trip-date-label'), rL=document.getElementById('trip-return-date-label');
+  if(dL) dL.textContent = isCorp?'📅 Início do contrato' : (mode==='diaria'?'📅 Data / início':'📅 Data de ida');
+  if(rL) rL.textContent = isCorp?'📅 Fim do contrato' : '📅 Data de volta';
+  const typeFg=fgOf('trip-type'); if(typeFg) typeFg.style.display='none';       // serviceMode comanda o type legado
+  show(document.getElementById('trip-wait-section'), mode!=='transfer');         // espera: some no transfer
+  if(isCorp) applyRecurringToShifts();
+}
+function toggleWeekday(btn){ btn.classList.toggle('active'); applyRecurringToShifts(); }
+function setWeekdaysPreset(p){
+  document.querySelectorAll('#trip-weekdays .wd-opt').forEach(b=>{ const wd=+b.dataset.wd;
+    if(p==='clear') b.classList.remove('active');
+    else if(p==='all') b.classList.add('active');
+    else if(p==='weekdays') b.classList.toggle('active', wd>=1&&wd<=5);
+  });
+  applyRecurringToShifts();
+}
+function _selectedWeekdays(){ return [...document.querySelectorAll('#trip-weekdays .wd-opt.active')].map(b=>+b.dataset.wd); }
+function generateRecurringDays(){
+  const start=document.getElementById('trip-date')?.value, end=document.getElementById('trip-return-date')?.value;
+  const wd=_selectedWeekdays(); if(!start||!end||!wd.length) return [];
+  const s=new Date(start+'T00:00:00'), e=new Date(end+'T00:00:00'); if(isNaN(s)||isNaN(e)||e<s) return [];
+  const days=[]; for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){ if(wd.includes(d.getDay())) days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`); }
+  return days;
+}
+// Corporativo: aplica os dias gerados como escala de CADA motorista designado (gera driverShifts.days[])
+function applyRecurringToShifts(){
+  if((window._serviceMode||'')!=='corporativo') return;
+  const days=generateRecurringDays();
+  (typeof _tripDriversTmp!=='undefined'?_tripDriversTmp:[]).forEach(nm=>{
+    if(days.length) _tripShiftsTmp[_norm(nm)]={name:nm,days:days.slice()};
+    else delete _tripShiftsTmp[_norm(nm)];
+  });
+  const info=document.getElementById('trip-recurring-info');
+  if(info) info.textContent = days.length ? `✓ ${days.length} dia(s) de serviço gerado(s) no período.` : 'Marque o período (ida/volta) e os dias da semana pra gerar a escala.';
+}
+
+/* ══════════ FASE 3B — WIZARD DE 3 ETAPAS (reorganiza o modal por movimentação de DOM) ══════════ */
+let _wzStep=1, _wzBuilt=false;
+function buildTripWizard(){
+  if(!_wzBuilt){
+    const anchor=document.getElementById('trip-id'); if(!anchor) return;
+    // captura os shells ANTES de mover os campos (pra esconder depois)
+    const shellDados=document.getElementById('trip-vehicle')?.closest('.fsec');
+    const shellReceita=document.getElementById('trip-revenue')?.closest('.fsec');
+    const shellKm=document.getElementById('trip-km-estimated')?.closest('.fsec');
+    const oldFooter=[...document.querySelectorAll('#modal-trip .fl-row')].find(d=>d.querySelector('button[onclick="saveTrip()"]'));
+
+    const wrap=document.createElement('div'); wrap.id='wz-wrap';
+    wrap.innerHTML=`
+      <div class="wz-stepper" id="wz-stepper">
+        <div class="wz-step-ind active" data-s="1"><span class="wz-num">1</span> Serviço e Agenda</div>
+        <div class="wz-step-ind" data-s="2"><span class="wz-num">2</span> Operação</div>
+        <div class="wz-step-ind" data-s="3"><span class="wz-num">3</span> Comercial e Recebimento</div>
+      </div>
+      <div class="wz-panel" id="wz-step-1"></div>
+      <div class="wz-panel" id="wz-step-2" style="display:none"></div>
+      <div class="wz-panel" id="wz-step-3" style="display:none"></div>
+      <div class="wz-nav">
+        <button type="button" class="btn btn-gh" onclick="closeModal('modal-trip')">Cancelar</button>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-gh" id="wz-back" onclick="wzGoStep(_wzStep-1)" style="display:none">← Voltar</button>
+          <button type="button" class="btn btn-pr" id="wz-next" onclick="wzGoStep(_wzStep+1)">Próximo →</button>
+          <button type="button" class="btn btn-pr" id="wz-save" onclick="saveTrip()" style="display:none">💾 Salvar viagem</button>
+        </div>
+      </div>`;
+    anchor.insertAdjacentElement('afterend', wrap);
+    const s1=wrap.querySelector('#wz-step-1'), s2=wrap.querySelector('#wz-step-2'), s3=wrap.querySelector('#wz-step-3');
+    const fg=id=>{ const el=document.getElementById(id); return el?el.closest('.fg'):null; };
+    const put=(panel,el,full)=>{ if(!panel||!el) return; if(full) el.classList.add('full'); panel.appendChild(el); };
+
+    // STEP 1 — Serviço e Agenda
+    put(s1, document.getElementById('trip-servicemode-sec'), true);
+    put(s1, fg('trip-client'), true);
+    put(s1, fg('trip-origin')); put(s1, fg('trip-destination'));
+    put(s1, fg('trip-date')); put(s1, fg('trip-pickup-time'));
+    put(s1, fg('trip-return-date')); put(s1, fg('trip-return-time'));
+
+    // STEP 2 — Operação
+    put(s2, fg('trip-vehicle')); put(s2, fg('trip-passengers'));
+    put(s2, fg('trip-driver-name'), true);
+    put(s2, fg('trip-passenger-name')); put(s2, fg('trip-passenger-phone'));
+    put(s2, fg('trip-client-phone')); put(s2, fg('trip-km-estimated'));
+    put(s2, fg('trip-itinerary'), true);
+    put(s2, document.getElementById('trip-wait-section'), true);
+
+    // STEP 3 — Comercial e Recebimento
+    put(s3, fg('trip-revenue')); put(s3, fg('trip-nf'));
+    put(s3, fg('trip-nf-value')); put(s3, fg('trip-tax-rate')); put(s3, fg('trip-tax-amount'));
+    put(s3, document.getElementById('trip-payment-type')?.closest('.fsec'), true);
+    put(s3, fg('trip-notes'), true);
+    const rz=document.createElement('div'); rz.id='wz-resumo'; s3.appendChild(rz);
+
+    // Execução e fechamento (dentro do step 3, colapsável)
+    const exec=document.createElement('div'); exec.id='wz-exec'; exec.className='collapsed';
+    exec.innerHTML=`<div class="exec-h" onclick="document.getElementById('wz-exec').classList.toggle('collapsed')">
+      <span style="font-weight:700;font-size:13px">🔧 Execução e fechamento <span class="txs txm" style="font-weight:400">— km real, despesas, pagamentos, resultado</span></span>
+      <span class="txs txm">abrir / fechar</span></div><div class="exec-body" style="margin-top:12px"></div>`;
+    const eb=exec.querySelector('.exec-body');
+    ['driver-payment-section','rental-fields'].forEach(id=>{ const e=document.getElementById(id); if(e) eb.appendChild(e); });
+    ['trip-km-start','trip-km-end','trip-km-total'].forEach(id=>{ const f=fg(id); if(f) eb.appendChild(f); });
+    ['trip-km-estimated-vs','trip-rateio-info','trip-dailylog-info'].forEach(id=>{ const e=document.getElementById(id); if(e) eb.appendChild(e); });
+    const despesas=document.getElementById('trip-fuel')?.closest('.fsec'); if(despesas) eb.appendChild(despesas);
+    const resultado=document.getElementById('calc-revenue')?.closest('.fsec'); if(resultado) eb.appendChild(resultado);
+    const stEl=document.getElementById('trip-status-section'); if(stEl) eb.appendChild(stEl);
+    s3.appendChild(exec);
+
+    // esconde os shells vazios + rodapé antigo
+    [shellDados,shellReceita,shellKm].forEach(sh=>{ if(sh) sh.style.display='none'; });
+    if(oldFooter) oldFooter.style.display='none';
+    _wzBuilt=true;
+  }
+  wzGoStep(1);
+}
+function wzGoStep(n){
+  n=Math.max(1,Math.min(3,n)); _wzStep=n;
+  for(let i=1;i<=3;i++){ const p=document.getElementById('wz-step-'+i); if(p) p.style.display=(i===n)?'':'none'; }
+  document.querySelectorAll('#wz-stepper .wz-step-ind').forEach(el=>{ const s=+el.dataset.s; el.classList.toggle('active',s===n); el.classList.toggle('done',s<n); });
+  const bk=document.getElementById('wz-back'), nx=document.getElementById('wz-next'), sv=document.getElementById('wz-save');
+  if(bk) bk.style.display=n>1?'':'none';
+  if(nx) nx.style.display=n<3?'':'none';
+  if(sv) sv.style.display=n===3?'':'none';
+  if(n===3) renderWizardResumo();
+  const m=document.querySelector('#modal-trip .modal'); if(m) m.scrollTop=0;
+}
+function renderWizardResumo(){
+  const rz=document.getElementById('wz-resumo'); if(!rz) return;
+  const g=id=>document.getElementById(id)?.value||'';
+  const svcMap={transfer:'Transfer executivo',fretamento:'Fretamento / van',corporativo:'Corporativo recorrente',diaria:'Diária / à disposição'};
+  const veh=(DB.vehicles||[]).find(v=>v.id===g('trip-vehicle'))||{};
+  const vehTxt=veh.plate?`${veh.plate} · ${[veh.brand,veh.model].filter(Boolean).join(' ')}`:'—';
+  const drv=(typeof _tripDriversTmp!=='undefined'&&_tripDriversTmp.length)?_tripDriversTmp.join(', '):'—';
+  const rota=(g('trip-origin')||g('trip-destination'))?`${g('trip-origin')||'?'} → ${g('trip-destination')||'?'}`:'—';
+  const datas=g('trip-date')?fmtDate(g('trip-date'))+(g('trip-return-date')?' → '+fmtDate(g('trip-return-date')):''):'—';
+  const payMap={avista:'À vista',entrada_saldo:'Entrada + saldo',prazo_fim:'Ao finalizar',prazo_15:'15 dias',prazo_20:'20 dias',prazo_30:'30 dias',prazo_45:'45 dias',prazo_custom:'Prazo personalizado',custom:'Parcelado'};
+  const item=(l,v)=>`<div><div class="rz-l">${l}</div><div class="rz-v">${v||'—'}</div></div>`;
+  rz.innerHTML=`<div class="rz-t">📋 Resumo — confira antes de salvar</div><div class="rz-grid">
+    ${item('Serviço',svcMap[window._serviceMode]||'—')}${item('Cliente',g('trip-client'))}${item('Datas',datas)}${item('Rota',rota)}
+    ${item('Veículo',vehTxt)}${item('Motorista(s)',drv)}${item('Valor cobrado',g('trip-revenue')?R(n(g('trip-revenue'))):'—')}${item('Recebimento',payMap[g('trip-payment-type')]||'—')}</div>`;
 }
 
 // Calcula consumo médio (km/L) a partir dos abastecimentos do motorista.
@@ -7940,6 +8818,18 @@ function editTrip(id){
   renderTripDailyLog(t);
   refreshTripStatusSection(t);
   applyTripTypeUI();
+  // Fase 3 — restaura o tipo de serviço e os controles
+  const _rkEl=document.getElementById('trip-requireskm'); if(_rkEl) _rkEl.checked=!!t.requiresKm;
+  const _hrEl=document.getElementById('trip-hasreturn'); if(_hrEl) _hrEl.checked=!!t.returnDate;
+  _wizManualKm=true;   // não sobrescrever o requiresKm restaurado
+  const _stdTypes=['avulso','fixo','diaria','aluguel'];
+  if(t.serviceMode || _stdTypes.includes(t.type||'avulso')){
+    setServiceMode(t.serviceMode || ({fixo:'corporativo',diaria:'diaria'}[t.type]) || 'transfer');
+  } else {
+    window._serviceMode=null; applyServiceModeUI();   // categoria custom legada
+  }
+  buildTripWizard();
+  const _ex=document.getElementById('wz-exec'); if(_ex) _ex.style.display='';   // edição: execução disponível
   openModal('modal-trip');
 }
 
@@ -8353,6 +9243,7 @@ function saveTrip(){
   const _origin=document.getElementById('trip-origin').value.trim();
   const _destination=document.getElementById('trip-destination').value.trim();
   const _description = (_origin||_destination) ? [_origin, _destination].filter(Boolean).join(' → ') : '';
+  try{ applyRecurringToShifts(); }catch(_){}   // corporativo: gera a escala de dias antes de salvar
   const trip={
     id:id||uid(),vehicleId:document.getElementById('trip-vehicle').value,
     date:document.getElementById('trip-date').value,
@@ -8368,6 +9259,8 @@ function saveTrip(){
     driverNames:_tripDriversTmp.length?_tripDriversTmp.slice():null,
     driverName:_tripDriversTmp[0]||'',
     driverShifts:buildTripShifts(),   // 📆 escala: quais dias cada motorista cobre (vazio = contrato todo)
+    serviceMode:(window._serviceMode||null),   // Fase 3: transfer|fretamento|corporativo|diaria (opcional, retrocompat)
+    requiresKm:!!document.getElementById('trip-requireskm')?.checked,
     pickupTime:(document.getElementById('trip-pickup-time')?.value)||'',
     returnTime:(document.getElementById('trip-return-time')?.value)||'',
     waitToleranceMin:(document.getElementById('trip-wait-tolerance')?.value!=='')?n(document.getElementById('trip-wait-tolerance')?.value):null,
@@ -9409,102 +10302,58 @@ function getAllInstallments(vFilter){
   return list;
 }
 
+function renderRcvRow(inst){
+  const statusConfig={overdue:{cls:'rcv-overdue',pill:'rcv-pill-overdue',label:'Atrasado',icon:'🔴'},today:{cls:'rcv-today',pill:'rcv-pill-today',label:'Vence hoje',icon:'🟡'},upcoming:{cls:'rcv-upcoming',pill:'rcv-pill-upcoming',label:'A vencer',icon:'⏳'},received:{cls:'rcv-received',pill:'rcv-pill-received',label:'Recebido',icon:'✅'}};
+  const pTypeLabel={avista:'À Vista',entrada_saldo:'Entrada+Saldo',prazo_fim:'Ao Finalizar',prazo_15:'15 dias',prazo_20:'20 dias',prazo_30:'30 dias',prazo_45:'45 dias',prazo_custom:'Prazo Custom',custom:'Parcelado'};
+  const methodLabel={pix:'PIX',dinheiro:'Dinheiro',transferencia:'Transferência',cartao:'Cartão',cheque:'Cheque',outro:'Outro'};
+  const sc=statusConfig[inst.status]||statusConfig.upcoming;
+  const daysLabel=inst.status==='received'?`Recebido em ${fmtDate(inst.receivedAt)}`:inst.diffDays===null?(inst.pType==='prazo_fim'?'🏁 Aguardando finalizar':'Sem data'):inst.diffDays===0?'Vence hoje!':inst.diffDays<0?`Venceu há ${Math.abs(inst.diffDays)} dia(s)`:`Em ${inst.diffDays} dia(s)`;
+  const prazoTag=inst.pType&&inst.pType!=='avista'&&inst.pType!=='custom'?`<span class="badge p" style="font-size:10px;margin-left:4px">📅 ${pTypeLabel[inst.pType]||inst.pType}</span>`:'';
+  const zero=n(inst.amount)<=0;
+  return `<div class="rcv-row ${sc.cls}">
+    <div><div style="font-weight:600;font-size:13px">${inst.label||'Parcela'}</div>
+      <div class="txs txm">${inst.tripDesc}${inst.client?' · '+inst.client:''}</div>
+      <div class="txs txm" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="badge b" style="font-size:10px">${inst.plate}</span>${prazoTag}</div></div>
+    <div><div style="font-size:18px;font-weight:700;color:${inst.status==='received'?'var(--sc)':'var(--pr)'}">${R(inst.amount)}</div><span class="rcv-pill ${sc.pill}">${sc.icon} ${sc.label}</span></div>
+    <div><div style="font-weight:500">${inst.dueDate?fmtDate(inst.dueDate):'A definir'}</div><div class="txs txm">${daysLabel}</div>${inst.receivedMethod?`<div class="txs txm">${methodLabel[inst.receivedMethod]||inst.receivedMethod}</div>`:''}</div>
+    <div style="white-space:nowrap;display:flex;flex-direction:column;gap:4px">
+      ${zero?'':(inst.status!=='received'?`<button class="btn btn-sc btn-sm" onclick="openMarkReceived('${inst.tripId}','${inst.id}')">Marcar recebido</button>`:`<button class="btn btn-gh btn-sm" onclick="undoReceived('${inst.tripId}','${inst.id}')">Desfazer</button>`)}
+      ${inst.status!=='received'&&!inst.dueDate?`<button class="btn btn-ol btn-xs" onclick="setInstDueDate('${inst.tripId}','${inst.id}')">Definir data</button>`:''}</div>
+    <div><button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${inst.tripId}')">Abrir viagem</button></div>
+  </div>`;
+}
 function renderReceivables(){
-  // Populate vehicle filter
   const vf=document.getElementById('rcv-veh-filter');
-  if(vf) vf.innerHTML='<option value="all">Todos os veículos</option>'+
-    DB.vehicles.map(v=>`<option value="${v.id}">${v.plate} — ${v.model}</option>`).join('');
+  if(vf){ const cur=vf.value||'all'; vf.innerHTML='<option value="all">Todos os veículos</option>'+DB.vehicles.map(v=>`<option value="${v.id}">${v.plate} — ${v.model}</option>`).join(''); vf.value=[...vf.options].some(o=>o.value===cur)?cur:'all'; }
   const vFilter=vf?.value||'all';
-
   const all=getAllInstallments(vFilter);
-  const pending=all.filter(i=>i.status!=='received');
-  const received=all.filter(i=>i.status==='received');
-  const totalPending=pending.reduce((s,i)=>s+n(i.amount),0);
-  const totalOverdue=all.filter(i=>i.status==='overdue').reduce((s,i)=>s+n(i.amount),0);
+  const nz=all.filter(i=>n(i.amount)>0);          // parcelas com valor (entram nos totais)
+  const zeroed=all.filter(i=>n(i.amount)<=0);      // registros zerados (fora dos totais)
+  const notRec=nz.filter(i=>i.status!=='received');
+  const overdue=notRec.filter(i=>i.status==='overdue');
+  const received=nz.filter(i=>i.status==='received');
+  const totalPending=notRec.reduce((s,i)=>s+n(i.amount),0);
+  const totalOverdue=overdue.reduce((s,i)=>s+n(i.amount),0);
   const totalReceived=received.reduce((s,i)=>s+n(i.amount),0);
-  const totalAll=all.reduce((s,i)=>s+n(i.amount),0);
-
   document.getElementById('rcv-kpis').innerHTML=`
-    <div class="kpi"><div class="kpi-lbl">💰 Total a Receber</div>
-      <div class="kpi-val tpr">${R(totalPending)}</div>
-      <div class="kpi-sub">${pending.length} parcela(s) em aberto</div></div>
-    <div class="kpi"><div class="kpi-lbl">🔴 Atrasado</div>
-      <div class="kpi-val tdr">${R(totalOverdue)}</div>
-      <div class="kpi-sub">${all.filter(i=>i.status==='overdue').length} parcela(s) vencida(s)</div></div>
-    <div class="kpi"><div class="kpi-lbl">✅ Já Recebido</div>
-      <div class="kpi-val tsc">${R(totalReceived)}</div>
-      <div class="kpi-sub">${received.length} pagamento(s)</div></div>
-    <div class="kpi"><div class="kpi-lbl">📊 Total Geral</div>
-      <div class="kpi-val">${R(totalAll)}</div>
-      <div class="kpi-sub">Todas as parcelas</div></div>`;
-
-  let items=all;
-  if(rcvTab==='pending') items=pending;
-  else if(rcvTab==='received') items=received;
-
-  if(!items.length){
-    document.getElementById('rcv-list').innerHTML=`<div class="empty">
-      <div class="empty-ic">${rcvTab==='received'?'✅':'💰'}</div>
-      <div class="empty-tx">${rcvTab==='received'?'Nenhum recebimento registrado':'Nenhuma parcela em aberto'}</div>
-      <div class="txm txs">As parcelas aparecem aqui quando você define um plano de recebimento ao lançar viagens.</div>
-    </div>`;
-    return;
-  }
-
-  const statusConfig={
-    overdue:{cls:'rcv-overdue',pill:'rcv-pill-overdue',label:'Atrasado',icon:'🔴'},
-    today:  {cls:'rcv-today',  pill:'rcv-pill-today',  label:'Vence Hoje',icon:'🟡'},
-    upcoming:{cls:'rcv-upcoming',pill:'rcv-pill-upcoming',label:'A Vencer',icon:'⏳'},
-    received:{cls:'rcv-received',pill:'rcv-pill-received',label:'Recebido',icon:'✅'},
-  };
-
-  const pTypeLabel={
-    avista:'À Vista',entrada_saldo:'Entrada+Saldo',
-    prazo_fim:'Ao Finalizar',prazo_15:'15 dias',prazo_20:'20 dias',
-    prazo_30:'30 dias',prazo_45:'45 dias',prazo_custom:'Prazo Custom',custom:'Parcelado'
-  };
-  document.getElementById('rcv-list').innerHTML=items.map(inst=>{
-    const sc=statusConfig[inst.status]||statusConfig.upcoming;
-    const daysLabel=inst.status==='received'
-      ?`Recebido em ${fmtDate(inst.receivedAt)}`
-      :inst.diffDays===null
-        ?(inst.pType==='prazo_fim'?'🏁 Aguardando finalizar serviço':'Sem data')
-        :inst.diffDays===0?'Vence hoje!'
-        :inst.diffDays<0?`Venceu há ${Math.abs(inst.diffDays)} dia(s)`
-        :`Em ${inst.diffDays} dia(s)`;
-    const methodLabel={pix:'PIX',dinheiro:'Dinheiro',transferencia:'Transferência',cartao:'Cartão',cheque:'Cheque',outro:'Outro'};
-    const prazoTag=inst.pType&&inst.pType!=='avista'&&inst.pType!=='custom'
-      ?`<span class="badge p" style="font-size:10px;margin-left:4px">📅 ${pTypeLabel[inst.pType]||inst.pType}</span>`:'';
-    return `<div class="rcv-row ${sc.cls}">
-      <div>
-        <div style="font-weight:600;font-size:13px">${inst.label||'Parcela'}</div>
-        <div class="txs txm">${inst.tripDesc}${inst.client?' · '+inst.client:''}</div>
-        <div class="txs txm" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">
-          <span class="badge b" style="font-size:10px">${inst.plate}</span>${prazoTag}
-        </div>
-      </div>
-      <div>
-        <div style="font-size:18px;font-weight:700;color:${inst.status==='received'?'var(--sc)':'var(--prl)'}">
-          ${R(inst.amount)}</div>
-        <span class="rcv-pill ${sc.pill}">${sc.icon} ${sc.label}</span>
-      </div>
-      <div>
-        <div style="font-weight:500">${inst.dueDate?fmtDate(inst.dueDate):'A definir'}</div>
-        <div class="txs txm">${daysLabel}</div>
-        ${inst.receivedMethod?`<div class="txs txm">${methodLabel[inst.receivedMethod]||inst.receivedMethod}</div>`:''}
-      </div>
-      <div style="white-space:nowrap;display:flex;flex-direction:column;gap:4px">
-        ${inst.status!=='received'
-          ?`<button class="btn btn-sc btn-sm" onclick="openMarkReceived('${inst.tripId}','${inst.id}')">✅ Recebido</button>`
-          :`<button class="btn btn-gh btn-sm" onclick="undoReceived('${inst.tripId}','${inst.id}')">↩️ Desfazer</button>`}
-        ${inst.status!=='received'&&!inst.dueDate
-          ?`<button class="btn btn-ol btn-xs" onclick="setInstDueDate('${inst.tripId}','${inst.id}')">📅 Definir data</button>`:''}
-      </div>
-      <div>
-        <button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${inst.tripId}')">✏️</button>
-      </div>
-    </div>`;
+    <div class="kpi"><div class="kpi-lbl">Total a receber</div><div class="kpi-val tpr">${R(totalPending)}</div><div class="kpi-sub">${notRec.length} parcela(s) em aberto</div></div>
+    <div class="kpi"><div class="kpi-lbl">Vencido</div><div class="kpi-val tdr">${R(totalOverdue)}</div><div class="kpi-sub">${overdue.length} parcela(s) vencida(s)</div></div>
+    <div class="kpi"><div class="kpi-lbl">Já recebido</div><div class="kpi-val tsc">${R(totalReceived)}</div><div class="kpi-sub">${received.length} pagamento(s)</div></div>
+    <div class="kpi"><div class="kpi-lbl">Registros zerados</div><div class="kpi-val">${zeroed.length}</div><div class="kpi-sub">R$ 0 · fora dos totais</div></div>`;
+  const groups=[
+    {title:'Vencidas',color:'var(--dg)',items:overdue,sum:true},
+    {title:'Vencendo hoje',color:'var(--wn)',items:notRec.filter(i=>i.status==='today'),sum:true},
+    {title:'Próximos 7 dias',color:'var(--pr)',items:notRec.filter(i=>i.dueDate&&i.diffDays>0&&i.diffDays<=7),sum:true},
+    {title:'A vencer (8+ dias)',color:'var(--pr)',items:notRec.filter(i=>i.dueDate&&i.diffDays>7),sum:true},
+    {title:'Sem vencimento',color:'#64748b',items:notRec.filter(i=>!i.dueDate),sum:true},
+    {title:'Recebidas',color:'var(--sc)',items:received,sum:true},
+    {title:'Registros zerados',color:'#94a3b8',items:zeroed,sum:false}
+  ];
+  const html=groups.filter(g=>g.items.length).map(g=>{
+    const tot=g.items.reduce((s,i)=>s+n(i.amount),0);
+    return `<div style="margin-bottom:18px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 13px;border-left:4px solid ${g.color};background:var(--bg3);border-radius:8px;margin-bottom:8px"><span style="font-weight:800;font-size:13px">${g.title} <span class="txm" style="font-weight:600">· ${g.items.length}</span></span>${g.sum?`<span class="fb">${R(tot)}</span>`:'<span class="txs txm">não somam</span>'}</div>${g.items.map(renderRcvRow).join('')}</div>`;
   }).join('');
+  document.getElementById('rcv-list').innerHTML=html||`<div class="empty"><div class="empty-ic">💰</div><div class="empty-tx">Nenhuma parcela</div><div class="txm txs">As parcelas aparecem quando você define um plano de recebimento ao lançar viagens.</div></div>`;
 }
 
 // Helper: add N days to a date string
@@ -12433,6 +13282,52 @@ function logoutApp(){
   if(!confirm('Sair do painel? Você precisará digitar a senha novamente.')) return;
   sessionStorage.removeItem('fleetcontrol_authok');
   location.reload();
+}
+
+// ═══════ SANDBOX DE TESTE — faixa de aviso + dados fictícios + entrada direta ═══════
+function injectTesteBanner(){
+  if(document.getElementById('__teste_banner__')) return;
+  const css="#__teste_banner__{position:fixed;top:0;left:0;right:0;height:26px;line-height:26px;text-align:center;background:repeating-linear-gradient(45deg,#b45309,#b45309 14px,#92400e 14px,#92400e 28px);color:#fff;font:700 11.5px/26px 'Inter',system-ui,sans-serif;letter-spacing:1px;z-index:100000;box-shadow:0 2px 10px rgba(0,0,0,.45)}body{padding-top:26px !important}";
+  document.head.insertAdjacentHTML('beforeend','<style>'+css+'</style>');
+  document.body.insertAdjacentHTML('afterbegin','<div id="__teste_banner__">AMBIENTE DE TESTE — SEM CONEXÃO COM A PRODUÇÃO</div>');
+}
+function seedTesteData(){
+  try{
+    if(localStorage.getItem('fleetcontrol_db')) return;   // já semeado nesta máquina
+    const seed = {
+      settings:{ companyName:'MuvCity Transfer — AMBIENTE DE TESTE', companyLogo:'', defaultTaxRate:6, currency:'BRL',
+        maintenance:{ oil:{intervalKm:10000,warnKm:1000}, tire:{intervalKm:40000,warnKm:3000}, ac:{intervalKm:15000,warnKm:1500} } },
+      vehicles:[
+        {id:'vt1',brand:'Mercedes-Benz',model:'Sprinter (Van Turismo)',plate:'TST-1A11',year:2023,color:'#2563eb',currentKm:82000,purchaseDate:'2025-01-10',purchaseValue:350000,active:true,fuelTargetKmPerL:9,tankCapacityL:75,cashReserve:0,cashReserveHistory:[]},
+        {id:'vt2',brand:'Toyota',model:'Corolla (Transfer Executivo)',plate:'TST-2B22',year:2024,color:'#0ea5e9',currentKm:41000,purchaseDate:'2025-06-01',purchaseValue:150000,active:true,fuelTargetKmPerL:12,tankCapacityL:50,cashReserve:0,cashReserveHistory:[]}
+      ],
+      clients:[
+        {id:'ct1',name:'Agência Turismo Sol',phone:'(49) 90000-0001',type:'pj',subclients:[]},
+        {id:'ct2',name:'Empresa ACME Ltda',phone:'(49) 90000-0002',type:'pj',subclients:['RH','Comercial']},
+        {id:'ct3',name:'João Particular',phone:'(49) 90000-0003',type:'pf',subclients:[]}
+      ],
+      drivers:[
+        {id:'dr1',name:'Carlos Teste',phone:'(49) 91111-1111',type:'fixo',active:true,dailyRate:200},
+        {id:'dr2',name:'Marcos Teste',phone:'(49) 92222-2222',type:'freelance',active:true,dailyRate:250}
+      ],
+      providers:[ {id:'pr1',name:'Transportes Beta (Terceiro)',phone:'(49) 93333-3333',pix:'beta@teste'} ],
+      trips:[
+        {id:'tt1',vehicleId:'vt2',date:'2026-07-28',type:'avulso',origin:'Chapecó - SC',destination:'Aeroporto (Chapecó)',client:'João Particular',driverNames:['Carlos Teste'],driverName:'Carlos Teste',passengerName:'João Particular',pickupTime:'08:00',passengers:1,grossRevenue:300,driverStatus:'programada',paymentPlan:{type:'avista',installments:[{id:'i1',label:'Pagamento Total',amount:300,dueDate:'2026-07-28',receivedAt:'2026-07-28',receivedMethod:'pix'}]}},
+        {id:'tt2',vehicleId:'vt1',date:'2026-07-31',returnDate:'2026-08-02',type:'fixo',origin:'Chapecó - SC',destination:'Balneário Camboriú - SC',client:'Agência Turismo Sol',driverNames:['Marcos Teste'],driverName:'Marcos Teste',pickupTime:'06:00',returnTime:'20:00',passengers:12,grossRevenue:2500,driverStatus:'programada',paymentPlan:{type:'prazo_30',termDays:30,installments:[{id:'i2',label:'Parcela única',amount:2500,dueDate:'2026-08-30',receivedAt:null}]}},
+        {id:'tt3',vehicleId:'vt1',date:'2026-07-20',type:'avulso',origin:'Chapecó - SC',destination:'Florianópolis - SC',client:'Empresa ACME Ltda',subclient:'RH',driverNames:['Carlos Teste'],driverName:'Carlos Teste',pickupTime:'05:00',passengers:8,grossRevenue:1800,kmStart:81500,kmEnd:82000,kmDriven:500,fuelCost:400,fuelLiters:55,tollCost:60,driverCost:200,driverStatus:'finalizada',finishedAt:'2026-07-20T18:00:00',paymentPlan:{type:'avista',installments:[{id:'i3',label:'Pagamento Total',amount:1800,dueDate:'2026-07-20',receivedAt:'2026-07-22',receivedMethod:'pix'}]}},
+        {id:'tt4',vehicleId:'vt2',date:'2026-07-10',type:'avulso',origin:'Chapecó - SC',destination:'Xanxerê - SC',client:'Empresa ACME Ltda',subclient:'Comercial',driverNames:['Marcos Teste'],driverName:'Marcos Teste',passengers:3,grossRevenue:600,driverStatus:'finalizada',paymentPlan:{type:'prazo_15',termDays:15,installments:[{id:'i4',label:'Parcela única',amount:600,dueDate:'2026-07-25',receivedAt:null}]}},
+        {id:'tt5',vehicleId:'vt2',date:'2026-07-27',type:'avulso',origin:'Chapecó - SC',destination:'Concórdia - SC',client:'João Particular',driverNames:['Carlos Teste'],driverName:'Carlos Teste',passengers:1,grossRevenue:0,driverStatus:'programada',paymentPlan:{type:'avista',installments:[{id:'i5',label:'Cortesia (R$ 0)',amount:0,dueDate:'2026-07-27',receivedAt:null}]}}
+      ],
+      varExpenses:[ {id:'ve1',vehicleId:'vt1',date:'2026-07-15',category:'combustivel',amount:300,description:'Abastecimento avulso (tanque cheio)'} ],
+      fixedCommitments:[ {id:'fc1',vehicleId:'vt1',name:'Financiamento da Van',category:'financiamento',installmentValue:3500,totalInstallments:48,paidInstallments:6,dueDay:10,startDate:'2025-02-10'} ],
+      sharedExpenses:[ {id:'se1',name:'Contador',category:'servicos',seType:'recurring',baseAmount:400,splitType:'equal',active:true,startMonth:'2025-01',payments:[]} ],
+      investors:[ {id:'inv1',vehicleId:'vt1',name:'Investidor Teste',investedAmount:100000,returnType:'proportional',returnPercentage:30,startDate:'2025-01-01',payments:[]} ],
+      agencyRevenue:[ {id:'ag1',date:'2026-07-18',client:'Agência Turismo Sol',operator:'Transportes Beta (Terceiro)',origin:'Chapecó',destination:'Curitiba - PR',totalValue:2000,providerPayout:1600,commissionValue:400,commissionRate:20,clientPaid:false,providerPaid:false} ],
+      admins:[ {id:'admin_teste',name:'Gestor (Teste)',role:'gestor',email:'',phone:'',pin:'0000',active:true,createdAt:'2026-07-28'} ],
+      customCategories:{ revenueTypes:[], expenseCategories:[], fixedExpenseCategories:[], builtinOverrides:{}, maintenanceSubs:[] }
+    };
+    localStorage.setItem('fleetcontrol_db', JSON.stringify(seed));
+  }catch(e){ console.warn('[TESTE] falha ao semear dados ficticios', e); }
 }
 
 // Boot: se já logado nesta sessão, entra direto. Senão mostra lock.
