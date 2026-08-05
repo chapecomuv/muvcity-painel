@@ -246,6 +246,9 @@ textarea.fc{min-height:80px;resize:vertical}
 //  MUVCITY — APP DO MOTORISTA
 // ════════════════════════════════════════════════════════════
 
+/* Produção — sincroniza com o Firebase real. (Gerado a partir do sandbox _TESTE.) */
+window.__TESTE__ = false;
+
 let DB = {};
 const KEY = 'muvcity_motorista_db';
 
@@ -285,6 +288,7 @@ const cloudSync = {
   POLL_INTERVAL:20000,PUSH_DEBOUNCE:600,
   enabled:false,url:null,pollTimer:null,pushTimer:null,status:'idle',
   init(){
+    if(window.__TESTE__){ this.enabled=false; this.url=null; this.status='offline'; try{this.renderIndicator();}catch(_){} return; }
     this.url=localStorage.getItem(this.KEY) || FIREBASE_URL_DEFAULT;
     this.enabled=true;
     this.startPolling();
@@ -934,6 +938,57 @@ function renderHome(root){
     </div>`;
   }
 
+  // ══════════ BLOCO 5 — "Minha operação de hoje" (destaque da próxima ação) ══════════
+  const _tod=_todayKey();
+  const _nowHM=(()=>{ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); })();
+  let heroTrip=null, heroKind=null;                 // 'andamento' | 'hoje' | 'proxima'
+  const _andToday=andamentoList.filter(t=>myCoversDay(t,_tod));
+  const _progToday=programadaList.filter(t=>myCoversDay(t,_tod)).sort((a,b)=>(a.pickupTime||'').localeCompare(b.pickupTime||''));
+  if(andamentoList.length){ heroTrip=_andToday[0]||andamentoList[0]; heroKind='andamento'; }
+  else if(_progToday.length){ heroTrip=_progToday[0]; heroKind='hoje'; }
+  else if(programadaList.length){ heroTrip=programadaList[0]; heroKind='proxima'; }
+  let heroHtml='';
+  if(heroTrip && !selDay){
+    const t=heroTrip;
+    const rota=`${t.origin||'?'} <span style="opacity:.6">→</span> ${t.destination||'?'}`;
+    const horario=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):'';
+    const quem=t.passengerName?`🙋 ${t.passengerName}`:(t.client?`👤 ${t.client}`:'');
+    const veh=t.vehiclePlate?`🚐 ${t.vehiclePlate}`:'';
+    // alertas internos (ajudam o motorista; não expõem financeiro)
+    const alerts=[];
+    if(heroKind==='andamento'){
+      if(t.requiresKm!==false && !(n(t.kmStart)>0)) alerts.push('KM inicial não informado');
+      if(t.returnTime && _nowHM>t.returnTime) alerts.push('Passou do horário de retorno — finalize a viagem');
+    } else if(heroKind==='hoje'){
+      if(t.pickupTime && _nowHM>t.pickupTime) alerts.push('Passou do horário de embarque e ainda não iniciou');
+    }
+    const alertHtml=alerts.length?`<div style="margin-top:12px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.4);border-radius:11px;padding:9px 12px;font-size:12.5px;font-weight:600;color:#fbbf24">⚠️ ${alerts.join(' · ')}</div>`:'';
+    // ação principal
+    let action='', kindLabel='', accent='';
+    if(heroKind==='andamento'){
+      kindLabel='🟢 Em andamento agora'; accent='#34d399';
+      const kmTxt=n(t.kmStart)>0?`<div style="font-size:12px;color:#94a3b8;margin-top:8px">KM inicial: <b style="color:#e2e8f0">${n(t.kmStart).toLocaleString('pt-BR')}</b></div>`:'';
+      action=`${kmTxt}<button class="btn btn-dg btn-lg" style="width:100%;margin-top:12px" onclick="openFinishTripModal('${t.id}')">🏁 Finalizar viagem</button>`;
+    } else {
+      kindLabel=heroKind==='hoje'?'⏳ Sua viagem de hoje':`📅 Próxima viagem · ${fmtDate(t.date)}`;
+      accent=heroKind==='hoje'?'#818cf8':'#7689a1';
+      action=`<button class="btn btn-sc btn-lg" style="width:100%;margin-top:12px" onclick="openStartTripModal('${t.id}')">🚀 Iniciar viagem</button>`;
+    }
+    heroHtml=`
+      <div class="card" style="border:1px solid ${accent}55;background:linear-gradient(160deg,${accent}18,rgba(255,255,255,.02));box-shadow:0 6px 22px ${accent}22">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.4px;color:${accent}">${kindLabel}</span>
+          ${horario?`<span style="font-size:13px;font-weight:800;color:#e2e8f0">⏰ ${horario}</span>`:''}
+        </div>
+        <div style="font-size:19px;font-weight:800;color:#f1f5f9;line-height:1.25">${rota}</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:#cbd5e1">
+          ${quem?`<span>${quem}</span>`:''}${veh?`<span>${veh}</span>`:''}
+        </div>
+        ${action}
+        ${alertHtml}
+      </div>`;
+  }
+
   root.innerHTML=`
     <div class="app-head">
       <div class="brand-mini">
@@ -949,6 +1004,7 @@ function renderHome(root){
     </div>
 
     <div class="section">
+      ${heroHtml}
       <div class="quick-stats">
         <div class="qs"><div class="qs-l">Em andamento</div><div class="qs-v" style="color:#67e8f9">${inProgress}</div></div>
         <div class="qs"><div class="qs-l">Finalizadas</div><div class="qs-v" style="color:#34d399">${finished}</div></div>
@@ -2003,9 +2059,11 @@ function seedMotoristaTeste(){
     localStorage.setItem(KEY, JSON.stringify(seed));
   }catch(e){ console.warn('[TESTE] seed motorista falhou', e); }
 }
+if(window.__TESTE__){ seedMotoristaTeste(); }
 loadDB();
 checkURLForTrip();
 render();
+if(window.__TESTE__){ injectTesteBannerM(); }
 cloudSync.init();
 // Quando driver finaliza/inicia/lança, push imediato (saveDB já cuida)
 // Quando driver está cadastrado mas sync não, sugere

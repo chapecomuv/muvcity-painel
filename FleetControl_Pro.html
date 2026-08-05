@@ -49,7 +49,7 @@ body.role-socio .gestor-only{ display:none !important; }
 body.role-socio::after{
   content:'👁️ Modo Sócio (somente leitura)';
   position:fixed; bottom:14px; left:14px; z-index:8500;
-  background:rgba(52,211,153,.12); color:#34d399;
+  background:rgba(52,211,153,.12); color:#059669;
   border:1px solid rgba(52,211,153,.28); border-radius:999px;
   padding:6px 14px; font-size:11.5px; font-weight:700; letter-spacing:.3px;
   font-family:'Inter',system-ui,sans-serif;
@@ -162,19 +162,19 @@ body.sidebar-collapsed .main{max-width:calc(100% - 64px)}
 }
 .agenda-bar{
   pointer-events:auto;cursor:pointer;
-  background:rgba(255,255,255,.04);
+  background:rgba(15,23,42,.05);
   border-left:3px solid var(--pr);
   border-radius:5px;padding:3px 8px;
-  font-size:11px;font-weight:600;color:#cbd5f5;
+  font-size:11px;font-weight:700;color:var(--tx);
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
   line-height:18px;
   transition:background .12s,transform .12s;
   margin:0 1px
 }
-.agenda-bar:hover{background:rgba(255,255,255,.08);transform:translateY(-1px)}
-.agenda-bar.status-finalizada{opacity:.5;text-decoration:line-through;text-decoration-color:rgba(148,163,184,.55)}
-.agenda-bar.status-andamento{background:rgba(16,185,129,.1);border-left-color:#10b981}
-.agenda-bar-time{font-weight:800;color:#fff;margin-right:4px}
+.agenda-bar:hover{background:rgba(15,23,42,.09);transform:translateY(-1px)}
+.agenda-bar.status-finalizada{opacity:.55;text-decoration:line-through;text-decoration-color:rgba(100,116,139,.6)}
+.agenda-bar.status-andamento{background:rgba(16,185,129,.16);border-left-color:#059669}
+.agenda-bar-time{font-weight:800;color:var(--tx);margin-right:4px}
 .agenda-bar-more{
   pointer-events:auto;cursor:pointer;font-size:10.5px;color:var(--txm);
   padding:2px 7px;font-weight:600;background:rgba(255,255,255,.03);
@@ -216,11 +216,11 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
 /* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;letter-spacing:.1px}
-.g{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.2)}
+.g{background:rgba(16,185,129,.12);color:#059669;border:1px solid rgba(16,185,129,.2)}
 .b{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
-.y{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
-.r{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
-.p{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
+.y{background:rgba(245,158,11,.12);color:#b45309;border:1px solid rgba(245,158,11,.2)}
+.r{background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.2)}
+.p{background:rgba(139,92,246,.12);color:#7c3aed;border:1px solid rgba(139,92,246,.2)}
 .gz{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.15)}
 .o{background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.2)}
 
@@ -281,7 +281,7 @@ textarea.fc{resize:vertical;min-height:65px}
 .mb1{margin-bottom:4px}.mb2{margin-bottom:8px}.mb3{margin-bottom:12px}.mb4{margin-bottom:16px}
 .fl-row{display:flex}.ic{align-items:center}.jb{justify-content:space-between}.g2p{gap:8px}.g3p{gap:12px}
 .fb{font-weight:700}.fsb{font-weight:600}.tsm{font-size:12px}.txs{font-size:11px}
-.tsc{color:#34d399}.tdr{color:#f87171}.twn{color:#fbbf24}.tpr{color:var(--prl)}
+.tsc{color:#059669}.tdr{color:#dc2626}.twn{color:#b45309}.tpr{color:var(--prl)}
 .empty{text-align:center;padding:52px 20px;color:var(--txm)}
 .empty-ic{font-size:36px;margin-bottom:10px;opacity:.5}
 .empty-tx{font-size:14px;color:var(--tx);margin-bottom:3px;font-weight:500}
@@ -302,9 +302,9 @@ textarea.fc{resize:vertical;min-height:65px}
 .cmt:last-child{border-bottom:none}
 .cmt-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
 .cmt-n{font-weight:600;font-size:14px}
-.cmt-v{font-size:16px;font-weight:800;color:#f87171}
+.cmt-v{font-size:16px;font-weight:800;color:#dc2626}
 .cmt-m{font-size:11px;color:var(--txm);margin-bottom:6px}
-.ibox{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:12px 14px;font-size:12px;color:#a5b4fc;margin-bottom:13px}
+.ibox{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:12px 14px;font-size:12px;color:#4338ca;margin-bottom:13px}
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:4px;height:4px}
@@ -318,16 +318,16 @@ textarea.fc{resize:vertical;min-height:65px}
 
 /* ── MAINTENANCE ── */
 .maint-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:7px;font-size:11px;font-weight:700;margin:2px}
-.maint-urgent{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
-.maint-warn{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
-.maint-ok{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.25)}
+.maint-urgent{background:rgba(239,68,68,.15);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
+.maint-warn{background:rgba(245,158,11,.15);color:#b45309;border:1px solid rgba(245,158,11,.3)}
+.maint-ok{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.25)}
 .maint-info{background:rgba(148,163,184,.08);color:#94a3b8;border:1px solid var(--bd)}
 .alert-banner{display:flex;align-items:flex-start;gap:10px;padding:13px 16px;border-radius:12px;margin-bottom:10px;font-size:13px;font-weight:500}
-.alert-banner-urgent{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#f87171}
-.alert-banner-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fbbf24}
+.alert-banner-urgent{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#dc2626}
+.alert-banner-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#b45309}
 
 /* ── CAIXINHA ── */
-.caixinha-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(99,102,241,.1);color:#a78bfa;border:1px solid rgba(99,102,241,.2)}
+.caixinha-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(99,102,241,.1);color:#7c3aed;border:1px solid rgba(99,102,241,.2)}
 
 /* ── RECEIVABLES ── */
 .rcv-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:10px;align-items:center;padding:12px 16px;border-radius:12px;margin-bottom:6px;font-size:13px}
@@ -337,10 +337,10 @@ textarea.fc{resize:vertical;min-height:65px}
 .rcv-received{background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.15);opacity:.7}
 .installment-row{display:grid;grid-template-columns:1fr 120px 140px auto;gap:8px;align-items:center;margin-bottom:6px}
 .rcv-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.rcv-pill-overdue{background:rgba(239,68,68,.18);color:#f87171}
-.rcv-pill-today{background:rgba(245,158,11,.18);color:#fbbf24}
+.rcv-pill-overdue{background:rgba(239,68,68,.18);color:#dc2626}
+.rcv-pill-today{background:rgba(245,158,11,.18);color:#b45309}
 .rcv-pill-upcoming{background:rgba(148,163,184,.12);color:#94a3b8}
-.rcv-pill-received{background:rgba(16,185,129,.12);color:#34d399}
+.rcv-pill-received{background:rgba(16,185,129,.12);color:#059669}
 
 /* ── SELECT OPTGROUP ── */
 select optgroup{background:var(--bg3);color:var(--txm);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
@@ -355,15 +355,15 @@ select option{background:var(--bg2);color:var(--tx)}
 @media(max-width:900px){.g3{grid-template-columns:repeat(2,1fr)}}
 /* ── MAINTENANCE ALERTS ── */
 .maint-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;margin:2px}
-.maint-urgent{background:rgba(239,68,68,.2);color:#f87171;border:1px solid rgba(239,68,68,.4)}
-.maint-warn{background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}
-.maint-ok{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.maint-urgent{background:rgba(239,68,68,.2);color:#dc2626;border:1px solid rgba(239,68,68,.4)}
+.maint-warn{background:rgba(245,158,11,.2);color:#b45309;border:1px solid rgba(245,158,11,.4)}
+.maint-ok{background:rgba(16,185,129,.15);color:#059669;border:1px solid rgba(16,185,129,.3)}
 .maint-info{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid var(--bd)}
 .alert-banner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:8px;margin-bottom:10px;font-size:13px}
-.alert-banner-urgent{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#f87171}
-.alert-banner-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:#fbbf24}
+.alert-banner-urgent{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#dc2626}
+.alert-banner-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:#b45309}
 /* ── CAIXINHA ── */
-.caixinha-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(99,102,241,.15);color:#a78bfa;border:1px solid rgba(99,102,241,.3)}
+.caixinha-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(99,102,241,.15);color:#7c3aed;border:1px solid rgba(99,102,241,.3)}
 /* ── RECEIVABLES ── */
 .rcv-row{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:10px;align-items:center;padding:11px 14px;border-radius:8px;margin-bottom:6px;font-size:13px}
 .rcv-overdue{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)}
@@ -372,10 +372,10 @@ select option{background:var(--bg2);color:var(--tx)}
 .rcv-received{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);opacity:.7}
 .installment-row{display:grid;grid-template-columns:1fr 120px 140px auto;gap:8px;align-items:center;margin-bottom:6px}
 .rcv-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.rcv-pill-overdue{background:rgba(239,68,68,.2);color:#f87171}
-.rcv-pill-today{background:rgba(245,158,11,.2);color:#fbbf24}
+.rcv-pill-overdue{background:rgba(239,68,68,.2);color:#dc2626}
+.rcv-pill-today{background:rgba(245,158,11,.2);color:#b45309}
 .rcv-pill-upcoming{background:rgba(148,163,184,.15);color:#94a3b8}
-.rcv-pill-received{background:rgba(16,185,129,.15);color:#34d399}
+.rcv-pill-received{background:rgba(16,185,129,.15);color:#059669}
 
 /* ════════════ DESPESAS VARIÁVEIS — PREMIUM ════════════ */
 .expv-shell{background:linear-gradient(135deg,rgba(13,24,41,.7) 0%,rgba(15,28,48,.5) 100%);border:1px solid rgba(148,163,184,.12);border-radius:22px;padding:0;box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden;backdrop-filter:blur(8px)}
@@ -385,7 +385,7 @@ select option{background:var(--bg2);color:var(--tx)}
 .expv-head{padding:22px 26px 18px;border-bottom:1px solid rgba(148,163,184,.08);position:relative;z-index:2;display:flex;flex-direction:column;gap:18px}
 .expv-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
 .expv-title{font-size:18px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:11px}
-.expv-title-ic{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,rgba(59,130,246,.28),rgba(139,92,246,.28));display:flex;align-items:center;justify-content:center;color:#a5b4fc;border:1px solid rgba(99,102,241,.32);box-shadow:0 6px 18px rgba(99,102,241,.25)}
+.expv-title-ic{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,rgba(59,130,246,.28),rgba(139,92,246,.28));display:flex;align-items:center;justify-content:center;color:#4338ca;border:1px solid rgba(99,102,241,.32);box-shadow:0 6px 18px rgba(99,102,241,.25)}
 .expv-sub{font-size:11px;color:var(--txm);margin-top:4px;letter-spacing:.4px}
 .expv-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 26px 0;position:relative;z-index:2}
 .expv-kpi{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid rgba(148,163,184,.12);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden;transition:transform .22s,border-color .22s,box-shadow .22s}
@@ -420,7 +420,7 @@ select option{background:var(--bg2);color:var(--tx)}
 .expv-row-t{font-size:14px;font-weight:600;color:var(--tx);letter-spacing:-.1px}
 .expv-row-m{font-size:11px;color:var(--txm);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .expv-row-m b{color:#cbd5e1;font-weight:600}
-.expv-row-amt{font-size:17px;font-weight:800;color:#f87171;letter-spacing:-.4px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1}
+.expv-row-amt{font-size:17px;font-weight:800;color:#dc2626;letter-spacing:-.4px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1}
 .expv-row-amt-sub{font-size:10px;font-weight:600;color:var(--txm);margin-top:3px;text-align:right;letter-spacing:.3px}
 .expv-row-act{display:flex;gap:5px;align-items:center}
 .expv-iconbtn{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(148,163,184,.1);color:var(--txm);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;font-size:13px;padding:0}
@@ -428,19 +428,19 @@ select option{background:var(--bg2);color:var(--tx)}
 .expv-iconbtn.danger:hover{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.5);color:#fca5a5;box-shadow:0 6px 16px rgba(239,68,68,.25)}
 .expv-iconbtn.toggle.open{background:rgba(96,165,250,.18);border-color:rgba(96,165,250,.5);color:#fff;transform:rotate(180deg)}
 .expv-row-pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:14px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
-.expv-row-pill.pago{background:rgba(16,185,129,.18);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.expv-row-pill.pago{background:rgba(16,185,129,.18);color:#059669;border:1px solid rgba(16,185,129,.3)}
 .expv-row-pill.parcial{background:rgba(96,165,250,.18);color:#93c5fd;border:1px solid rgba(96,165,250,.3)}
-.expv-row-pill.pendente{background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
-.expv-row-pill.atrasada{background:rgba(239,68,68,.18);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.expv-row-pill.pendente{background:rgba(245,158,11,.18);color:#b45309;border:1px solid rgba(245,158,11,.3)}
+.expv-row-pill.atrasada{background:rgba(239,68,68,.18);color:#dc2626;border:1px solid rgba(239,68,68,.3)}
 .expv-inst{margin-top:12px;padding:14px;background:rgba(0,0,0,.18);border:1px solid rgba(148,163,184,.08);border-radius:11px;animation:fi .22s ease}
 .expv-inst-head{font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--txm);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
 .expv-inst-row{display:grid;grid-template-columns:30px 1fr 110px 130px auto;gap:10px;align-items:center;padding:8px 6px;border-radius:9px;font-size:12px;transition:background .15s}
 .expv-inst-row:hover{background:rgba(255,255,255,.03)}
-.expv-inst-num{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:rgba(99,102,241,.14);color:#a5b4fc;font-size:11px;font-weight:800}
+.expv-inst-num{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:rgba(99,102,241,.14);color:#4338ca;font-size:11px;font-weight:800}
 .expv-inst-pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
-.expv-inst-pill.pago{background:rgba(16,185,129,.18);color:#34d399}
-.expv-inst-pill.pendente{background:rgba(245,158,11,.18);color:#fbbf24}
-.expv-inst-pill.atrasada{background:rgba(239,68,68,.18);color:#f87171}
+.expv-inst-pill.pago{background:rgba(16,185,129,.18);color:#059669}
+.expv-inst-pill.pendente{background:rgba(245,158,11,.18);color:#b45309}
+.expv-inst-pill.atrasada{background:rgba(239,68,68,.18);color:#dc2626}
 .expv-inst-bar{height:5px;border-radius:4px;background:rgba(255,255,255,.05);overflow:hidden;margin-top:6px}
 .expv-inst-bar>span{display:block;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width .8s ease}
 .cnt-up{display:inline-block;font-variant-numeric:tabular-nums}
@@ -450,7 +450,7 @@ select option{background:var(--bg2);color:var(--tx)}
 
 /* Payment Plan Builder (used in expense + fixed expense modals) */
 .pp-section{background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(99,102,241,.02));border:1px solid rgba(99,102,241,.24);border-radius:14px;padding:16px;margin-bottom:14px}
-.pp-section-t{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:#a5b4fc;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.pp-section-t{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:#4338ca;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .pp-options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .pp-opt{padding:11px 10px;border-radius:11px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.025);cursor:pointer;transition:all .18s;text-align:center}
 .pp-opt:hover{border-color:rgba(96,165,250,.55);background:rgba(96,165,250,.08);transform:translateY(-1px);box-shadow:0 6px 16px rgba(59,130,246,.2)}
@@ -459,15 +459,15 @@ select option{background:var(--bg2);color:var(--tx)}
 .pp-opt-d{font-size:10px;color:var(--txm);margin-top:3px;letter-spacing:.2px;line-height:1.3}
 .pp-builder{display:flex;flex-direction:column;gap:8px}
 .pp-inst-row{display:grid;grid-template-columns:36px 1fr 120px 150px auto;gap:8px;align-items:center;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:10px}
-.pp-inst-num{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:rgba(99,102,241,.16);color:#a5b4fc;font-size:11px;font-weight:800}
+.pp-inst-num{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:rgba(99,102,241,.16);color:#4338ca;font-size:11px;font-weight:800}
 .pp-inst-row .fc{padding:7px 10px;font-size:12px}
 .pp-inst-row .fl{font-size:9px;margin-bottom:2px}
 .pp-summary{margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;font-size:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bd);flex-wrap:wrap;gap:6px}
-.pp-summary.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08);color:#fbbf24}
-.pp-summary.ok{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.06);color:#34d399}
+.pp-summary.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08);color:#b45309}
+.pp-summary.ok{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.06);color:#059669}
 .pp-add{padding:8px 12px;border-radius:10px;border:1px dashed rgba(148,163,184,.3);background:transparent;color:var(--txm);cursor:pointer;font-size:12px;font-weight:600;transition:all .18s}
-.pp-add:hover{border-color:#a78bfa;color:#a78bfa;background:rgba(167,139,250,.08)}
-.pp-row-rm{background:transparent;border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer;transition:all .15s}
+.pp-add:hover{border-color:#7c3aed;color:#7c3aed;background:rgba(167,139,250,.08)}
+.pp-row-rm{background:transparent;border:1px solid rgba(239,68,68,.25);color:#dc2626;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer;transition:all .15s}
 .pp-row-rm:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.5)}
 @media(max-width:1100px){
   .expv-kpis{grid-template-columns:repeat(2,1fr)}
@@ -762,37 +762,36 @@ tbody tr:hover td{background:rgba(123,169,249,.05)}
 .badge{padding:4px 11px;font-weight:700;letter-spacing:.2px}
 .b{background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(99,102,241,.12));border-color:rgba(96,165,250,.32);color:#93c5fd}
 .g{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(34,211,163,.1));border-color:rgba(34,197,94,.3);color:#4ade80}
-.y{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,191,36,.1));border-color:rgba(251,191,36,.3);color:#fbbf24}
+.y{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,191,36,.1));border-color:rgba(251,191,36,.3);color:#b45309}
 .r{background:linear-gradient(135deg,rgba(239,68,68,.2),rgba(248,113,113,.1));border-color:rgba(239,68,68,.32);color:#fca5a5}
-.p{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(167,139,250,.1));border-color:rgba(139,92,246,.32);color:#c4b5fd}
+.p{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(167,139,250,.1));border-color:rgba(139,92,246,.32);color:#7c3aed}
 .o{background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(251,146,60,.1));border-color:rgba(249,115,22,.32);color:#fdba74}
 
 /* MODAL refinado — scroll vertical preservado */
 .overlay{background:rgba(2,6,15,.78);backdrop-filter:blur(8px) saturate(120%)}
 .modal{
-  background:linear-gradient(160deg,#0e1a2d 0%,#0a1422 100%);
-  border:1px solid rgba(148,163,184,.16);
+  background:var(--surface);
+  border:1px solid var(--bd-strong);
   border-radius:20px;padding:30px;
-  box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow:0 32px 80px rgba(15,23,42,.22),0 4px 14px rgba(15,23,42,.08);
   position:relative;
   overflow-y:auto;
   overflow-x:hidden;
   max-height:90vh;
-  /* faixa luminosa decorativa — borda do topo */
-  border-top:1px solid rgba(123,169,249,.45)
+  /* faixa de destaque no topo — combina com o tema claro */
+  border-top:3px solid var(--pr)
 }
 .modal::before{display:none}
-.modal-h{padding-bottom:18px;border-bottom:1px solid rgba(148,163,184,.1)}
+.modal-h{padding-bottom:18px;border-bottom:1px solid var(--bd)}
 .modal-t{
   font-size:17px;font-weight:800;letter-spacing:-.3px;
-  background:linear-gradient(135deg,#fff,#cbd5f5);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+  color:var(--tx);-webkit-text-fill-color:currentColor
 }
 .xbtn{transition:all .15s}
 .xbtn:hover{background:rgba(239,68,68,.14);color:#fca5a5;transform:rotate(90deg)}
 
 /* PROGRESS */
-.prg{height:6px;background:rgba(255,255,255,.06);border-radius:6px}
+.prg{height:6px;background:rgba(15,23,42,.08);border-radius:6px}
 .prg-f{background:linear-gradient(90deg,#3b82f6,#6366f1)}
 
 /* ALERT BANNERS mais polidos */
@@ -815,7 +814,7 @@ tbody tr:hover td{background:rgba(123,169,249,.05)}
 /* CAIXINHA badge */
 .caixinha-badge{
   background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(167,139,250,.12));
-  border:1px solid rgba(167,139,250,.4);color:#c4b5fd;
+  border:1px solid rgba(167,139,250,.4);color:#7c3aed;
   box-shadow:0 4px 14px rgba(124,58,237,.18);
   padding:5px 12px
 }
@@ -1051,7 +1050,7 @@ body.sidebar-collapsed .nav-item[data-label]:hover::after{
 .ac-item.active{border-left:3px solid #7ba9f9;padding-left:11px}
 .ac-empty{padding:14px;text-align:center;color:#7689a1;font-size:12.5px}
 .ac-hint{padding:8px 14px;font-size:11px;color:#7ba9f9;background:rgba(59,130,246,.06);border-bottom:1px solid rgba(123,169,249,.18);font-weight:600;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
-.ac-hint kbd{background:rgba(123,169,249,.15);border:1px solid rgba(123,169,249,.3);padding:1px 6px;border-radius:4px;font-size:10px;color:#a5b4fc;font-family:inherit}
+.ac-hint kbd{background:rgba(123,169,249,.15);border:1px solid rgba(123,169,249,.3);padding:1px 6px;border-radius:4px;font-size:10px;color:#4338ca;font-family:inherit}
 
 /* ── Relatório do Cliente — estilo Agenda Boa ── */
 .cr-doc{background:#fff;color:#0f172a;padding:28px 32px;border-radius:14px;font-family:'Inter',system-ui,sans-serif;font-size:12.5px;line-height:1.55}
@@ -1251,6 +1250,59 @@ tbody tr:hover{background:#f8fafc}
 .agenda-weekdays{background:var(--bg3)}
 .sec-t,.fsb,.fsec-t{color:var(--tx)}
 .badge{border-color:var(--bd)}
+
+/* ════════════════════════════════════════════════════════════════════
+   ☀️ BLOCO 2 — Acessibilidade + campos mobile/iPhone + dropdowns claros
+   ════════════════════════════════════════════════════════════════════ */
+:root{ --gold:#b8860b; }   /* dourado com contraste melhor (texto grande e bordas) */
+
+/* Dropdowns de busca (cidade/cliente) — claros e legíveis (corrige iPhone) */
+.ac-list{background:var(--surface);border:1px solid var(--bd-strong);box-shadow:var(--shadow-elev);border-radius:11px}
+.ac-item{border-bottom:1px solid var(--bd);color:var(--tx)}
+.ac-item .ac-name{color:var(--tx)}
+.ac-item .ac-meta{color:var(--txm)}
+.ac-item:hover,.ac-item.active{background:var(--bg3);padding-left:18px}
+.ac-item.active{border-left:3px solid var(--pr)}
+.ac-empty{color:var(--txm)}
+
+/* Inputs/selects/textarea — contraste, placeholder distinto, estados legíveis */
+.fc{color:var(--tx);background:var(--surface)}
+.fc::placeholder{color:#94a3b8;opacity:1}                 /* placeholder != valor preenchido */
+.fc:disabled,.fc[readonly]{background:#eef2f7;color:#64748b;-webkit-text-fill-color:#64748b;opacity:1;cursor:not-allowed}
+.fc[readonly]{cursor:default}
+.fc.error,.fc.invalid{border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+.field-error{color:var(--dg);font-size:11.5px;margin-top:4px;display:flex;align-items:center;gap:5px}  /* erro com texto, não só cor */
+
+/* Select: aparência consistente (evita fundo/seta escura do iOS) */
+select.fc{-webkit-appearance:none;appearance:none;background-color:var(--surface);color:var(--tx);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+select.fc option{background:#fff;color:var(--tx)}
+
+/* Foco visível pra teclado (acessibilidade) */
+.fc:focus-visible,button:focus-visible,.nav-item:focus-visible,.op-card:focus-visible,.tl-card:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+
+/* 📱 iOS: fonte >=16px nos campos evita o zoom automático ao focar */
+@media(max-width:640px){
+  input.fc,select.fc,textarea.fc,.fc{font-size:16px}
+  .ac-item{font-size:14px}
+}
+
+/* Modais claros: remapeia acentos claros (legado do tema escuro) p/ tons legíveis no branco.
+   Escopado a .modal — não afeta a sidebar/áreas escuras. Pastéis não são usados como fundo. */
+.modal [style*="color:#7c3aed"]{color:#7c3aed!important}
+.modal [style*="color:#4338ca"]{color:#4338ca!important}
+.modal [style*="color:#7c3aed"]{color:#7c3aed!important}
+.modal [style*="color:#b45309"]{color:#a16207!important}
+.modal [style*="color:#fcd34d"]{color:#a16207!important}
+.modal [style*="color:#fca5a5"]{color:#dc2626!important}
+.modal [style*="color:#dc2626"]{color:#dc2626!important}
+.modal [style*="color:#67e8f9"]{color:#0e7490!important}
+.modal [style*="color:#7ba9f9"]{color:#2563eb!important}
+.modal [style*="color:#059669"]{color:#059669!important}
+.modal [style*="color:#f59e0b"]{color:#b45309!important}
+.modal [style*="color:#a5f3fc"]{color:#0e7490!important}
+/* fsec-t com cor de acento inline dentro de modal também herda o remap acima */
 </style>
 </head>
 <body>
@@ -1630,7 +1682,7 @@ tbody tr:hover{background:#f8fafc}
                 Despesas Variáveis
               </div>
               <div class="expv-sub">Gestão completa de gastos da operação · planos de pagamento · parcelas e boletos</div>
-              <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(99,102,241,.18));border:1px solid rgba(96,165,250,.4);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#a5b4fc">✨ Design v4.3 — Multi-Admin</div>
+              <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(99,102,241,.18));border:1px solid rgba(96,165,250,.4);font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#4338ca">✨ Design v4.3 — Multi-Admin</div>
             </div>
             <div class="fl-row ic" style="gap:10px;flex-wrap:wrap">
               <div class="mnav">
@@ -2040,7 +2092,7 @@ tbody tr:hover{background:#f8fafc}
           </div>
           <div class="fsec">
             <div class="fsec-t">Importar banco de dados</div>
-            <div style="font-size:12px;color:var(--txm);margin-bottom:14px"><strong style="color:#f87171">⚠️ Atenção:</strong> substituirá <strong>todos</strong> os dados atuais pelo arquivo importado. Faça um backup antes.</div>
+            <div style="font-size:12px;color:var(--txm);margin-bottom:14px"><strong style="color:#dc2626">⚠️ Atenção:</strong> substituirá <strong>todos</strong> os dados atuais pelo arquivo importado. Faça um backup antes.</div>
             <label class="btn btn-ol btn-sm" style="width:100%;justify-content:center;cursor:pointer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Importar backup (.json)
@@ -2159,7 +2211,7 @@ tbody tr:hover{background:#f8fafc}
         <button class="btn btn-pr gestor-only" onclick="openAdminModal()">➕ Novo Administrador</button>
       </div>
       <div class="card">
-        <div class="banner info" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:11px;padding:12px 16px;color:#c4b5fd;font-size:12.5px;line-height:1.6;margin-bottom:14px">
+        <div class="banner info" style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:11px;padding:12px 16px;color:#7c3aed;font-size:12.5px;line-height:1.6;margin-bottom:14px">
           💡 <b>Como funciona:</b> cada administrador entra no Painel Gestor com o nome e PIN próprios. Você decide o papel (Gestor, Sócio, Contabilidade ou Secretaria). Esse cadastro é separado do "Motoristas" — motoristas usam o app deles, não esse painel.
         </div>
         <div class="wrap"><table><thead><tr>
@@ -2275,7 +2327,7 @@ tbody tr:hover{background:#f8fafc}
     /* Wizard 3 etapas */
     .wz-stepper{display:flex;gap:8px;margin:2px 0 18px;flex-wrap:wrap}
     .wz-step-ind{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--txm);padding:7px 13px;border-radius:22px;background:var(--bg3);border:1px solid var(--bd)}
-    .wz-step-ind .wz-num{width:20px;height:20px;border-radius:50%;background:var(--bd-strong);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+    .wz-step-ind .wz-num{width:20px;height:20px;border-radius:50%;background:var(--txm);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
     .wz-step-ind.active{color:var(--pr);border-color:var(--pr);background:rgba(37,99,235,.06)}
     .wz-step-ind.active .wz-num{background:var(--pr)}
     .wz-step-ind.done{color:var(--sc)} .wz-step-ind.done .wz-num{background:var(--sc)}
@@ -2338,7 +2390,7 @@ tbody tr:hover{background:#f8fafc}
     <div class="fsec-t">📌 Dados Gerais</div>
     <div class="fr c4">
       <div class="fg"><label class="fl">Veículo</label>
-        <select class="fc" id="trip-vehicle"></select></div>
+        <select class="fc" id="trip-vehicle" onchange="onTripVehicleChange()"></select></div>
       <div class="fg"><label class="fl" id="trip-date-label">📅 Data de Ida</label>
         <input type="date" class="fc" id="trip-date" onchange="calcDriverPayment();try{renderTripDriverShifts()}catch(_){}"></div>
       <div class="fg"><label class="fl" id="trip-return-date-label">📅 Data de Volta</label>
@@ -2390,7 +2442,7 @@ tbody tr:hover{background:#f8fafc}
         </div>
         <!-- Quick-add inline panel -->
         <div id="trip-quick-client-panel" style="display:none;background:var(--bg3);border:1px solid rgba(99,102,241,.4);border-radius:8px;padding:12px;margin-top:6px">
-          <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px">➕ Cadastrar Novo Cliente</div>
+          <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px">➕ Cadastrar Novo Cliente</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div><label class="fl" style="font-size:11px">Nome *</label>
               <input type="text" class="fc" id="qc-name" placeholder="Nome do cliente" style="font-size:13px"></div>
@@ -2506,7 +2558,7 @@ tbody tr:hover{background:#f8fafc}
 
   <!-- CAMPOS ALUGUEL — exibido só quando tipo = Aluguel -->
   <div class="fsec" id="rental-fields" style="display:none;border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.04)">
-    <div class="fsec-t" style="color:#a78bfa">🏠 Detalhes do Aluguel</div>
+    <div class="fsec-t" style="color:#7c3aed">🏠 Detalhes do Aluguel</div>
     <div class="fr c3">
       <div class="fg">
         <label class="fl">Quantidade de Diárias</label>
@@ -2518,7 +2570,7 @@ tbody tr:hover{background:#f8fafc}
       </div>
       <div class="fg">
         <label class="fl">Total Calculado</label>
-        <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:9px;padding:9px 12px;font-size:15px;font-weight:800;color:#a78bfa" id="rental-total-display">R$ 0,00</div>
+        <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:9px;padding:9px 12px;font-size:15px;font-weight:800;color:#7c3aed" id="rental-total-display">R$ 0,00</div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--txm)">O total é aplicado automaticamente no campo Valor Cobrado acima.</div>
@@ -2591,9 +2643,13 @@ tbody tr:hover{background:#f8fafc}
       <div class="fg"><label class="fl">Outros (R$)</label>
         <input type="number" class="fc" id="trip-other" placeholder="0,00" step="0.01" oninput="calcTripProfit()"></div>
     </div>
-    <div class="fr">
+    <div class="fr c2">
       <div class="fg"><label class="fl">Descrição de Outros</label>
         <input type="text" class="fc" id="trip-other-desc" placeholder="Descreva outras despesas"></div>
+      <div class="fg"><label class="fl">🚐 Custo do Veículo (R$) <span class="txs txm" style="text-transform:none;letter-spacing:0">terceiro/aluguel</span></label>
+        <input type="number" class="fc" id="trip-vehicle-cost" placeholder="0,00" step="0.01" min="0" oninput="calcTripProfit()">
+        <div class="txs" id="trip-vehicle-cost-hint" style="margin-top:4px;display:none;color:var(--gold)"></div>
+      </div>
     </div>
 
     <!-- 💰 Livro de pagamentos de motorista — vários motoristas/turnos, soma sozinho -->
@@ -2629,7 +2685,7 @@ tbody tr:hover{background:#f8fafc}
     </div>
     <!-- Por KM — aparece só quando km > 0 -->
     <div id="calc-km-row" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(16,185,129,.2)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(16,185,129,.7);margin-bottom:8px">Análise por Quilômetro</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#047857;margin-bottom:8px">Análise por Quilômetro</div>
       <div class="g4" style="gap:10px">
         <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px">
           <div class="txs txm">Receita / km</div>
@@ -2652,7 +2708,7 @@ tbody tr:hover{background:#f8fafc}
   </div>
 
   <div class="fsec" style="border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.04)">
-    <div class="fsec-t" style="color:#a78bfa">💰 Plano de Recebimento</div>
+    <div class="fsec-t" style="color:#7c3aed">💰 Plano de Recebimento</div>
     <div class="fr c2" style="margin-bottom:10px">
       <div class="fg">
         <label class="fl">Forma de Recebimento</label>
@@ -2704,7 +2760,7 @@ tbody tr:hover{background:#f8fafc}
 <div class="overlay" id="modal-mark-received">
 <div class="modal modal-sm">
   <div class="modal-h">
-    <span class="modal-t">✅ Confirmar Recebimento</span>
+    <span class="modal-t">💵 Registrar Recebimento</span>
     <button class="xbtn" onclick="closeModal('modal-mark-received')">✕</button>
   </div>
   <input type="hidden" id="mr-trip-id">
@@ -2712,12 +2768,21 @@ tbody tr:hover{background:#f8fafc}
   <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:14px">
     <div class="txs txm">Parcela</div>
     <div style="font-size:15px;font-weight:600" id="mr-label">—</div>
-    <div style="font-size:22px;font-weight:700;color:var(--sc);margin-top:4px" id="mr-amount">R$ 0,00</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">
+      <div><div class="txs txm">Valor original</div><div style="font-size:17px;font-weight:700" id="mr-amount">R$ 0,00</div></div>
+      <div><div class="txs txm">Já pago</div><div style="font-size:17px;font-weight:700;color:var(--sc)" id="mr-paid">R$ 0,00</div></div>
+      <div><div class="txs txm">Saldo</div><div style="font-size:17px;font-weight:700;color:var(--pr)" id="mr-balance">R$ 0,00</div></div>
+    </div>
+    <div id="mr-history" style="margin-top:8px"></div>
   </div>
   <div class="fr c2">
-    <div class="fg"><label class="fl">Data de Recebimento</label>
+    <div class="fg"><label class="fl">Valor deste pagamento (R$)</label>
+      <input type="number" class="fc" id="mr-pay-amount" step="0.01" min="0" placeholder="0,00"></div>
+    <div class="fg"><label class="fl">Data do Recebimento</label>
       <input type="date" class="fc" id="mr-date"></div>
-    <div class="fg"><label class="fl">Forma de Pagamento</label>
+  </div>
+  <div class="fr c2">
+    <div class="fg" style="grid-column:1/-1"><label class="fl">Forma de Pagamento</label>
       <select class="fc" id="mr-method">
         <option value="pix">PIX</option>
         <option value="dinheiro">Dinheiro</option>
@@ -2929,6 +2994,36 @@ tbody tr:hover{background:#f8fafc}
   </div>
 
   <div class="fsec">
+    <div class="fsec-t">🏷️ Classificação e Custo <span class="txs txm" style="text-transform:none;letter-spacing:0">(uso interno — não aparece pro motorista/cliente)</span></div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">Classificação</label>
+        <select class="fc" id="veh-ownership" onchange="applyVehOwnershipUI()">
+          <option value="proprio">Veículo próprio</option>
+          <option value="terceiro">Veículo de terceiro</option>
+        </select>
+      </div>
+      <div class="fg" id="veh-supplier-wrap"><label class="fl" id="veh-supplier-lbl">Proprietário</label>
+        <input type="text" class="fc" id="veh-supplier" placeholder="Nome do proprietário / fornecedor"></div>
+    </div>
+    <div class="fr c2" id="veh-cost-row" style="display:none">
+      <div class="fg"><label class="fl">Forma de custo</label>
+        <select class="fc" id="veh-cost-mode">
+          <option value="">— não definido —</option>
+          <option value="diaria">Diária</option>
+          <option value="viagem">Por viagem</option>
+          <option value="periodo">Por período (aluguel)</option>
+          <option value="km">Por km</option>
+          <option value="fixo">Valor fixo</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Valor padrão (R$)</label>
+        <input type="number" class="fc" id="veh-cost-value" placeholder="0,00" step="0.01" min="0">
+        <div class="txs txm" style="margin-top:4px">Sugerido ao usar essa placa numa viagem. O gestor confirma ou edita.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fsec">
     <div class="fsec-t">⛽ Consumo de Combustível</div>
     <div class="fr c2">
       <div class="fg"><label class="fl">Meta de Consumo (km/L)</label>
@@ -2981,7 +3076,7 @@ tbody tr:hover{background:#f8fafc}
   <input type="hidden" id="cxv-vehicle-id">
   <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:8px;padding:12px 14px;margin-bottom:14px">
     <div class="txs txm">Saldo atual</div>
-    <div style="font-size:22px;font-weight:700;color:#a78bfa" id="cxv-saldo-atual">R$ 0,00</div>
+    <div style="font-size:22px;font-weight:700;color:#7c3aed" id="cxv-saldo-atual">R$ 0,00</div>
   </div>
   <div class="fr c2">
     <div class="fg"><label class="fl">Tipo</label>
@@ -3173,7 +3268,7 @@ tbody tr:hover{background:#f8fafc}
     <div class="fg"><label class="fl">Data do Aporte</label>
       <input type="date" class="fc" id="inv-date"></div>
   </div>
-  <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:#a5b4fc">
+  <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:#4338ca">
     💡 <strong>Como funciona:</strong> O investidor tem direito ao retorno <em>somente sobre o lucro líquido do veículo relacionado</em>.
     O percentual deve ser acordado entre as partes. Defina o % acima e o sistema calculará automaticamente o valor mensal devido.
   </div>
@@ -3400,8 +3495,8 @@ tbody tr:hover{background:#f8fafc}
     </div>
     <input type="hidden" id="ag-rate">
     <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:12px 14px;margin-top:4px">
-      <div class="fsec-t" style="color:#a78bfa;margin-bottom:6px">🧾 Notas Fiscais</div>
-      <div class="txs" style="color:#a5b4fc;line-height:1.6;margin-bottom:12px">
+      <div class="fsec-t" style="color:#7c3aed;margin-bottom:6px">🧾 Notas Fiscais</div>
+      <div class="txs" style="color:#4338ca;line-height:1.6;margin-bottom:12px">
         Como funciona: <b>você emite NF pro cliente</b> do valor cobrado (ex: R$ 700) ·
         <b>o prestador emite NF pra você</b> do repasse (ex: R$ 560). A NF do prestador comprova
         tua despesa — pro fisco, tua receita real é só a diferença.
@@ -3782,6 +3877,9 @@ tbody tr:hover{background:#f8fafc}
      JAVASCRIPT
 ══════════════════════════════════════════ -->
 <script>
+/* Produção — sincroniza com o Firebase real. (Gerado a partir do sandbox _TESTE.) */
+window.__TESTE__ = false;
+
 // ══════════ INITIAL DATA ══════════
 const INIT = {
   vehicles:[{
@@ -3888,11 +3986,110 @@ function ensureDBShape(){
     if(!Array.isArray(DB.customCategories.maintenanceSubs)) DB.customCategories.maintenanceSubs=[];
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MIGRAÇÃO VERSIONADA (v2 — Operações) — idempotente e aditiva.
+   Nunca apaga campos; só acrescenta o que falta. Preserva IDs e registros
+   já migrados via DB.schemaVersion. Roda no load e após cada pull da nuvem.
+   ════════════════════════════════════════════════════════════════════════ */
+const SCHEMA_VERSION = 2;
+function _migYmd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// É fretamento contínuo? (corporativo/serviceMode ou type 'fixo' com período)
+function isContinuousFret(t){ return t && ((t.serviceMode==='corporativo') || (t.type==='fixo' && t.returnDate && t.returnDate>t.date)); }
+// Dias de serviço da operação: união das driverShifts.days; senão todo o intervalo ida→volta
+function tripServiceDaysList(t){
+  const shifts=(Array.isArray(t.driverShifts)?t.driverShifts:[]).filter(s=>s&&Array.isArray(s.days)&&s.days.length);
+  if(shifts.length){ const set=new Set(); shifts.forEach(s=>s.days.forEach(d=>set.add(d))); return [...set].sort(); }
+  const from=t.date||t.departureDate; const to=t.returnDate||from; if(!from) return [];
+  const out=[]; const s=new Date(from+'T00:00:00'), e=new Date(to+'T00:00:00');
+  if(isNaN(s)||isNaN(e)||e<s) return from?[from]:[];
+  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) out.push(_migYmd(d));
+  return out;
+}
+// Gera as execuções (por dia) de uma operação de fretamento contínuo — planejado do contrato, efetivo em aberto
+function buildExecutionsFromTrip(t){
+  const days=tripServiceDaysList(t);
+  const plannedDriver=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'';
+  return days.map(dk=>({
+    id: uid('exec'), date: dk,
+    plannedVehicleId: t.vehicleId||'', actualVehicleId: '',
+    plannedDriver: plannedDriver, actualDriver: '',
+    kmStart: null, kmEnd: null,
+    pickupTime: t.pickupTime||'', returnTime: t.returnTime||'',
+    status: 'programada',              // programada | andamento | finalizada
+    fuelings: [], extraTrips: [], occurrences: [],
+    history: []                        // auditoria: {at, by, field, from, to}
+  }));
+}
+function migrateDB(){
+  const from = DB.schemaVersion || 0;
+  if(from >= SCHEMA_VERSION) return;   // já migrado (idempotente)
+  if(from < 2){
+    // Veículos: classificação (próprio/terceiro) e forma de custo — default próprio, sem valor
+    (DB.vehicles||[]).forEach(v=>{
+      if(v.ownership==null) v.ownership='proprio';        // 'proprio' | 'terceiro'
+      if(v.supplier==null) v.supplier='';                  // proprietário/fornecedor (interno)
+      if(v.costMode==null) v.costMode='';                  // '' | 'diaria' | 'viagem' | 'periodo' | 'km' | 'fixo'
+      if(v.costValue===undefined) v.costValue=null;
+    });
+    // Fretamento contínuo: gera execuções por dia (não recria se já existirem)
+    (DB.trips||[]).forEach(t=>{
+      if(!isContinuousFret(t)) return;
+      if(Array.isArray(t.executions) && t.executions.length) return;
+      t.executions = buildExecutionsFromTrip(t);
+    });
+    // Horário por dia da semana (config opcional; vazio = usa pickup/return da viagem)
+    (DB.trips||[]).forEach(t=>{ if(t.weekdaySchedule==null) t.weekdaySchedule=null; });
+    // Parcelas: histórico de pagamento (parcial). Migra o "recebido" binário legado 1x.
+    (DB.trips||[]).forEach(t=>{
+      const insts=(t.paymentPlan&&Array.isArray(t.paymentPlan.installments))?t.paymentPlan.installments:[];
+      insts.forEach(i=>{
+        if(!Array.isArray(i.payments)) i.payments=[];
+        if(i.receivedAt && !i.payments.length && (parseFloat(i.amount)||0)>0){
+          i.payments.push({date:i.receivedAt, amount:parseFloat(i.amount)||0, method:i.receivedMethod||'', note:i.receivedNotes||'', _migrated:true});
+        }
+      });
+    });
+    // Investidores: garante payments[] (base do parcial)
+    (DB.investors||[]).forEach(inv=>{ if(!Array.isArray(inv.payments)) inv.payments=[]; });
+  }
+  DB.schemaVersion = SCHEMA_VERSION;
+}
+// Helpers de obrigação com pagamento parcial (usados nos módulos financeiros)
+function paymentsTotal(payments){ return (Array.isArray(payments)?payments:[]).reduce((s,p)=>s+(parseFloat(p.amount)||0),0); }
+function obligationBalance(original, payments){ return Math.max(0,(parseFloat(original)||0)-paymentsTotal(payments)); }
+function obligationStatus(original, payments){ const paid=paymentsTotal(payments), orig=parseFloat(original)||0; if(paid<=0.001) return 'aberto'; if(paid>=orig-0.001) return 'pago'; return 'parcial'; }
+
+// ── BLOCO 6 — parcela (installment) ciente de pagamentos parciais ──
+// Total recebido de uma parcela: soma payments[] quando houver; senão o binário legado receivedAt.
+function instReceivedTotal(inst){
+  if(Array.isArray(inst.payments)&&inst.payments.length) return paymentsTotal(inst.payments);
+  return inst.receivedAt ? (parseFloat(inst.amount)||0) : 0;
+}
+// Recebido dessa parcela DENTRO de um mês (y,m) — cada pagamento tem sua própria data.
+function instReceivedInMonth(inst, y, m){
+  if(Array.isArray(inst.payments)&&inst.payments.length){
+    let s=0; inst.payments.forEach(p=>{ if(!p.date) return; const d=new Date(p.date+'T00:00:00'); if(!isNaN(d)&&d.getFullYear()===y&&d.getMonth()===m) s+=(parseFloat(p.amount)||0); });
+    return s;
+  }
+  if(!inst.receivedAt) return 0;
+  const d=new Date(inst.receivedAt+'T00:00:00'); return (!isNaN(d)&&d.getFullYear()===y&&d.getMonth()===m)?(parseFloat(inst.amount)||0):0;
+}
+function instSaldo(inst){ return Math.max(0,(parseFloat(inst.amount)||0)-instReceivedTotal(inst)); }
+// Situação: 'aberto' | 'parcial' | 'pago' (valor original NUNCA é substituído pelo parcial)
+function instSituacao(inst){
+  const paid=instReceivedTotal(inst), orig=parseFloat(inst.amount)||0;
+  if(paid<=0.001) return 'aberto';
+  if(paid>=orig-0.001) return 'pago';
+  return 'parcial';
+}
+
 function loadDB(){
   try{
     const s = localStorage.getItem('fleetcontrol_db');
     DB = s ? JSON.parse(s) : JSON.parse(JSON.stringify(INIT));
     ensureDBShape();
+    migrateDB();   // v2: operações/execuções/veículos/pagamentos (idempotente)
 
     // ── Migração: recalcula fuelLiters/fuelEfficiency em trips com driverExpenses antigas ──
     // (versões anteriores não agregavam litros nem consumo do motorista — preenche retroativamente)
@@ -4068,6 +4265,7 @@ const cloudSync = {
   status:'idle',     // idle | syncing | ok | error | offline
 
   init(){
+    if(window.__TESTE__){ this.enabled=false; this.url=null; this.status='offline'; try{this.renderIndicator();}catch(_){} return; }
     // Usa override do localStorage (se houver) OU a URL padrão hardcoded
     this.url=localStorage.getItem(this.KEY) || FIREBASE_URL_DEFAULT;
     this.enabled=true;   // sempre ligado
@@ -4150,6 +4348,7 @@ const cloudSync = {
           const {_meta,...db}=data;
           DB=db;
           ensureDBShape();   // 🛡️ garante arrays/objetos críticos antes de qualquer render
+          migrateDB();       // v2: migra o DB recém-baixado da nuvem (idempotente)
           localStorage.setItem('fleetcontrol_db',JSON.stringify(DB));
           localStorage.setItem('muvcity_lastWrite',String(cloudTs));
           try{ renderCurrentPage(); updateSidebarLogo(); }catch(_){}
@@ -4353,7 +4552,7 @@ function openSyncSettings(){
           <li>Cole aqui em cima e clique em <b>Salvar</b></li>
           <li>Pronto. Faça o mesmo nos celulares (gestor, sócio, motorista) — todos com a mesma URL</li>
         </ol>
-        <div style="margin-top:12px;padding:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:9px;font-size:11.5px;color:#fbbf24">
+        <div style="margin-top:12px;padding:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:9px;font-size:11.5px;color:#b45309">
           ⚠️ <b>Importante:</b> as regras padrão expiram em 30 dias. Vá em <b>Realtime Database → Regras</b> e cole:<br>
           <code style="display:block;background:rgba(0,0,0,.3);padding:8px;border-radius:6px;margin-top:6px;font-size:10.5px;color:#cbd5f5;font-family:monospace">{ "rules": { ".read": true, ".write": true } }</code>
           <span style="font-size:11px;display:block;margin-top:6px">Isso libera leitura/escrita pra qualquer pessoa com a URL — então NÃO compartilhe a URL publicamente, apenas com seu sócio/motoristas.</span>
@@ -4585,7 +4784,7 @@ function calcTrip(t){
   const taxAmt = n(t.taxAmount);
   const fuelRateio = getFuelRateioAdjust(t);
   const exp = n(t.fuelCost)+fuelRateio+n(t.tollCost)+n(t.accommodationCost)+n(t.foodCost)+
-              n(t.driverCost)+n(t.maintenanceCost)+n(t.otherCost)+taxAmt;
+              n(t.driverCost)+n(t.maintenanceCost)+n(t.otherCost)+n(t.vehicleCost)+taxAmt;
   const profit = rev - exp;
   const margin = rev>0 ? (profit/rev)*100 : 0;
   return {totalExpenses:exp, netProfit:profit, profitMargin:margin, fuelRateio};
@@ -5032,15 +5231,20 @@ function _dashToday(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
 function _dashCoversDay(t, dk){ const s=t.date||t.departureDate||''; const e=t.returnDate||s; return !!s && dk>=s && dk<=e; }
 function _dashHasDriver(t){ return (Array.isArray(t.driverNames)&&t.driverNames.some(Boolean)) || !!t.driverName; }
 function _dashPeriodMonths(period){ return new Set(getPeriodRange(period).months.map(([y,m])=>y+'-'+m)); }
-// Receita RECEBIDA no período (caixa) — soma installments.receivedAt, ignora parcelas <= 0
+// Receita RECEBIDA no período (caixa) — soma os PAGAMENTOS (parciais inclusive) datados no período.
 function getReceivedInPeriod(period, vFilter){
-  const set=_dashPeriodMonths(period); let total=0, count=0;
+  const set=_dashPeriodMonths(period); let total=0; const counted=new Set();
   getAllInstallments(vFilter==='all'?null:vFilter).forEach(i=>{
-    if(!i.receivedAt || n(i.amount)<=0) return;
-    const d=new Date(i.receivedAt+'T00:00:00'); if(isNaN(d)) return;
-    if(set.has(d.getFullYear()+'-'+d.getMonth())){ total+=n(i.amount); count++; }
+    if(n(i.amount)<=0) return;
+    if(Array.isArray(i.payments)&&i.payments.length){
+      i.payments.forEach(p=>{ if(!p.date) return; const d=new Date(p.date+'T00:00:00'); if(isNaN(d)) return;
+        if(set.has(d.getFullYear()+'-'+d.getMonth())){ total+=(parseFloat(p.amount)||0); counted.add(i.id); } });
+    } else if(i.receivedAt){
+      const d=new Date(i.receivedAt+'T00:00:00'); if(isNaN(d)) return;
+      if(set.has(d.getFullYear()+'-'+d.getMonth())){ total+=n(i.amount); counted.add(i.id); }
+    }
   });
-  return {total, count};
+  return {total, count:counted.size};
 }
 // Comissão de agenciamento no período (indicador INDEPENDENTE — não entra no resultado da frota)
 function getAgencyCommissionInPeriod(period){
@@ -5087,8 +5291,28 @@ function getOperationSnapshot(){
   const disponiveis=ativos.length-emViagem;
   const urgent=ativos.filter(v=>hasUrgentMaintenance(v)).length;
   const warn=ativos.filter(v=>!hasUrgentMaintenance(v)&&hasWarnMaintenance(v)).length;
+  // ── BLOCO 9 — estados operacionais adicionais ──
+  // Não iniciadas: cobrem hoje e ainda estão 'programada' (não começaram)
+  const naoIniciadas=hoje.filter(t=>(t.driverStatus||'programada')==='programada').length;
+  // Aguardando fechamento: em andamento cujo último dia já passou, ou finalizada sem km
+  const aguardFech=trips.filter(t=>{
+    const st=t.driverStatus||'programada'; const end=t.returnDate||t.date||'';
+    if(st==='andamento' && end && end<todayKey) return true;
+    if(st==='finalizada' && t.requiresKm!==false && _tripKm(t)<=0) return true;
+    return false;
+  }).length;
+  // Lançamentos pendentes: execuções finalizadas sem KM (fretamento contínuo)
+  let lancPend=0;
+  trips.forEach(t=>{ if(Array.isArray(t.executions)) t.executions.forEach(ex=>{ if(ex.status==='finalizada' && (ex.kmStart==null||ex.kmEnd==null)) lancPend++; }); });
+  // Contas parcialmente pagas
+  let parciais=0;
+  try{ getAllInstallments(null).forEach(i=>{ if(n(i.amount)>0 && instSituacao(i)==='parcial') parciais++; }); }catch(_){}
+  // Motoristas escalados hoje (distintos)
+  const drvSet=new Set();
+  hoje.forEach(t=>{ const drs=(Array.isArray(t.driverNames)&&t.driverNames.length)?t.driverNames:(t.driverName?[t.driverName]:[]); drs.forEach(d=>{ if(d) drvSet.add(_norm(d)); }); });
   return {todayKey, hoje:hoje.length, prox7:prox7.length, andamento:andamento.length, semMotorista:semMotorista.length,
-    confVeh, confDrv, disponiveis, emViagem, urgent, warn, ativos:ativos.length};
+    confVeh, confDrv, disponiveis, emViagem, urgent, warn, ativos:ativos.length,
+    naoIniciadas, aguardFech, lancPend, parciais, motoristasEscalados:drvSet.size};
 }
 function _opIcon(name){
   const p={
@@ -5099,7 +5323,11 @@ function _opIcon(name){
     alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
     truck:'<path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="12" height="10" rx="2"/><circle cx="12.5" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>',
-    wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
+    wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+    coins:'<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88l.7.71-2.82 2.82"/>',
+    users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
   };
   return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;
 }
@@ -5128,12 +5356,17 @@ function renderOperacao(){
   const manutTxt=s.urgent?`${s.urgent} manutenção(ões) vencida(s)`:s.warn?`${s.warn} em breve`:'Manutenção em dia';
   const manutNum=s.urgent||s.warn||'✓';
   el.innerHTML=[
-    card('neutral','cal',s.hoje,'Viagens de hoje',`openDayTrips('${s.todayKey}')`),
-    card('neutral','days',s.prox7,'Próximos 7 dias',`nav('agenda')`),
+    card('neutral','cal',s.hoje,'Operações de hoje',`openDayTrips('${s.todayKey}')`),
+    card(s.naoIniciadas?'warn':'ok','clock',s.naoIniciadas,'Não iniciadas',`openDayTrips('${s.todayKey}')`),
     card('neutral','play',s.andamento,'Em andamento',`nav('trips')`),
+    card(s.aguardFech?'warn':'ok','flag',s.aguardFech,'Aguardando fechamento',`nav('trips')`),
+    card(s.lancPend?'warn':'ok','days',s.lancPend,'Lançamentos pendentes',`nav('trips')`),
+    card('neutral','users',s.motoristasEscalados,'Motoristas escalados hoje',`nav('agenda')`),
     card(s.semMotorista?'warn':'ok','userx',s.semMotorista,'Sem motorista',`nav('agenda')`),
     card(s.confVeh?'alert':'ok','alert',s.confVeh,'Conflitos de veículo',`nav('agenda')`),
     card(s.confDrv?'alert':'ok','alert',s.confDrv,'Conflitos de motorista',`nav('agenda')`),
+    card(s.parciais?'warn':'ok','coins',s.parciais,'Contas parcialmente pagas',`nav('receivables')`),
+    card('neutral','days',s.prox7,'Próximos 7 dias',`nav('agenda')`),
     card('ok','check',s.disponiveis,'Veículos disponíveis',`nav('fleet')`),
     card('neutral','truck',s.emViagem,'Veículos em viagem',`nav('fleet')`),
     card(manutCls,'wrench',manutNum,manutTxt,`nav('fleet')`)
@@ -5327,7 +5560,7 @@ function renderMainChart(){
     labels.push(new Date(yr,mo,1).toLocaleDateString('pt-BR',{month:'short'}));
     const t=getMonthlyTotals(yr,mo,vehicleFilter);
     prev.push(t.grossRev); desp.push(t.totalExp);
-    let r=0; insts.forEach(i=>{ if(!i.receivedAt||n(i.amount)<=0)return; const d=new Date(i.receivedAt+'T00:00:00'); if(!isNaN(d)&&d.getFullYear()===yr&&d.getMonth()===mo) r+=n(i.amount); });
+    let r=0; insts.forEach(i=>{ if(n(i.amount)<=0)return; r+=instReceivedInMonth(i,yr,mo); });
     recv.push(r);
   });
   charts.main=new Chart(ctx,{ type:'bar',
@@ -5886,7 +6119,7 @@ function renderAgenda(){
       const title=`${rota}${p.t.client?' · '+p.t.client:''}${p.t.driverName?' · '+p.t.driverName:''}${diario}`.replace(/"/g,'&quot;');
       const continuation=!p.startsHere?' ← ':'';
       const continuationEnd=!p.endsHere?' →':'';
-      return `<div class="agenda-bar status-${status}" style="grid-column:${p.colStart}/${p.colEnd+1};grid-row:${p.row};background:${color}22;border-left-color:${color}" onclick="event.stopPropagation();editTrip('${p.t.id}')" title="${title}">${continuation}${hora?`<span class="agenda-bar-time">${hora}</span>`:''}${rota}${continuationEnd}</div>`;
+      return `<div class="agenda-bar status-${status}" style="grid-column:${p.colStart}/${p.colEnd+1};grid-row:${p.row};background:${color}30;border-left-color:${color}" onclick="event.stopPropagation();editTrip('${p.t.id}')" title="${title}">${continuation}${hora?`<span class="agenda-bar-time">${hora}</span>`:''}${rota}${continuationEnd}</div>`;
     }).join('');
 
     // "+N mais" pra colunas com overflow → abre o detalhe do dia com TODAS as viagens
@@ -5919,13 +6152,17 @@ function openDayTrips(dk){
     const rota=t.origin&&t.destination?`${t.origin} → ${t.destination}`:(t.description||t.client||'Viagem');
     const isMulti=t.returnDate&&t.returnDate>t.date;
     const horaLbl=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):(isMulti?'diário':'—');
-    return `<div onclick="closeModal('modal-day');editTrip('${t.id}')" style="display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--bd);border-left:4px solid ${color};border-radius:10px;margin-bottom:8px;cursor:pointer;background:rgba(255,255,255,.02)">
-      <div style="min-width:64px;font-weight:800;color:#7ba9f9;font-size:13px">${horaLbl}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600">${rota}</div>
-        <div class="txs txm">${[vehicleName(t.vehicleId),t.client,(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)].filter(Boolean).join(' · ')}</div>
+    const cont=isContinuousFret(t);
+    return `<div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--bd);border-left:4px solid ${color};border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.02)">
+      <div onclick="closeModal('modal-day');${cont?`openExecutionEditor('${t.id}','${dk}')`:`editTrip('${t.id}')`}" style="display:flex;gap:12px;align-items:center;flex:1;min-width:0;cursor:pointer">
+        <div style="min-width:64px;font-weight:800;color:#7ba9f9;font-size:13px">${horaLbl}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${rota}</div>
+          <div class="txs txm">${[vehicleName(t.vehicleId),t.client,(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)].filter(Boolean).join(' · ')}</div>
+        </div>
       </div>
       <span class="txs" style="white-space:nowrap">${stLabel}</span>
+      ${cont?`<button class="btn btn-sm btn-gh" onclick="event.stopPropagation();closeModal('modal-day');openExecutionEditor('${t.id}','${dk}')" title="Execução do dia">🔧</button>`:''}
     </div>`;
   }).join('') || '<div class="txs txm txc" style="padding:20px">Nenhuma viagem neste dia.</div>';
   let host=document.getElementById('modal-day');
@@ -6131,7 +6368,7 @@ function renderAgendaDrivers(){
         const hora=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):(isMulti?'diário':'');
         const rota=(t.origin||t.destination)?`${(t.origin||'?').split(/[,\-]/)[0].trim()}→${(t.destination||'?').split(/[,\-]/)[0].trim()}`:(t.client||t.description||'Viagem');
         const title=`${rota}${t.client?' · '+t.client:''}${hora?' · '+hora:''}`.replace(/"/g,'&quot;');
-        return `<div onclick="editTrip('${t.id}')" title="${title}" style="cursor:pointer;background:${color}22;border-left:3px solid ${color};border-radius:6px;padding:3px 6px;margin-bottom:3px;font-size:10.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hora?`<b style="color:var(--tx)">${hora}</b> `:''}${rota}</div>`;
+        return `<div onclick="editTrip('${t.id}')" title="${title}" style="cursor:pointer;color:var(--tx);background:${color}30;border-left:3px solid ${color};border-radius:6px;padding:3px 6px;margin-bottom:3px;font-size:10.5px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hora?`<b style="color:var(--tx)">${hora}</b> `:''}${rota}</div>`;
       }).join('');
       const bg=conflict?'rgba(239,68,68,.10)':(isT?'rgba(59,130,246,.04)':'transparent');
       return `<td style="vertical-align:top;padding:4px;min-width:118px;border-left:1px solid var(--bd);border-bottom:1px solid var(--bd);background:${bg}">${conflict?'<div style="font-size:9px;color:#fca5a5;font-weight:800;margin-bottom:2px">⚠️ conflito</div>':''}${chips||'<div style="min-height:22px"></div>'}</td>`;
@@ -6161,7 +6398,7 @@ function tripStatusInfo(t){ const s=t.driverStatus||'programada';
 function tripReceivedInfo(t){
   const insts=(t.paymentPlan&&Array.isArray(t.paymentPlan.installments))?t.paymentPlan.installments:[];
   const total=insts.reduce((s,i)=>s+n(i.amount),0);
-  const rec=insts.filter(i=>i.receivedAt&&n(i.amount)>0).reduce((s,i)=>s+n(i.amount),0);
+  const rec=insts.reduce((s,i)=>s+(n(i.amount)>0?instReceivedTotal(i):0),0);
   if(total<=0) return {cls:'rcv-no',label:'—'};
   if(rec<=0) return {cls:'rcv-no',label:'A receber'};
   if(rec>=total-0.001) return {cls:'rcv-ok',label:'Recebido'};
@@ -6234,7 +6471,9 @@ function toggleTripMenu(id, ev){
   if(m.style.display==='block'&&m._id===id){ m.style.display='none'; return; }
   m._id=id;
   const a=(lbl,call,cls)=>`<button class="${cls||''}" onclick="event.stopPropagation();document.getElementById('trip-row-menu').style.display='none';${call}">${lbl}</button>`;
-  m.innerHTML=a('Visualizar',`viewTrip('${id}')`)+a('Execução / fechamento',`openTripExecution('${id}')`)+a('Editar',`editTrip('${id}')`)+a('Voucher',`printTripVoucher('${id}')`)+a('Duplicar',`duplicateTrip('${id}')`)+`<div class="sep"></div>`+a('Excluir',`confirmDelete('trip','${id}')`,'del');
+  const _t=DB.trips.find(x=>x.id===id);
+  const escalaItem=(_t&&isContinuousFret(_t))?a('📋 Escala do contrato',`openOperationSchedule('${id}')`):'';
+  m.innerHTML=a('Visualizar',`viewTrip('${id}')`)+escalaItem+a('Execução / fechamento',`openTripExecution('${id}')`)+a('Editar',`editTrip('${id}')`)+a('📄 Ordem de Serviço',`printSmartOS('${id}')`)+a('Voucher',`printTripVoucher('${id}')`)+a('Duplicar',`duplicateTrip('${id}')`)+`<div class="sep"></div>`+a('Excluir',`confirmDelete('trip','${id}')`,'del');
   const r=ev.currentTarget.getBoundingClientRect(); const mw=196;
   m.style.display='block';
   m.style.top=(r.bottom+window.scrollY+4)+'px';
@@ -6259,14 +6498,305 @@ function viewTrip(id){
   const rota=(t.origin||t.destination)?`${t.origin||'?'} → ${t.destination||'?'}`:(t.description||'—');
   const drv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)||'—';
   const row=(l,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--bd)"><span class="txm">${l}</span><span style="font-weight:600;text-align:right">${v}</span></div>`;
+  // 📊 Demonstrativo da operação — itens de custo não-zero (transparência de margem zero/prejuízo)
+  const costItems=[
+    ['⛽ Combustível', n(t.fuelCost)+(c.fuelRateio||0)],
+    ['🚐 Veículo (terceiro)', n(t.vehicleCost)],
+    ['👤 Motorista', n(t.driverCost)],
+    ['🛣️ Pedágio', n(t.tollCost)],
+    ['🔧 Manutenção', n(t.maintenanceCost)],
+    ['🏨 Hospedagem', n(t.accommodationCost)],
+    ['🍽️ Alimentação', n(t.foodCost)],
+    ['📦 Outros', n(t.otherCost)],
+    ['🧾 Impostos', n(t.taxAmount)]
+  ].filter(x=>x[1]>0.001);
+  const rlColor=c.netProfit>0.001?'var(--sc)':(c.netProfit<-0.001?'var(--dg)':'var(--wn)');
+  const rlLabel=c.netProfit<-0.001?'Prejuízo':(Math.abs(c.netProfit)<=0.001?'Margem zero':'Resultado');
+  const demo=`<div style="margin-top:12px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:11px 13px">
+    <div class="txs txm" style="font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">📊 Demonstrativo da operação</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span class="txm">Receita</span><b style="color:var(--pr)">${R(t.grossRevenue)}</b></div>
+    ${costItems.map(([l,v])=>`<div style="display:flex;justify-content:space-between;font-size:12.5px"><span class="txm">${l}</span><span style="color:var(--dg)">− ${R(v)}</span></div>`).join('')||'<div class="txs txm">Sem custos lançados.</div>'}
+    <div style="display:flex;justify-content:space-between;border-top:1px solid var(--bd-strong);margin-top:6px;padding-top:6px;font-size:14px"><b>${rlLabel}</b><b style="color:${rlColor}">${R(c.netProfit)} · ${Pct(c.profitMargin)}</b></div>
+  </div>`;
   let host=document.getElementById('modal-view-trip');
   if(!host){ host=document.createElement('div'); host.id='modal-view-trip'; host.className='overlay'; document.body.appendChild(host); }
   host.innerHTML=`<div class="modal" style="max-width:520px"><div class="modal-h"><span class="modal-t">Viagem · ${fmtDate(t.date||t.departureDate)}</span><button class="xbtn" onclick="closeModal('modal-view-trip')">✕</button></div>
     <div style="margin-bottom:10px"><span class="st-badge ${st.cls}">${st.label}</span> <span class="svc-badge" style="margin-left:8px">${tripServiceLabel(t)}</span></div>
     ${row('Rota',rota)}${row('Cliente',t.client||'—')}${t.passengerName?row('Passageiro',t.passengerName):''}${row('Veículo',vehicleName(t.vehicleId))}${row('Motorista',drv)}
-    ${row('Receita',R(t.grossRevenue))}${row('Despesas',R(c.totalExpenses))}${row('Lucro',R(c.netProfit)+' · '+Pct(c.profitMargin))}${row('Recebimento',rcv.label)}
-    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-view-trip')">Fechar</button><button class="btn btn-pr" onclick="closeModal('modal-view-trip');editTrip('${t.id}')">Editar</button></div></div>`;
+    ${row('Recebimento',rcv.label)}
+    ${demo}
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-view-trip')">Fechar</button>${isContinuousFret(t)?`<button class="btn btn-pr" onclick="closeModal('modal-view-trip');openOperationSchedule('${t.id}')">📋 Escala do contrato</button>`:''}<button class="btn btn-pr" onclick="closeModal('modal-view-trip');editTrip('${t.id}')">Editar</button></div></div>`;
   openModal('modal-view-trip');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BLOCO 4 — FRETAMENTO CONTÍNUO: execução por dia, escala e horário semanal.
+   Cada dia da operação tem sua própria execução (placa/motorista PLANEJADO ×
+   EFETIVO, km, horário, situação). Trocar veículo/motorista num dia NÃO gera
+   nova OS — grava na execução daquele dia e guarda histórico (auditoria).
+   ══════════════════════════════════════════════════════════════════════════ */
+const _WD_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const _WD_FULL=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+function _execWeekday(dk){ const d=new Date(dk+'T00:00:00'); return isNaN(d)?0:d.getDay(); }
+function _actorName(){ return (DB.settings&&DB.settings.operatorName)||'Gestor'; }
+function _nowIso(){ return new Date().toISOString(); }
+// Horário planejado do dia: weekdaySchedule[wd] tem prioridade; senão pickup/return da operação
+function plannedHorario(t, dk){
+  const wd=_execWeekday(dk);
+  const ws=(t.weekdaySchedule&&t.weekdaySchedule[wd])||null;
+  return { pickup:(ws&&ws.p)||t.pickupTime||'', return:(ws&&ws.r)||t.returnTime||'' };
+}
+// Acha a execução do dia; cria sob demanda (op contínua que ganhou um dia novo)
+function getExecution(t, dk, createIfMissing){
+  if(!Array.isArray(t.executions)) t.executions=[];
+  let ex=t.executions.find(e=>e.date===dk);
+  if(!ex && createIfMissing){
+    const plannedDriver=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'';
+    const h=plannedHorario(t,dk);
+    ex={id:uid('exec'),date:dk,plannedVehicleId:t.vehicleId||'',actualVehicleId:'',plannedDriver,actualDriver:'',
+        kmStart:null,kmEnd:null,pickupTime:h.pickup,returnTime:h.return,status:'programada',
+        fuelings:[],extraTrips:[],occurrences:[],history:[]};
+    t.executions.push(ex);
+    t.executions.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  }
+  return ex||null;
+}
+function execStatusInfo(st){
+  return ({programada:{l:'⏳ Programada',bg:'rgba(148,163,184,.15)',fg:'#64748b'},
+           andamento:{l:'🟢 Em andamento',bg:'rgba(16,185,129,.14)',fg:'#059669'},
+           finalizada:{l:'✅ Finalizada',bg:'rgba(59,130,246,.14)',fg:'#2563eb'}})[st]
+        ||{l:'⏳ Programada',bg:'rgba(148,163,184,.15)',fg:'#64748b'};
+}
+function execVehicleId(ex){ return ex.actualVehicleId||ex.plannedVehicleId||''; }
+function execDriver(ex){ return ex.actualDriver||ex.plannedDriver||''; }
+// Substituição = efetivo diferente do planejado (placa ou motorista)
+function execHasSub(ex){
+  const vSub=ex.actualVehicleId && ex.actualVehicleId!==ex.plannedVehicleId;
+  const dSub=ex.actualDriver && _norm(ex.actualDriver)!==_norm(ex.plannedDriver||'');
+  return { vehicle:vSub, driver:dSub, any:vSub||dSub };
+}
+function _vehOptions(sel){ return (DB.vehicles||[]).filter(v=>v.active!==false||v.id===sel).map(v=>`<option value="${v.id}" ${v.id===sel?'selected':''}>${v.plate||v.model||'—'}</option>`).join(''); }
+function _driverOptionList(sel){
+  const cad=(DB.drivers||[]).filter(d=>d.active!==false).map(d=>d.name).filter(Boolean);
+  const set=new Set(cad.map(_norm)); const all=[...cad];
+  if(sel && !set.has(_norm(sel))) all.unshift(sel);
+  return '<option value="">— sem motorista —</option>'+all.map(nm=>`<option value="${nm.replace(/"/g,'&quot;')}" ${_norm(nm)===_norm(sel||'')?'selected':''}>${nm}</option>`).join('');
+}
+
+// ── Modal: escala do contrato (lista de execuções por dia) ──
+let _opSchedTripId=null;
+const _execSel=new Set();   // dias marcados para ação em lote
+function openOperationSchedule(tripId){
+  const t=DB.trips.find(x=>x.id===tripId); if(!t) return;
+  if(!Array.isArray(t.executions)||!t.executions.length) t.executions=buildExecutionsFromTrip(t);
+  _opSchedTripId=tripId; _execSel.clear();
+  let host=document.getElementById('modal-opsched');
+  if(!host){ host=document.createElement('div'); host.id='modal-opsched'; host.className='overlay'; document.body.appendChild(host); }
+  renderOperationSchedule();
+  openModal('modal-opsched');
+}
+function renderOperationSchedule(){
+  const t=DB.trips.find(x=>x.id===_opSchedTripId); if(!t) return;
+  const host=document.getElementById('modal-opsched'); if(!host) return;
+  const rota=(t.origin||t.destination)?`${t.origin||'?'} → ${t.destination||'?'}`:(t.description||'—');
+  const execs=(t.executions||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const rows=execs.map(ex=>{
+    const sub=execHasSub(ex); const st=execStatusInfo(ex.status);
+    const dt=new Date(ex.date+'T00:00:00');
+    const wd=_WD_NAMES[dt.getDay()]; const dd=dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const plate=vehicleName(execVehicleId(ex))||'—';
+    const drv=execDriver(ex)||'—';
+    const km=(ex.kmStart!=null&&ex.kmEnd!=null)?`${(n(ex.kmEnd)-n(ex.kmStart)).toLocaleString('pt-BR')} km`:(ex.kmStart!=null?'iniciado':'—');
+    const checked=_execSel.has(ex.date)?'checked':'';
+    return `<tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:8px 6px;text-align:center"><input type="checkbox" ${checked} onchange="_toggleExecSel('${ex.date}')"></td>
+      <td style="padding:8px 6px;white-space:nowrap"><b>${dd}</b> <span class="txm txs">${wd}</span></td>
+      <td style="padding:8px 6px">${plate}${sub.vehicle?' <span title="placa substituída" style="color:var(--gold)">↺</span>':''}</td>
+      <td style="padding:8px 6px">${drv}${sub.driver?' <span title="motorista substituído" style="color:var(--gold)">↺</span>':''}</td>
+      <td style="padding:8px 6px;white-space:nowrap">${ex.pickupTime||'—'}${ex.returnTime?'–'+ex.returnTime:''}</td>
+      <td style="padding:8px 6px">${km}</td>
+      <td style="padding:8px 6px"><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${st.bg};color:${st.fg};white-space:nowrap">${st.l}</span></td>
+      <td style="padding:8px 6px;text-align:right"><button class="btn btn-sm btn-gh" onclick="openExecutionEditor('${t.id}','${ex.date}')">Editar</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" class="txs txm txc" style="padding:20px">Nenhum dia na escala.</td></tr>';
+  const selCount=_execSel.size;
+  host.innerHTML=`<div class="modal" style="max-width:820px">
+    <div class="modal-h"><span class="modal-t">📋 Escala — ${t.client||'Operação'}</span>
+      <button class="xbtn" onclick="closeModal('modal-opsched')">✕</button></div>
+    <div class="txs txm" style="margin-bottom:10px">${rota} · ${execs.length} dia(s) · <a href="javascript:void(0)" onclick="openWeekdaySchedule('${t.id}')" style="color:var(--pr);font-weight:600">⏰ horários por dia da semana</a></div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="border-bottom:2px solid var(--bd-strong);text-align:left">
+          <th style="padding:6px"></th><th style="padding:6px">Dia</th><th style="padding:6px">Placa efetiva</th>
+          <th style="padding:6px">Motorista</th><th style="padding:6px">Horário</th><th style="padding:6px">KM</th>
+          <th style="padding:6px">Situação</th><th style="padding:6px"></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="opsched-bulk" style="margin-top:12px;padding:12px;border:1px dashed var(--bd-strong);border-radius:10px;${selCount?'':'display:none'}">
+      <div class="txs" style="font-weight:700;margin-bottom:8px">Aplicar aos ${selCount} dia(s) marcado(s):</div>
+      <div class="fr c2" style="gap:8px;align-items:end">
+        <div class="fg" style="margin:0"><label class="fl" style="font-size:11px">Trocar placa efetiva</label>
+          <select class="fc" id="bulk-veh"><option value="">— manter —</option>${_vehOptions('')}</select></div>
+        <div class="fg" style="margin:0"><label class="fl" style="font-size:11px">Trocar motorista real</label>
+          <select class="fc" id="bulk-drv"><option value="__keep__">— manter —</option>${_driverOptionList('')}</select></div>
+      </div>
+      <div class="fl-row" style="gap:8px;margin-top:10px">
+        <button class="btn btn-sm btn-pr" onclick="applyBulkExec()">✔ Aplicar aos dias marcados</button>
+        <button class="btn btn-sm btn-gh" onclick="_execSel.clear();renderOperationSchedule()">Limpar seleção</button>
+      </div>
+    </div>
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-opsched')">Fechar</button></div>
+  </div>`;
+}
+function _toggleExecSel(dk){ if(_execSel.has(dk)) _execSel.delete(dk); else _execSel.add(dk); renderOperationSchedule(); }
+function applyBulkExec(){
+  if(!requireEdit()) return;
+  const t=DB.trips.find(x=>x.id===_opSchedTripId); if(!t) return;
+  const vId=document.getElementById('bulk-veh').value;
+  const drv=document.getElementById('bulk-drv').value;
+  const nDays=_execSel.size;
+  let count=0;
+  _execSel.forEach(dk=>{
+    const ex=getExecution(t,dk,true); if(!ex) return;
+    if(vId && vId!==execVehicleId(ex)){ _execLog(ex,'placa',vehicleName(execVehicleId(ex)),vehicleName(vId)); ex.actualVehicleId=(vId===ex.plannedVehicleId?'':vId); count++; }
+    if(drv!=='__keep__' && _norm(drv)!==_norm(execDriver(ex))){ _execLog(ex,'motorista',execDriver(ex)||'—',drv||'—'); ex.actualDriver=(_norm(drv)===_norm(ex.plannedDriver||'')?'':drv); count++; }
+  });
+  saveDB(); _execSel.clear(); renderOperationSchedule();
+  showToast(count?`Aplicado a ${nDays} dia(s) — ${count} alteração(ões).`:'Nenhuma alteração aplicada.', count?'ok':'warn');
+}
+function _execLog(ex,field,from,to){ if(!Array.isArray(ex.history)) ex.history=[]; ex.history.push({at:_nowIso(),by:_actorName(),field,from:from||'—',to:to||'—'}); }
+
+// ── Modal: editor de execução de UM dia ──
+let _execEdit={tripId:null, dk:null};
+function openExecutionEditor(tripId, dk){
+  const t=DB.trips.find(x=>x.id===tripId); if(!t) return;
+  const ex=getExecution(t,dk,true); if(!ex) return;
+  _execEdit={tripId,dk};
+  const dt=new Date(dk+'T00:00:00');
+  const titulo=`${_WD_FULL[dt.getDay()]}, ${dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}`;
+  const plannedPlate=vehicleName(ex.plannedVehicleId)||'—';
+  const plannedDrv=ex.plannedDriver||'—';
+  const ph=plannedHorario(t,dk);
+  const hist=(ex.history||[]).slice().reverse().map(h=>`<div class="txs" style="padding:4px 0;border-bottom:1px solid var(--bd)"><b>${h.field}</b>: ${h.from} → ${h.to} <span class="txm">· ${h.by} · ${fmtDate((h.at||'').slice(0,10))}</span></div>`).join('')||'<div class="txs txm">Sem alterações registradas.</div>';
+  const occ=(ex.occurrences||[]).slice().reverse().map(o=>`<div class="txs" style="padding:3px 0">• ${o.text||o} <span class="txm">${o.at?'· '+fmtDate((o.at||'').slice(0,10)):''}</span></div>`).join('')||'<div class="txs txm">Nenhuma ocorrência.</div>';
+  let host=document.getElementById('modal-exec');
+  if(!host){ host=document.createElement('div'); host.id='modal-exec'; host.className='overlay'; document.body.appendChild(host); }
+  host.innerHTML=`<div class="modal" style="max-width:600px">
+    <div class="modal-h"><span class="modal-t">🔧 Execução · ${titulo}</span>
+      <button class="xbtn" onclick="closeModal('modal-exec')">✕</button></div>
+    <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12.5px">
+      <div class="txs" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--txm);margin-bottom:4px">Planejado (contrato)</div>
+      <div>🚐 ${plannedPlate} · 👤 ${plannedDrv} · ⏰ ${ph.pickup||'—'}${ph.return?'–'+ph.return:''}</div>
+    </div>
+    <div class="fsec-t">Efetivo do dia <span class="txs txm" style="text-transform:none;letter-spacing:0">(pode diferir do planejado — vira substituição)</span></div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">🚐 Placa utilizada</label><select class="fc" id="ex-veh">${_vehOptions(execVehicleId(ex))}</select></div>
+      <div class="fg"><label class="fl">👤 Motorista real</label><select class="fc" id="ex-drv">${_driverOptionList(execDriver(ex))}</select></div>
+    </div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">⏰ Embarque</label><input type="time" class="fc" id="ex-pickup" value="${ex.pickupTime||ph.pickup||''}"></div>
+      <div class="fg"><label class="fl">⏰ Retorno</label><input type="time" class="fc" id="ex-return" value="${ex.returnTime||ph.return||''}"></div>
+    </div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">KM inicial</label><input type="number" class="fc" id="ex-kmstart" value="${ex.kmStart!=null?ex.kmStart:''}" placeholder="0"></div>
+      <div class="fg"><label class="fl">KM final</label><input type="number" class="fc" id="ex-kmend" value="${ex.kmEnd!=null?ex.kmEnd:''}" placeholder="0"></div>
+    </div>
+    <div class="fr c2">
+      <div class="fg"><label class="fl">Situação</label><select class="fc" id="ex-status">
+        <option value="programada" ${ex.status==='programada'?'selected':''}>⏳ Programada</option>
+        <option value="andamento" ${ex.status==='andamento'?'selected':''}>🟢 Em andamento</option>
+        <option value="finalizada" ${ex.status==='finalizada'?'selected':''}>✅ Finalizada</option>
+      </select></div>
+      <div class="fg"><label class="fl">Registrar ocorrência</label><input type="text" class="fc" id="ex-occ" placeholder="Ex: atraso, passageiro faltou..."></div>
+    </div>
+    <details style="margin-top:8px"><summary class="txs txm" style="cursor:pointer">📜 Histórico de alterações · ocorrências</summary>
+      <div style="margin-top:8px"><div class="txs" style="font-weight:700;margin-bottom:4px">Alterações</div>${hist}
+      <div class="txs" style="font-weight:700;margin:8px 0 4px">Ocorrências</div>${occ}</div></details>
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-exec')">Cancelar</button>
+      <button class="btn btn-pr" onclick="saveExecution()">💾 Salvar execução</button></div>
+  </div>`;
+  openModal('modal-exec');
+}
+function saveExecution(){
+  if(!requireEdit()) return;
+  const t=DB.trips.find(x=>x.id===_execEdit.tripId); if(!t) return;
+  const ex=getExecution(t,_execEdit.dk,true); if(!ex) return;
+  const newVeh=document.getElementById('ex-veh').value;
+  const newDrv=document.getElementById('ex-drv').value;
+  const kmS=document.getElementById('ex-kmstart').value, kmE=document.getElementById('ex-kmend').value;
+  const pk=document.getElementById('ex-pickup').value, rt=document.getElementById('ex-return').value;
+  const stt=document.getElementById('ex-status').value;
+  const occTxt=(document.getElementById('ex-occ').value||'').trim();
+  // KM coerente
+  if(kmS!=='' && kmE!=='' && n(kmE)<n(kmS)){ showToast('KM final não pode ser menor que o inicial.','warn'); return; }
+  // Substituições → histórico
+  if(newVeh!==execVehicleId(ex)) _execLog(ex,'placa',vehicleName(execVehicleId(ex)),vehicleName(newVeh));
+  if(_norm(newDrv)!==_norm(execDriver(ex))) _execLog(ex,'motorista',execDriver(ex)||'—',newDrv||'—');
+  if(stt!==ex.status) _execLog(ex,'situação',execStatusInfo(ex.status).l,execStatusInfo(stt).l);
+  // Efetivo só grava quando difere do planejado (mantém "planejado" como fonte)
+  ex.actualVehicleId=(newVeh===ex.plannedVehicleId?'':newVeh);
+  ex.actualDriver=(_norm(newDrv)===_norm(ex.plannedDriver||'')?'':newDrv);
+  ex.kmStart=kmS!==''?n(kmS):null;
+  ex.kmEnd=kmE!==''?n(kmE):null;
+  ex.pickupTime=pk; ex.returnTime=rt; ex.status=stt;
+  if(occTxt){ if(!Array.isArray(ex.occurrences)) ex.occurrences=[]; ex.occurrences.push({at:_nowIso(),by:_actorName(),text:occTxt}); }
+  saveDB(); closeModal('modal-exec');
+  if(document.getElementById('modal-opsched')&&document.getElementById('modal-opsched').classList.contains('show')) renderOperationSchedule();
+  try{ renderCurrentPage(); }catch(_){}
+  showToast('Execução salva.','ok');
+}
+
+// ── Modal: horários por dia da semana (weekdaySchedule) ──
+let _wsTripId=null;
+function openWeekdaySchedule(tripId){
+  const t=DB.trips.find(x=>x.id===tripId); if(!t) return;
+  _wsTripId=tripId;
+  const ws=t.weekdaySchedule||{};
+  const rows=[1,2,3,4,5,6,0].map(wd=>{
+    const cur=ws[wd]||{};
+    return `<div class="fr c2" style="gap:8px;align-items:end;margin-bottom:6px">
+      <div class="fg" style="margin:0"><label class="fl" style="font-size:11px">${_WD_FULL[wd]}</label>
+        <input type="time" class="fc" id="ws-p-${wd}" value="${cur.p||''}" placeholder="embarque"></div>
+      <div class="fg" style="margin:0"><label class="fl" style="font-size:11px">Retorno</label>
+        <input type="time" class="fc" id="ws-r-${wd}" value="${cur.r||''}"></div>
+    </div>`;
+  }).join('');
+  let host=document.getElementById('modal-ws');
+  if(!host){ host=document.createElement('div'); host.id='modal-ws'; host.className='overlay'; document.body.appendChild(host); }
+  host.innerHTML=`<div class="modal" style="max-width:480px">
+    <div class="modal-h"><span class="modal-t">⏰ Horários por dia da semana</span>
+      <button class="xbtn" onclick="closeModal('modal-ws')">✕</button></div>
+    <div class="txs txm" style="margin-bottom:10px">Deixe em branco pra usar o horário padrão da operação. <a href="javascript:void(0)" onclick="fillWeekdayPreset()" style="color:var(--pr);font-weight:600">usar preset (seg-sex 06:30/18:00, sáb 17:00, dom 16:00)</a></div>
+    ${rows}
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-ws')">Cancelar</button>
+      <button class="btn btn-pr" onclick="saveWeekdaySchedule()">💾 Salvar horários</button></div>
+  </div>`;
+  openModal('modal-ws');
+}
+function fillWeekdayPreset(){
+  const set=(wd,p,r)=>{ const pe=document.getElementById('ws-p-'+wd), re=document.getElementById('ws-r-'+wd); if(pe)pe.value=p; if(re)re.value=r; };
+  [1,2,3,4,5].forEach(wd=>set(wd,'06:30','18:00')); set(6,'06:30','17:00'); set(0,'06:30','16:00');
+}
+function saveWeekdaySchedule(){
+  if(!requireEdit()) return;
+  const t=DB.trips.find(x=>x.id===_wsTripId); if(!t) return;
+  const ws={};
+  [0,1,2,3,4,5,6].forEach(wd=>{
+    const p=document.getElementById('ws-p-'+wd)?.value||'', r=document.getElementById('ws-r-'+wd)?.value||'';
+    if(p||r) ws[wd]={p,r};
+  });
+  t.weekdaySchedule=Object.keys(ws).length?ws:null;
+  // Re-aplica horário nas execuções ainda PROGRAMADAS (não mexe em dias já em andamento/finalizados)
+  let upd=0;
+  (t.executions||[]).forEach(ex=>{
+    if(ex.status!=='programada') return;
+    const h=plannedHorario(t,ex.date);
+    if(ex.pickupTime!==h.pickup||ex.returnTime!==h.return){ ex.pickupTime=h.pickup; ex.returnTime=h.return; upd++; }
+  });
+  saveDB(); closeModal('modal-ws');
+  if(document.getElementById('modal-opsched')&&document.getElementById('modal-opsched').classList.contains('show')) renderOperationSchedule();
+  showToast(`Horários salvos.${upd?` ${upd} dia(s) programado(s) atualizado(s).`:''}`,'ok');
 }
 
 // ══════════ EXPENSES ══════════
@@ -6571,10 +7101,10 @@ function renderCommitments(){
       const rows=alertItems.map(a=>`
         <div class="fl-row ic jb" style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)">
           <div style="font-size:13px"><strong>${a.fc.name}</strong> — ${a.label}</div>
-          <span class="badge" style="background:${a.status==='overdue'?'rgba(239,68,68,.25);color:#f87171':'rgba(251,191,36,.25);color:#f59e0b'}">${a.status==='overdue'?'🔴 Vencida':'🟡 Vence em breve'}</span>
+          <span class="badge" style="background:${a.status==='overdue'?'rgba(239,68,68,.25);color:#dc2626':'rgba(251,191,36,.25);color:#f59e0b'}">${a.status==='overdue'?'🔴 Vencida':'🟡 Vence em breve'}</span>
         </div>`).join('');
       banner.innerHTML=`<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px">
-        <div class="fl-row ic" style="gap:8px;margin-bottom:8px"><span style="font-size:16px">⚠️</span><span class="fsb" style="color:#f87171">${alertItems.length} parcela(s) com vencimento pendente</span></div>
+        <div class="fl-row ic" style="gap:8px;margin-bottom:8px"><span style="font-size:16px">⚠️</span><span class="fsb" style="color:#dc2626">${alertItems.length} parcela(s) com vencimento pendente</span></div>
         ${rows}</div>`;
       banner.style.display='';
     } else {
@@ -6602,7 +7132,7 @@ function renderCommitments(){
     const remainingDebt=isVendedor?(n(fc.totalDebt)-n(fc.paidTotal)):null;
 
     const dueBadge=dueStatus==='overdue'
-      ? `<span class="badge" style="background:rgba(239,68,68,.2);color:#f87171">🔴 Parcela vencida — dia ${fc.dueDay}</span>`
+      ? `<span class="badge" style="background:rgba(239,68,68,.2);color:#dc2626">🔴 Parcela vencida — dia ${fc.dueDay}</span>`
       : dueStatus==='due-soon'
       ? `<span class="badge" style="background:rgba(251,191,36,.2);color:#f59e0b">🟡 Vence dia ${fc.dueDay}</span>`
       : '';
@@ -6927,7 +7457,7 @@ function renderInvestors(){
       if(!hasPct||vehProfit<=0) return `<span class="badge gz">— Sem retorno</span>`;
       if(paidThisMonth>=dueThisMonth) return `<span class="badge g">✅ Pago</span>`;
       if(paidThisMonth>0) return `<span class="badge" style="background:rgba(251,191,36,.2);color:#f59e0b">⚠️ Parcial</span>`;
-      return `<span class="badge" style="background:rgba(239,68,68,.15);color:#f87171">🔴 Em aberto</span>`;
+      return `<span class="badge" style="background:rgba(239,68,68,.15);color:#dc2626">🔴 Em aberto</span>`;
     };
 
     // Monthly history (last 6 months)
@@ -6946,7 +7476,7 @@ function renderInvestors(){
       if(!r.calculated) statusBadge='<span class="badge gz">—</span>';
       else if(r.paid>=r.calculated) statusBadge='<span class="badge g">✅ Pago</span>';
       else if(r.paid>0) statusBadge='<span class="badge" style="background:rgba(251,191,36,.2);color:#f59e0b">⚠️ Parcial</span>';
-      else statusBadge='<span class="badge" style="background:rgba(239,68,68,.15);color:#f87171">🔴 Pendente</span>';
+      else statusBadge='<span class="badge" style="background:rgba(239,68,68,.15);color:#dc2626">🔴 Pendente</span>';
       const isCurrentMonth=r.key===curKey;
       return `<tr style="${isCurrentMonth?'background:rgba(99,102,241,.08);':''}">
         <td style="font-weight:${isCurrentMonth?700:400}">${r.label}${isCurrentMonth?' ◀':''}</td>
@@ -6978,11 +7508,11 @@ function renderInvestors(){
 
       <!-- Participação -->
       <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:14px;margin-bottom:14px">
-        <div class="fsec-t" style="color:#a78bfa">📐 Participação no Veículo</div>
+        <div class="fsec-t" style="color:#7c3aed">📐 Participação no Veículo</div>
         <div class="g4">
           <div class="vst"><div class="vst-l">Valor do Veículo</div><div class="vst-v">${R(purchaseValue)}</div></div>
           <div class="vst"><div class="vst-l">Aporte do Investidor</div><div class="vst-v tpr">${R(inv.investedAmount)}</div></div>
-          <div class="vst"><div class="vst-l">Participação no Capital</div><div class="vst-v" style="color:#a78bfa">${equityPct.toFixed(2)}%</div></div>
+          <div class="vst"><div class="vst-l">Participação no Capital</div><div class="vst-v" style="color:#7c3aed">${equityPct.toFixed(2)}%</div></div>
           <div class="vst"><div class="vst-l">% Retorno Acordado</div>
             <div class="vst-v ${hasPct?'twn':'tdr'}">${hasPct?pct+'%':'Não definido'}</div></div>
         </div>
@@ -7030,7 +7560,7 @@ function renderInvestors(){
               <td>Total 6 meses</td><td>—</td>
               <td class="twn">${histTotalCalc>0?R(histTotalCalc):'—'}</td>
               <td class="tsc">${histTotalPaid>0?R(histTotalPaid):'—'}</td>
-              <td>${histBalance>0?`<span style="color:#f87171;font-size:11px">⚠️ ${R(histBalance)} pendente</span>`:`<span style="color:var(--sc);font-size:11px">✅ Em dia</span>`}</td>
+              <td>${histBalance>0?`<span style="color:#dc2626;font-size:11px">⚠️ ${R(histBalance)} pendente</span>`:`<span style="color:var(--sc);font-size:11px">✅ Em dia</span>`}</td>
             </tr></tfoot>
           </table>
         </div>
@@ -7135,12 +7665,12 @@ function calcDetailedTotals(period, vFilter){
 
   // Despesas das viagens (operacionais)
   let fuelTotal=0, tollTotal=0, foodTotal=0, hotelTotal=0,
-      driverTotal=0, maintTripTotal=0, otherTripTotal=0, taxPaid=0;
+      driverTotal=0, maintTripTotal=0, otherTripTotal=0, vehTotal=0, taxPaid=0;
   trips.forEach(t=>{
     fuelTotal+=n(t.fuelCost); tollTotal+=n(t.tollCost);
     foodTotal+=n(t.foodCost); hotelTotal+=n(t.accommodationCost);
     driverTotal+=n(t.driverCost); maintTripTotal+=n(t.maintenanceCost);
-    otherTripTotal+=n(t.otherCost); taxPaid+=n(t.taxAmount);
+    otherTripTotal+=n(t.otherCost); vehTotal+=n(t.vehicleCost); taxPaid+=n(t.taxAmount);
   });
 
   // Despesas variáveis (categorias)
@@ -7202,7 +7732,7 @@ function calcDetailedTotals(period, vFilter){
   let kmTotal=0;
   trips.forEach(t=>{ const km=n(t.kmDriven)||(n(t.kmEnd)-n(t.kmStart)); if(km>0) kmTotal+=km; });
 
-  const tripExpTotal = fuelTotal+tollTotal+foodTotal+hotelTotal+driverTotal+maintTripTotal+otherTripTotal+taxPaid;
+  const tripExpTotal = fuelTotal+tollTotal+foodTotal+hotelTotal+driverTotal+maintTripTotal+otherTripTotal+vehTotal+taxPaid;
   const totalExp = tripExpTotal+varTotal+fixedTotal+sharedTotal;
   const netProfit = grossRev-totalExp;
   const margin = grossRev>0?(netProfit/grossRev)*100:0;
@@ -7229,7 +7759,7 @@ function calcDetailedTotals(period, vFilter){
     label, monthsCount:months.length,
     trips, exps,
     grossRev, revWithNF, revWithoutNF, invoiceTotal,
-    fuelTotal, tollTotal, foodTotal, hotelTotal, driverTotal, maintTripTotal, otherTripTotal, taxPaid,
+    fuelTotal, tollTotal, foodTotal, hotelTotal, driverTotal, maintTripTotal, otherTripTotal, vehTotal, taxPaid,
     tripExpTotal,
     varTotal, varByCat,
     fixedTotal, fixedByName,
@@ -7262,6 +7792,7 @@ function renderExecutiveReport(el){
     {l:'🛣️ Pedágio',v:t.tollTotal,c:'#94a3b8'},
     {l:'🔧 Manutenção (viagem)',v:t.maintTripTotal,c:'#f59e0b'},
     {l:'👤 Comissão Motorista',v:t.driverTotal,c:'#a78bfa'},
+    {l:'🚐 Veículos de terceiros',v:t.vehTotal,c:'#b8860b'},
     {l:'🏨 Hospedagem',v:t.hotelTotal,c:'#10b981'},
     {l:'🍽️ Alimentação',v:t.foodTotal,c:'#22d3a3'},
     {l:'📦 Outros (viagem)',v:t.otherTripTotal,c:'#94a3b8'},
@@ -7378,7 +7909,7 @@ function renderExecutiveReport(el){
         <div class="div"></div>
         <div class="exec-line" style="background:rgba(16,185,129,.06);border-radius:10px;padding:10px 14px;border:1px solid rgba(16,185,129,.2)">
           <span style="font-weight:700">Receita Bruta</span>
-          <span style="font-weight:800;color:#34d399;font-size:16px">${R(t.grossRev)}</span>
+          <span style="font-weight:800;color:#059669;font-size:16px">${R(t.grossRev)}</span>
         </div>
       </div>
 
@@ -7451,7 +7982,7 @@ function renderExecutiveReport(el){
         O resultado líquido foi de <b class="${sign}">${R(t.netProfit)}</b>, equivalente a uma margem de <b>${t.margin.toFixed(1)}%</b>.
         ${t.taxPaid>0?` Foram pagos <b class="twn">${R(t.taxPaid)}</b> em impostos sobre nota fiscal.`:''}
         ${t.kmTotal>0?` A frota rodou <b>${t.kmTotal.toLocaleString('pt-BR')} km</b>, gerando <b class="tpr">${R(revKM)}/km</b> de receita e <b class="${sign}">${R(profitKM)}/km</b> de lucro.`:''}
-        ${t.investorPaid>0?` Do lucro apurado, foram <b>repassados <span style="color:#a78bfa">${R(t.investorPaid)}</span></b> aos investidores, restando <b>${R(t.retainedProfit)}</b> retidos para reinvestimento.`:''}
+        ${t.investorPaid>0?` Do lucro apurado, foram <b>repassados <span style="color:#7c3aed">${R(t.investorPaid)}</span></b> aos investidores, restando <b>${R(t.retainedProfit)}</b> retidos para reinvestimento.`:''}
       </div>
     </div>
   `;
@@ -7577,7 +8108,7 @@ function renderVehicleReport(el){
         <div class="vst"><div class="vst-l">Custo / km</div><div class="vst-v tdr">${R(t.kmTotal>0?t.totalExp/t.kmTotal:0)}</div></div>
         <div class="vst"><div class="vst-l">Lucro / km</div><div class="vst-v ${sg}">${R(profitKM)}</div></div>
       </div>`:''}
-      ${t.taxPaid>0?`<div class="txs mt3" style="padding:8px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;color:#fbbf24">💸 Impostos pagos no período: <b>${R(t.taxPaid)}</b></div>`:''}
+      ${t.taxPaid>0?`<div class="txs mt3" style="padding:8px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;color:#b45309">💸 Impostos pagos no período: <b>${R(t.taxPaid)}</b></div>`:''}
     </div>`;
   }).join('');
 }
@@ -8010,9 +8541,12 @@ function openTripModal(vId){
    'trip-pickup-time','trip-return-time','trip-wait-tolerance','trip-wait-rate','trip-passengers','trip-passenger-name','trip-passenger-phone','trip-client-phone','trip-itinerary',
    'trip-nf-value','trip-tax-rate','trip-tax-amount','trip-km-start','trip-km-end',
    'trip-km-total','trip-km-estimated','trip-fuel','trip-liters','trip-toll','trip-maint','trip-hotel',
-   'trip-food','trip-driver','trip-other','trip-other-desc','trip-notes',
+   'trip-food','trip-driver','trip-other','trip-other-desc','trip-vehicle-cost','trip-notes',
    'trip-driver-daily-rate','trip-driver-days','trip-driver-total']
     .forEach(id=>{ const el=document.getElementById(id); if(el){el.value='';if(el.dataset)el.dataset.manual='0';} });
+  window._tripVehCostMode=null;
+  const _vch=document.getElementById('trip-vehicle-cost-hint'); if(_vch){ _vch.style.display='none'; _vch.textContent=''; }
+  try{ onTripVehicleChange(); }catch(_){}   // sugere custo se o veículo padrão for de terceiro
   const dps=document.getElementById('driver-payment-section'); if(dps) dps.style.display='none';
   const qcp=document.getElementById('trip-quick-client-panel'); if(qcp) qcp.style.display='none';
   const rti=document.getElementById('trip-rateio-info'); if(rti){ rti.style.display='none'; rti.innerHTML=''; }
@@ -8051,6 +8585,39 @@ function openTripModal(vId){
   buildTripWizard();
   const _ex=document.getElementById('wz-exec'); if(_ex) _ex.style.display='none';   // nova viagem: execução escondida
   openModal('modal-trip');
+}
+
+// ══════════ BLOCO 3 — VEÍCULO PRÓPRIO/TERCEIRO: sugestão de custo ══════════
+const _VEH_COST_MODE_LABEL={diaria:'diária',viagem:'por viagem',periodo:'por período',km:'por km',fixo:'valor fixo'};
+function _applyVehCostSuggestion(){
+  const inp=document.getElementById('trip-vehicle-cost'); if(!inp) return;
+  const v=DB.vehicles.find(x=>x.id===document.getElementById('trip-vehicle').value);
+  if(!v || v.ownership!=='terceiro' || v.costValue==null) return;
+  inp.value=v.costValue; window._tripVehCostMode=v.costMode||null;
+  try{ calcTripProfit(); }catch(_){}
+  const hint=document.getElementById('trip-vehicle-cost-hint');
+  if(hint){ hint.innerHTML=`✓ Custo sugerido aplicado — confirme ou edite.`; }
+}
+// noPrefill=true: modo edição — nunca sobrescreve o valor salvo, só mostra o aviso
+function onTripVehicleChange(noPrefill){
+  const inp=document.getElementById('trip-vehicle-cost');
+  const hint=document.getElementById('trip-vehicle-cost-hint');
+  if(!inp||!hint) return;
+  const v=DB.vehicles.find(x=>x.id===document.getElementById('trip-vehicle').value);
+  const isTerc=v && v.ownership==='terceiro' && v.costValue!=null;
+  if(!isTerc){ window._tripVehCostMode=window._tripVehCostMode||null; hint.style.display='none'; hint.textContent=''; return; }
+  const modeLbl=_VEH_COST_MODE_LABEL[v.costMode]||'valor cadastrado';
+  hint.style.display='';
+  const empty=(inp.value===''||n(inp.value)===0);
+  if(empty && !noPrefill){
+    // preenche automaticamente e avisa que é sugestão editável
+    inp.value=v.costValue; window._tripVehCostMode=v.costMode||null;
+    try{ calcTripProfit(); }catch(_){}
+    hint.innerHTML=`🚐 Placa de terceiro — custo sugerido <b>${R(v.costValue)}</b> (${modeLbl}). Confirme ou edite.`;
+  } else {
+    // gestor já tem um valor: não sobrescreve, só oferece aplicar a sugestão
+    hint.innerHTML=`🚐 Terceiro — sugestão do cadastro: <b>${R(v.costValue)}</b> (${modeLbl}). <a href="javascript:void(0)" onclick="_applyVehCostSuggestion()" style="color:var(--pr);font-weight:600">usar sugestão</a>`;
+  }
 }
 
 /* ══════════ FASE 3 — MOTOR DE TIPO DE SERVIÇO ══════════ */
@@ -8441,7 +9008,7 @@ function renderTripRateioInfo(t){
       (−) Viagens Eventuais no período: <b>${info.kmEv.toLocaleString('pt-BR')} km</b>${evList?'<br>'+evList:''}<br>
       (=) KM do fretamento: <b>${info.kmFret.toLocaleString('pt-BR')} km</b><br>
       ⛽ Diesel lançado: <b>${R(info.fuel)}</b> · custo/km: <b>${R(info.costPerKm)}</b><br>
-      → Repassado às eventuais: <b style="color:#f59e0b">${R(info.allocatedOut)}</b> · fica no fretamento: <b style="color:#34d399">${R(info.fuel-info.allocatedOut)}</b>`);
+      → Repassado às eventuais: <b style="color:#f59e0b">${R(info.allocatedOut)}</b> · fica no fretamento: <b style="color:#059669">${R(info.fuel-info.allocatedOut)}</b>`);
     return;
   }
   // Eventual: procura fretamento cobrindo a data
@@ -8466,7 +9033,7 @@ function renderTripRateioInfo(t){
       } else if(diff>0){
         historia=`Você abasteceu: <b>${R(lancado)}</b>${t.fuelLiters?` (${r2(t.fuelLiters)} L)`:''}<br>
           A viagem consumiu (${km.toLocaleString('pt-BR')} km): <b>${R(consumiu)}</b><br>
-          Ficou no tanque: <b style="color:#34d399">${R(diff)}</b> → vai pras próximas viagens`;
+          Ficou no tanque: <b style="color:#059669">${R(diff)}</b> → vai pras próximas viagens`;
       } else {
         historia=`Você abasteceu: <b>${R(lancado)}</b>${t.fuelLiters?` (${r2(t.fuelLiters)} L)`:''}<br>
           A viagem consumiu (${km.toLocaleString('pt-BR')} km): <b>${R(consumiu)}</b><br>
@@ -8729,6 +9296,103 @@ function printDailyLogReport(){
   printDocWindow(`Ordem de Servico - ${t.client||'servico'} - ${new Date().toISOString().slice(0,10)}`, body);
 }
 
+/* ══════════ BLOCO 7 — ORDEM DE SERVIÇO INTELIGENTE ══════════
+   Por tipo de serviço. Fretamento contínuo = 1 OS do ciclo com a tabela
+   diária vinda da ESCALA (execuções). Sem valores/custos/proprietário. */
+function osRouteLink(t){
+  if(!t.origin && !t.destination) return '';
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(t.origin||'')}&destination=${encodeURIComponent(t.destination||'')}`;
+}
+// QR da rota. Único elemento que depende de internet no momento de imprimir (imagem).
+// Fallback offline garantido: origem/destino e o link completo são impressos como texto.
+function osQrImg(link){
+  if(!link) return '';
+  return `<div class="osx-qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(link)}" alt="QR da rota"><div>Escaneie a rota</div></div>`;
+}
+function printSmartOS(tripId){
+  const t=DB.trips.find(x=>x.id===tripId); if(!t){ alert('Viagem não encontrada.'); return; }
+  const s=DB.settings||{};
+  const cname=s.companyName||'MUVCITY TRANSFER';
+  const logo=s.companyLogo||null;
+  const osNum=(t.id||'').replace(/\D/g,'').slice(-6).padStart(6,'0');
+  const cont=isContinuousFret(t);
+  let servicoLabel; try{ servicoLabel=tripServiceLabel(t); }catch(_){ servicoLabel=cont?'Fretamento Contínuo':'Viagem'; }
+  // Tabela diária: execuções (contínuo) ou a própria viagem (1 dia). Placa/motorista EFETIVOS.
+  let dayRows;
+  if(cont){
+    if(!Array.isArray(t.executions)||!t.executions.length) t.executions=buildExecutionsFromTrip(t);
+    dayRows=t.executions.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(ex=>
+      `<tr><td class="c">${fmtDate(ex.date)}</td><td>${vehicleName(execVehicleId(ex))||'—'}</td><td>${execDriver(ex)||'—'}</td>`+
+      `<td class="c">${ex.kmStart!=null?n(ex.kmStart).toLocaleString('pt-BR'):''}</td><td class="c">${ex.kmEnd!=null?n(ex.kmEnd).toLocaleString('pt-BR'):''}</td></tr>`).join('');
+  } else {
+    const drv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)||'—';
+    dayRows=`<tr><td class="c">${fmtDate(t.date)}</td><td>${vehicleName(t.vehicleId)||'—'}</td><td>${drv}</td>`+
+      `<td class="c">${t.kmStart?n(t.kmStart).toLocaleString('pt-BR'):''}</td><td class="c">${t.kmEnd?n(t.kmEnd).toLocaleString('pt-BR'):''}</td></tr>`;
+  }
+  // Horários fixos por dia da semana (weekdaySchedule) ou horário único da operação
+  const horarioTxt=(()=>{
+    if(cont && t.weekdaySchedule){
+      const map={1:'Seg',2:'Ter',3:'Qua',4:'Qui',5:'Sex',6:'Sáb',0:'Dom'};
+      const parts=[1,2,3,4,5,6,0].filter(wd=>t.weekdaySchedule[wd]).map(wd=>{const w=t.weekdaySchedule[wd];return `${map[wd]} ${w.p||'—'}${w.r?'–'+w.r:''}`;});
+      if(parts.length) return parts.join('  ·  ');
+    }
+    return t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):'—';
+  })();
+  const link=osRouteLink(t);
+  const rota=`${t.origin||'—'} → ${t.destination||'—'}`;
+  // Deslocamentos extras: das execuções (extraTrips) ou 2 linhas em branco. Sem coluna "Extra?", sem valor.
+  let extraRows='';
+  if(cont){
+    const ex=[]; (t.executions||[]).forEach(e=>(e.extraTrips||[]).forEach(x=>ex.push({date:e.date,...x})));
+    extraRows=ex.map(x=>`<tr><td class="c">${fmtDate(x.date)}</td><td>${x.desc||x.note||'—'}</td><td class="c">${x.km!=null?n(x.km).toLocaleString('pt-BR'):''}</td><td class="visto"></td></tr>`).join('');
+  }
+  if(!extraRows) extraRows=[1,2].map(()=>`<tr><td class="c"></td><td></td><td class="c"></td><td class="visto"></td></tr>`).join('');
+  const fuelRows=[1,2,3].map(()=>`<tr><td></td><td></td><td class="c"></td><td class="c"></td><td class="visto"></td></tr>`).join('');
+  const logoHtml=logo?`<img class="osx-logo" src="${logo}" alt="">`:`<div class="osx-logo">M</div>`;
+  const body=`<div class="osx-doc">
+    <div class="osx-head">
+      <div class="osx-brand">${logoHtml}<div><div class="osx-name">${cname}</div><div class="osx-os">Ordem de Serviço · Nº ${osNum}</div></div></div>
+      ${osQrImg(link)}
+    </div>
+    <div class="osx-title">${servicoLabel}</div>
+    <table class="osx-info">
+      <tr><td class="k">Contratante</td><td>${t.client||'—'}</td><td class="k">Serviço</td><td>${servicoLabel}</td></tr>
+      <tr><td class="k">Rota</td><td colspan="3">${rota}${link?`<div style="font-size:8px;color:#64748b;word-break:break-all;margin-top:2px">${link}</div>`:''}</td></tr>
+      <tr><td class="k">Horários</td><td colspan="3">${horarioTxt}</td></tr>
+    </table>
+    <div class="osx-sec">Execução diária</div>
+    <table class="osx-tbl">
+      <thead><tr><th style="width:88px">Data</th><th style="width:90px">Placa</th><th>Motorista</th><th style="width:78px">KM inicial</th><th style="width:78px">KM final</th></tr></thead>
+      <tbody>${dayRows||'<tr><td colspan="5" class="c">—</td></tr>'}</tbody>
+    </table>
+    <div class="osx-sec">Deslocamentos extras</div>
+    <table class="osx-tbl">
+      <thead><tr><th style="width:88px">Data</th><th>Descrição</th><th style="width:78px">KM</th><th class="visto">Visto</th></tr></thead>
+      <tbody>${extraRows}</tbody>
+    </table>
+    <div class="osx-sec">Registro de abastecimento</div>
+    <table class="osx-tbl">
+      <thead><tr><th style="width:88px">Data</th><th>Posto</th><th style="width:66px">Litros</th><th style="width:78px">KM</th><th class="visto">Visto</th></tr></thead>
+      <tbody>${fuelRows}</tbody>
+    </table>
+    <div class="osx-sec">Controle de lançamento</div>
+    <table class="osx-tbl">
+      <thead><tr><th>Item</th><th style="width:88px">Lançado?</th><th style="width:110px">Data</th><th class="visto">Visto</th></tr></thead>
+      <tbody>
+        <tr><td>KM do período</td><td class="c"></td><td></td><td></td></tr>
+        <tr><td>Abastecimentos</td><td class="c"></td><td></td><td></td></tr>
+        <tr><td>Deslocamentos extras</td><td class="c"></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    <table class="osx-sign">
+      <tr><td>Motorista<div class="sub">${(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'—'}</div></td>
+          <td>Contratante<div class="sub">${t.client||'—'}</div></td></tr>
+    </table>
+    <div class="osx-foot">${cname} · Documento operacional de comprovação de serviço — não contém valores.</div>
+  </div>`;
+  printDocWindow(`OS - ${t.client||'servico'} - ${new Date().toISOString().slice(0,10)}`, body);
+}
+
 function editTrip(id){
   const t=DB.trips.find(t=>t.id===id);
   if(!t)return;
@@ -8790,6 +9454,9 @@ function editTrip(id){
   document.getElementById('trip-driver').value=t.driverCost?r2(t.driverCost):'';
   document.getElementById('trip-other').value=t.otherCost?r2(t.otherCost):'';
   document.getElementById('trip-other-desc').value=t.otherCostDesc||'';
+  const _vc=document.getElementById('trip-vehicle-cost'); if(_vc) _vc.value=t.vehicleCost?r2(t.vehicleCost):'';
+  window._tripVehCostMode=t.vehicleCostMode||null;
+  try{ onTripVehicleChange(true); }catch(_){}   // mostra o aviso de terceiro sem sobrescrever o valor salvo
   document.getElementById('trip-notes').value=t.notes||'';
   // Driver payment fields
   const driverDailyRateEl=document.getElementById('trip-driver-daily-rate');
@@ -9194,7 +9861,8 @@ function calcTripProfit(){
     n(document.getElementById('trip-hotel').value)+
     n(document.getElementById('trip-food').value)+
     n(document.getElementById('trip-driver').value)+
-    n(document.getElementById('trip-other').value)+taxAmt;
+    n(document.getElementById('trip-other').value)+
+    n(document.getElementById('trip-vehicle-cost')?.value)+taxAmt;
   const profit=rev-exp;
   const margin=rev>0?(profit/rev)*100:0;
 
@@ -9292,6 +9960,8 @@ function saveTrip(){
     driverDays:parseInt(document.getElementById('trip-driver-days').value)||null,
     otherCost:r2(n(document.getElementById('trip-other').value)),
     otherCostDesc:document.getElementById('trip-other-desc').value,
+    vehicleCost:r2(n(document.getElementById('trip-vehicle-cost')?.value)),   // 🚐 custo do veículo de terceiro (interno)
+    vehicleCostMode:(window._tripVehCostMode||null),   // forma de custo sugerida (diaria/viagem/periodo/km/fixo)
     notes:document.getElementById('trip-notes').value,
     paymentPlan:(()=>{
       const pType=document.getElementById('trip-payment-type').value;
@@ -9745,7 +10415,20 @@ function openVehicleModal(){
     .forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
   document.getElementById('veh-purchase-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('veh-color').value='#2563eb';
+  document.getElementById('veh-ownership').value='proprio';
+  document.getElementById('veh-supplier').value='';
+  document.getElementById('veh-cost-mode').value='';
+  document.getElementById('veh-cost-value').value='';
+  applyVehOwnershipUI();
   openModal('modal-vehicle');
+}
+
+function applyVehOwnershipUI(){
+  const own=document.getElementById('veh-ownership').value;
+  const isTerc=own==='terceiro';
+  document.getElementById('veh-cost-row').style.display=isTerc?'':'none';
+  document.getElementById('veh-supplier-lbl').textContent=isTerc?'Fornecedor':'Proprietário';
+  document.getElementById('veh-supplier').placeholder=isTerc?'Ex: Locadora, motorista dono, parceiro':'Nome do proprietário (opcional)';
 }
 
 function editVehicle(id){
@@ -9771,6 +10454,12 @@ function editVehicle(id){
   document.getElementById('veh-tire-km').value=v.lastTireChange?.km??'';
   document.getElementById('veh-ac-date').value=v.lastACFilterChange?.date||'';
   document.getElementById('veh-ac-km').value=v.lastACFilterChange?.km??'';
+  // Classificação e custo (interno)
+  document.getElementById('veh-ownership').value=v.ownership||'proprio';
+  document.getElementById('veh-supplier').value=v.supplier||'';
+  document.getElementById('veh-cost-mode').value=v.costMode||'';
+  document.getElementById('veh-cost-value').value=(v.costValue!=null?v.costValue:'');
+  applyVehOwnershipUI();
   openModal('modal-vehicle');
 }
 
@@ -9791,6 +10480,10 @@ function saveVehicle(){
     purchaseDate:document.getElementById('veh-purchase-date').value,
     purchaseValue:n(document.getElementById('veh-purchase-value').value),
     color:document.getElementById('veh-color').value,active:true,
+    ownership:document.getElementById('veh-ownership').value||'proprio',
+    supplier:document.getElementById('veh-supplier').value.trim(),
+    costMode:(document.getElementById('veh-ownership').value==='terceiro'?document.getElementById('veh-cost-mode').value:'')||'',
+    costValue:(document.getElementById('veh-ownership').value==='terceiro' && document.getElementById('veh-cost-value').value!=='')?n(document.getElementById('veh-cost-value').value):null,
     fuelTargetKmPerL:n(document.getElementById('veh-fuel-target').value)||null,
     tankCapacityL:n(document.getElementById('veh-tank-capacity').value)||null,
     cashReserve:existing.cashReserve||0,
@@ -10282,7 +10975,7 @@ function getAllInstallments(vFilter){
       const diffDays=due?Math.round((due-today)/(1000*60*60*24)):null;
       let status='upcoming';
       // "Ao finalizar serviço" with no date = pending/sem-data
-      if(inst.receivedAt) status='received';
+      if(inst.receivedAt || instSituacao(inst)==='pago') status='received';
       else if(!inst.dueDate&&pType==='prazo_fim') status='upcoming';
       else if(diffDays!==null&&diffDays<0) status='overdue';
       else if(diffDays===0) status='today';
@@ -10307,18 +11000,24 @@ function renderRcvRow(inst){
   const pTypeLabel={avista:'À Vista',entrada_saldo:'Entrada+Saldo',prazo_fim:'Ao Finalizar',prazo_15:'15 dias',prazo_20:'20 dias',prazo_30:'30 dias',prazo_45:'45 dias',prazo_custom:'Prazo Custom',custom:'Parcelado'};
   const methodLabel={pix:'PIX',dinheiro:'Dinheiro',transferencia:'Transferência',cartao:'Cartão',cheque:'Cheque',outro:'Outro'};
   const sc=statusConfig[inst.status]||statusConfig.upcoming;
-  const daysLabel=inst.status==='received'?`Recebido em ${fmtDate(inst.receivedAt)}`:inst.diffDays===null?(inst.pType==='prazo_fim'?'🏁 Aguardando finalizar':'Sem data'):inst.diffDays===0?'Vence hoje!':inst.diffDays<0?`Venceu há ${Math.abs(inst.diffDays)} dia(s)`:`Em ${inst.diffDays} dia(s)`;
+  const daysLabel=inst.status==='received'?`Recebido${inst.receivedAt?' em '+fmtDate(inst.receivedAt):''}`:inst.diffDays===null?(inst.pType==='prazo_fim'?'🏁 Aguardando finalizar':'Sem data'):inst.diffDays===0?'Vence hoje!':inst.diffDays<0?`Venceu há ${Math.abs(inst.diffDays)} dia(s)`:`Em ${inst.diffDays} dia(s)`;
   const prazoTag=inst.pType&&inst.pType!=='avista'&&inst.pType!=='custom'?`<span class="badge p" style="font-size:10px;margin-left:4px">📅 ${pTypeLabel[inst.pType]||inst.pType}</span>`:'';
   const zero=n(inst.amount)<=0;
+  // pagamento parcial: valor original preservado; mostra pago/saldo e situação
+  const paid=instReceivedTotal(inst), saldo=instSaldo(inst), sit=instSituacao(inst);
+  const nPay=(Array.isArray(inst.payments)?inst.payments.length:0);
+  const partialTag=sit==='parcial'?`<span class="rcv-pill" style="background:rgba(251,191,36,.16);color:#b45309">◑ Parcial</span>`:'';
+  const paidLine=(paid>0&&sit!=='pago')?`<div class="txs" style="margin-top:3px;color:var(--sc)">Pago ${R(paid)} · <span style="color:var(--pr)">saldo ${R(saldo)}</span></div>`:'';
   return `<div class="rcv-row ${sc.cls}">
     <div><div style="font-weight:600;font-size:13px">${inst.label||'Parcela'}</div>
       <div class="txs txm">${inst.tripDesc}${inst.client?' · '+inst.client:''}</div>
       <div class="txs txm" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="badge b" style="font-size:10px">${inst.plate}</span>${prazoTag}</div></div>
-    <div><div style="font-size:18px;font-weight:700;color:${inst.status==='received'?'var(--sc)':'var(--pr)'}">${R(inst.amount)}</div><span class="rcv-pill ${sc.pill}">${sc.icon} ${sc.label}</span></div>
+    <div><div style="font-size:18px;font-weight:700;color:${inst.status==='received'?'var(--sc)':'var(--pr)'}">${R(inst.amount)}</div><span class="rcv-pill ${sc.pill}">${sc.icon} ${sc.label}</span>${partialTag}${paidLine}</div>
     <div><div style="font-weight:500">${inst.dueDate?fmtDate(inst.dueDate):'A definir'}</div><div class="txs txm">${daysLabel}</div>${inst.receivedMethod?`<div class="txs txm">${methodLabel[inst.receivedMethod]||inst.receivedMethod}</div>`:''}</div>
     <div style="white-space:nowrap;display:flex;flex-direction:column;gap:4px">
-      ${zero?'':(inst.status!=='received'?`<button class="btn btn-sc btn-sm" onclick="openMarkReceived('${inst.tripId}','${inst.id}')">Marcar recebido</button>`:`<button class="btn btn-gh btn-sm" onclick="undoReceived('${inst.tripId}','${inst.id}')">Desfazer</button>`)}
-      ${inst.status!=='received'&&!inst.dueDate?`<button class="btn btn-ol btn-xs" onclick="setInstDueDate('${inst.tripId}','${inst.id}')">Definir data</button>`:''}</div>
+      ${zero?'':(sit!=='pago'?`<button class="btn btn-sc btn-sm" onclick="openMarkReceived('${inst.tripId}','${inst.id}')">💵 ${sit==='parcial'?'Novo pagamento':'Registrar'}</button>`:`<button class="btn btn-gh btn-sm" onclick="undoReceived('${inst.tripId}','${inst.id}')">Desfazer</button>`)}
+      ${(nPay>0&&sit!=='pago')?`<button class="btn btn-ol btn-xs" onclick="estornarUltimoPagamento('${inst.tripId}','${inst.id}')">Estornar último</button>`:''}
+      ${sit!=='pago'&&!inst.dueDate?`<button class="btn btn-ol btn-xs" onclick="setInstDueDate('${inst.tripId}','${inst.id}')">Definir data</button>`:''}</div>
     <div><button class="btn btn-gh btn-xs gestor-only" onclick="editTrip('${inst.tripId}')">Abrir viagem</button></div>
   </div>`;
 }
@@ -10332,13 +11031,16 @@ function renderReceivables(){
   const notRec=nz.filter(i=>i.status!=='received');
   const overdue=notRec.filter(i=>i.status==='overdue');
   const received=nz.filter(i=>i.status==='received');
-  const totalPending=notRec.reduce((s,i)=>s+n(i.amount),0);
-  const totalOverdue=overdue.reduce((s,i)=>s+n(i.amount),0);
-  const totalReceived=received.reduce((s,i)=>s+n(i.amount),0);
+  // Pagamentos parciais: "a receber" = saldo em aberto; "já recebido" = soma dos pagamentos (parciais inclusive)
+  const totalPending=notRec.reduce((s,i)=>s+instSaldo(i),0);
+  const totalOverdue=overdue.reduce((s,i)=>s+instSaldo(i),0);
+  const totalReceived=nz.reduce((s,i)=>s+instReceivedTotal(i),0);
+  const partialCount=notRec.filter(i=>instSituacao(i)==='parcial').length;
+  const withPay=nz.filter(i=>instReceivedTotal(i)>0).length;
   document.getElementById('rcv-kpis').innerHTML=`
-    <div class="kpi"><div class="kpi-lbl">Total a receber</div><div class="kpi-val tpr">${R(totalPending)}</div><div class="kpi-sub">${notRec.length} parcela(s) em aberto</div></div>
-    <div class="kpi"><div class="kpi-lbl">Vencido</div><div class="kpi-val tdr">${R(totalOverdue)}</div><div class="kpi-sub">${overdue.length} parcela(s) vencida(s)</div></div>
-    <div class="kpi"><div class="kpi-lbl">Já recebido</div><div class="kpi-val tsc">${R(totalReceived)}</div><div class="kpi-sub">${received.length} pagamento(s)</div></div>
+    <div class="kpi"><div class="kpi-lbl">Total a receber</div><div class="kpi-val tpr">${R(totalPending)}</div><div class="kpi-sub">${notRec.length} em aberto${partialCount?` · ${partialCount} parcial(is)`:''}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Vencido</div><div class="kpi-val tdr">${R(totalOverdue)}</div><div class="kpi-sub">${overdue.length} parcela(s) · saldo</div></div>
+    <div class="kpi"><div class="kpi-lbl">Já recebido</div><div class="kpi-val tsc">${R(totalReceived)}</div><div class="kpi-sub">${withPay} parcela(s) com pagamento</div></div>
     <div class="kpi"><div class="kpi-lbl">Registros zerados</div><div class="kpi-val">${zeroed.length}</div><div class="kpi-sub">R$ 0 · fora dos totais</div></div>`;
   const groups=[
     {title:'Vencidas',color:'var(--dg)',items:overdue,sum:true},
@@ -10350,7 +11052,7 @@ function renderReceivables(){
     {title:'Registros zerados',color:'#94a3b8',items:zeroed,sum:false}
   ];
   const html=groups.filter(g=>g.items.length).map(g=>{
-    const tot=g.items.reduce((s,i)=>s+n(i.amount),0);
+    const tot=g.items.reduce((s,i)=>s+(g.title==='Recebidas'?n(i.amount):instSaldo(i)),0);
     return `<div style="margin-bottom:18px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 13px;border-left:4px solid ${g.color};background:var(--bg3);border-radius:8px;margin-bottom:8px"><span style="font-weight:800;font-size:13px">${g.title} <span class="txm" style="font-weight:600">· ${g.items.length}</span></span>${g.sum?`<span class="fb">${R(tot)}</span>`:'<span class="txs txm">não somam</span>'}</div>${g.items.map(renderRcvRow).join('')}</div>`;
   }).join('');
   document.getElementById('rcv-list').innerHTML=html||`<div class="empty"><div class="empty-ic">💰</div><div class="empty-tx">Nenhuma parcela</div><div class="txm txs">As parcelas aparecem quando você define um plano de recebimento ao lançar viagens.</div></div>`;
@@ -10423,7 +11125,7 @@ function buildPaymentPlan(){
       instLabel='Pagamento ao Finalizar Serviço';
       infoHtml=`<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
         <span style="font-size:18px">🏁</span>
-        <div><div style="font-weight:600;color:#fbbf24;font-size:13px">Pagamento ao Finalizar Serviço</div>
+        <div><div style="font-weight:600;color:#b45309;font-size:13px">Pagamento ao Finalizar Serviço</div>
         <div style="font-size:11px;color:var(--txm);margin-top:2px">A data de vencimento será definida quando o serviço for concluído. Você pode ajustar manualmente.</div></div>
       </div>`;
     } else {
@@ -10560,18 +11262,29 @@ function loadPaymentPlanToModal(paymentPlan){
   updatePaymentSummary();
 }
 
-// Mark received modal
+// Registrar recebimento (parcial ou total) — valor original NUNCA é substituído
 function openMarkReceived(tripId,instId){
   const t=DB.trips.find(x=>x.id===tripId);
   const inst=t?.paymentPlan?.installments?.find(i=>i.id===instId);
   if(!inst)return;
+  if(!Array.isArray(inst.payments)) inst.payments=[];
+  const paid=instReceivedTotal(inst), saldo=instSaldo(inst);
   document.getElementById('mr-trip-id').value=tripId;
   document.getElementById('mr-inst-id').value=instId;
   document.getElementById('mr-label').textContent=inst.label||'Parcela';
   document.getElementById('mr-amount').textContent=R(inst.amount);
+  document.getElementById('mr-paid').textContent=R(paid);
+  document.getElementById('mr-balance').textContent=R(saldo);
+  document.getElementById('mr-pay-amount').value=saldo>0?r2(saldo):'';   // default = saldo (facilita quitar)
   document.getElementById('mr-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('mr-method').value='pix';
   document.getElementById('mr-notes').value='';
+  // histórico de pagamentos já registrados
+  const hist=document.getElementById('mr-history');
+  const ml={pix:'PIX',dinheiro:'Dinheiro',transferencia:'Transf.',cartao:'Cartão',cheque:'Cheque',outro:'Outro'};
+  hist.innerHTML=(inst.payments&&inst.payments.length)
+    ? `<div class="txs txm" style="font-weight:700;margin-bottom:2px">Pagamentos:</div>`+inst.payments.map(p=>`<div class="txs" style="display:flex;justify-content:space-between"><span>${p.date?fmtDate(p.date):'—'} ${p.method?'· '+(ml[p.method]||p.method):''}</span><b>${R(p.amount)}</b></div>`).join('')
+    : '';
   openModal('modal-mark-received');
 }
 
@@ -10581,16 +11294,45 @@ function confirmMarkReceived(){
   const t=DB.trips.find(x=>x.id===tripId);
   const inst=t?.paymentPlan?.installments?.find(i=>i.id===instId);
   if(!inst)return;
-  inst.receivedAt=document.getElementById('mr-date').value;
-  inst.receivedMethod=document.getElementById('mr-method').value;
-  inst.receivedNotes=document.getElementById('mr-notes').value;
+  if(!Array.isArray(inst.payments)) inst.payments=[];
+  const amount=r2(n(document.getElementById('mr-pay-amount').value));
+  const date=document.getElementById('mr-date').value;
+  const method=document.getElementById('mr-method').value;
+  const note=document.getElementById('mr-notes').value;
+  if(amount<=0){ showToast('Informe o valor do pagamento','warn'); document.getElementById('mr-pay-amount').focus(); return; }
+  if(!date){ showToast('Informe a data do pagamento','warn'); return; }
+  const saldo=instSaldo(inst);
+  if(amount>saldo+0.001){
+    if(!confirm(`O pagamento (${R(amount)}) é maior que o saldo (${R(saldo)}). Registrar assim mesmo?`)) return;
+  }
+  inst.payments.push({id:uid('pay'),date,amount,method,note});
+  // Quando quita, espelha no binário legado (mantém compat com telas/relatórios antigos)
+  if(instSituacao(inst)==='pago'){ inst.receivedAt=date; inst.receivedMethod=method; inst.receivedNotes=note; }
+  else { inst.receivedAt=null; inst.receivedMethod=null; inst.receivedNotes=null; }
   saveDB();closeModal('modal-mark-received');renderCurrentPage();
+  showToast(instSituacao(inst)==='pago'?'✅ Parcela quitada':'💵 Pagamento parcial registrado','ok');
 }
 
+// Estorna o ÚLTIMO pagamento (mantém os anteriores e o valor original intactos)
+function estornarUltimoPagamento(tripId,instId){
+  const t=DB.trips.find(x=>x.id===tripId);
+  const inst=t?.paymentPlan?.installments?.find(i=>i.id===instId);
+  if(!inst||!Array.isArray(inst.payments)||!inst.payments.length)return;
+  const last=inst.payments[inst.payments.length-1];
+  if(!confirm(`Estornar o último pagamento de ${R(last.amount)}?`)) return;
+  inst.payments.pop();
+  if(instSituacao(inst)!=='pago'){ inst.receivedAt=null; inst.receivedMethod=null; inst.receivedNotes=null; }
+  saveDB();renderCurrentPage();
+  showToast('Pagamento estornado','ok');
+}
+
+// Desfaz TODOS os recebimentos da parcela (volta a valor original em aberto)
 function undoReceived(tripId,instId){
   const t=DB.trips.find(x=>x.id===tripId);
   const inst=t?.paymentPlan?.installments?.find(i=>i.id===instId);
   if(!inst)return;
+  if(!confirm('Desfazer todos os pagamentos desta parcela?')) return;
+  inst.payments=[];
   inst.receivedAt=null;inst.receivedMethod=null;inst.receivedNotes=null;
   saveDB();renderCurrentPage();
 }
@@ -10769,9 +11511,9 @@ function renderEditableBuiltinList(elId, scope, list){
       <button class="expv-iconbtn" onclick="startEditBuiltin('${scope}','${t.v}',${idx})" title="Renomear">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       </button>
-      <button class="expv-iconbtn" id="bi-${scope}-save-${idx}" style="display:none;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#34d399" onclick="saveEditBuiltin('${scope}','${t.v}',${idx})" title="Salvar">💾</button>
+      <button class="expv-iconbtn" id="bi-${scope}-save-${idx}" style="display:none;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#059669" onclick="saveEditBuiltin('${scope}','${t.v}',${idx})" title="Salvar">💾</button>
       ${hidden
-        ? `<button class="expv-iconbtn" style="background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.4);color:#a5b4fc" onclick="restoreBuiltin('${scope}','${t.v}')" title="Restaurar visibilidade">↩️</button>`
+        ? `<button class="expv-iconbtn" style="background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.4);color:#4338ca" onclick="restoreBuiltin('${scope}','${t.v}')" title="Restaurar visibilidade">↩️</button>`
         : `<button class="expv-iconbtn danger" onclick="hideBuiltin('${scope}','${t.v}','${(label||'').replace(/'/g,"\\'")}')" title="Ocultar dos novos lançamentos">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
           </button>`}
@@ -10924,7 +11666,7 @@ function renderCustomFixedList(){
       <button class="expv-iconbtn" onclick="startEditFixedCat(${i},'${t.replace(/'/g,"\\'")}')" title="Editar">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       </button>
-      <button class="expv-iconbtn" id="rcf-save-${i}" style="display:none;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#34d399" onclick="saveEditFixedCat(${i},'${t.replace(/'/g,"\\'")}')" title="Salvar">💾</button>
+      <button class="expv-iconbtn" id="rcf-save-${i}" style="display:none;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#059669" onclick="saveEditFixedCat(${i},'${t.replace(/'/g,"\\'")}')" title="Salvar">💾</button>
       <button class="expv-iconbtn danger" onclick="deleteCustomFixedCat('${t.replace(/'/g,"\\'")}')" title="Excluir">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
       </button>
@@ -11568,12 +12310,12 @@ function renderShared(){
 
   const listEl=document.getElementById('shared-list');
   const alertBanner=seAlerts.length?`<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px;margin-bottom:14px">
-    <div class="fl-row ic" style="gap:8px;margin-bottom:6px"><span>⚠️</span><span class="fsb" style="color:#f87171">${seAlerts.length} despesa(s) compartilhada(s) com vencimento pendente</span></div>
+    <div class="fl-row ic" style="gap:8px;margin-bottom:6px"><span>⚠️</span><span class="fsb" style="color:#dc2626">${seAlerts.length} despesa(s) compartilhada(s) com vencimento pendente</span></div>
     ${seAlerts.map(se=>{
       const s=getSharedDueStatus(se);
       return `<div class="fl-row ic jb" style="padding:4px 0;font-size:13px">
         <span><strong>${se.name}</strong> — ${s==='overdue'?'Venceu dia '+se.dueDay:'Vence dia '+se.dueDay}</span>
-        <span class="badge" style="background:${s==='overdue'?'rgba(239,68,68,.25);color:#f87171':'rgba(251,191,36,.25);color:#f59e0b'}">${s==='overdue'?'🔴 Vencida':'🟡 Em breve'}</span>
+        <span class="badge" style="background:${s==='overdue'?'rgba(239,68,68,.25);color:#dc2626':'rgba(251,191,36,.25);color:#f59e0b'}">${s==='overdue'?'🔴 Vencida':'🟡 Em breve'}</span>
       </div>`;}).join('')}
   </div>`:'';
 
@@ -11598,7 +12340,7 @@ function renderShared(){
       if(!se.active) monthBadge='<span class="badge gz txs">Inativo</span>';
       else if(!started) monthBadge=`<span class="badge gz txs">Inicia ${se.startMonth}</span>`;
       else if(paidThisMonth) monthBadge=`<span class="badge g txs">✅ ${R(n(monthPaid.amount))} pagos</span>`;
-      else if(dueStatus==='overdue') monthBadge='<span class="badge" style="background:rgba(239,68,68,.2);color:#f87171;font-size:11px">🔴 Vencida — dia '+se.dueDay+'</span>';
+      else if(dueStatus==='overdue') monthBadge='<span class="badge" style="background:rgba(239,68,68,.2);color:#dc2626;font-size:11px">🔴 Vencida — dia '+se.dueDay+'</span>';
       else if(dueStatus==='due-soon') monthBadge='<span class="badge" style="background:rgba(251,191,36,.2);color:#f59e0b;font-size:11px">🟡 Vence dia '+se.dueDay+'</span>';
       else if(isVariable) monthBadge='<span class="badge p txs">📊 Variável — lance valor do mês</span>';
       else monthBadge='<span class="badge g txs">Ativo</span>';
@@ -12177,18 +12919,21 @@ function renderClientReport(){
     const plate = t._agency ? '—' : (veh?.plate || '—');
     const origin = t.origin || (t.description ? t.description.split(/\s*[>→]\s*|\s+→\s+/)[0] : '—') || '—';
     const destination = t.destination || (t.description && t.description.includes('>')||t.description?.includes('→') ? (t.description.split(/\s*[>→]\s*/)[1]||'—') : (t.description||'—'));
+    let svc; try{ svc=tripServiceLabel(t); }catch(_){ svc=''; }
+    const horario=t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):'—';
     return `<tr>
       <td style="width:28px">${idx+1}</td>
       <td><strong>${fmtDate(t.date||t.departureDate)}</strong>${t.returnDate?`<div class="cr-sub">↩ ${fmtDate(t.returnDate)}</div>`:''}</td>
+      <td>${svc||'—'}</td>
       <td>${origin}</td>
       <td>${destination}</td>
+      <td style="white-space:nowrap">${horario}</td>
       ${showSubCol?`<td>${t.subclient||'—'}</td>`:''}
-      <td>${vehModel}</td>
       <td><strong>${plate}</strong></td>
       <td>${t.driverName||'—'}</td>
       <td style="text-align:right;font-weight:700">${R(t.grossRevenue)}</td>
     </tr>`;
-  }).join(''):`<tr><td colspan="${showSubCol?9:8}" style="text-align:center;padding:24px;color:#94a3b8">Nenhuma viagem encontrada no período</td></tr>`;
+  }).join(''):`<tr><td colspan="${showSubCol?10:9}" style="text-align:center;padding:24px;color:#94a3b8">Nenhuma viagem encontrada no período</td></tr>`;
 
   const condition = trips.some(t=>t.hasInvoice) ? 'FATURADO (Com Nota Fiscal)' : 'A combinar';
 
@@ -12216,10 +12961,11 @@ function renderClientReport(){
         <thead><tr>
           <th style="width:28px">#</th>
           <th>Data</th>
+          <th>Serviço</th>
           <th>Origem</th>
           <th>Destino</th>
+          <th>Horários</th>
           ${showSubCol?'<th>Subcliente</th>':''}
-          <th>Veículo</th>
           <th>Placa</th>
           <th>Motorista</th>
           <th style="text-align:right">Valor</th>
@@ -12227,7 +12973,7 @@ function renderClientReport(){
         <tbody>${rowsHtml}</tbody>
         ${trips.length?`<tfoot>
           <tr class="cr-total-row">
-            <td colspan="${showSubCol?8:7}" style="text-align:right;padding:14px"><strong>TOTAL FATURADO</strong></td>
+            <td colspan="${showSubCol?9:8}" style="text-align:right;padding:14px"><strong>TOTAL FATURADO</strong></td>
             <td style="text-align:right;font-size:17px;font-weight:800;padding:14px">${R(totalRev)}</td>
           </tr>
         </tfoot>`:''}
@@ -12324,6 +13070,30 @@ function printDocWindow(title, bodyHTML){
     .os-sign-tbl td{border:1px solid #4a4a4a;padding:30px 12px 8px;text-align:center;font-size:11px;font-weight:700;width:50%}
     .os-sign-tbl .sub{font-weight:400;color:#555;font-size:10px}
     .os-foot{margin-top:16px;text-align:center;font-size:9.5px;color:#666;line-height:1.6;border-top:1px solid #ccc;padding-top:8px}
+
+    /* ══ OS INTELIGENTE (v2) — azul-marinho, branca, econômica de tinta ══ */
+    .osx-doc{padding:12mm 13mm;color:#0f172a;font-size:11px}
+    .osx-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #1e3a5f;padding-bottom:10px;margin-bottom:10px}
+    .osx-brand{display:flex;gap:10px;align-items:center}
+    .osx-logo{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0}
+    .osx-name{font-size:15px;font-weight:800;color:#1e3a5f;letter-spacing:-.2px}
+    .osx-os{font-size:11.5px;font-weight:700;color:#1e3a5f;margin-top:2px}
+    .osx-qr{text-align:center;font-size:8.5px;color:#475569}
+    .osx-qr img{width:92px;height:92px;display:block;border:1px solid #cbd5e1}
+    .osx-title{text-align:center;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1e3a5f;margin-bottom:10px}
+    .osx-info{width:100%;border-collapse:collapse;margin-bottom:10px}
+    .osx-info td{border:1px solid #1e3a5f;padding:5px 8px;font-size:10.5px}
+    .osx-info .k{background:#eef2f7;font-weight:700;text-transform:uppercase;font-size:9px;letter-spacing:.3px;color:#1e3a5f;white-space:nowrap;width:1%}
+    .osx-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#1e3a5f;margin:11px 0 5px}
+    .osx-tbl{width:100%;border-collapse:collapse;margin-bottom:6px}
+    .osx-tbl th,.osx-tbl td{border:1px solid #1e3a5f;padding:5px 7px;font-size:10px}
+    .osx-tbl th{background:#1e3a5f;color:#fff;text-transform:uppercase;font-size:9px;letter-spacing:.3px;text-align:left}
+    .osx-tbl td.c{text-align:center}
+    .osx-tbl .visto{width:80px}
+    .osx-sign{width:100%;border-collapse:collapse;margin-top:24px}
+    .osx-sign td{border:1px solid #1e3a5f;padding:24px 10px 6px;text-align:center;font-size:10px;font-weight:700;width:50%}
+    .osx-sign .sub{font-weight:400;color:#555;font-size:9px}
+    .osx-foot{margin-top:12px;text-align:center;font-size:8.5px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:6px}
   `;
   w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>${bodyHTML}</body></html>`);
   w.document.close();
@@ -12595,7 +13365,7 @@ function renderDrivers(){
       <td class="txc"><span class="badge b">${s.trips}</span></td>
       <td class="tpr fb">${R(s.revenue)}</td>
       <td class="twn">${R(avg)}</td>
-      <td style="font-weight:700;color:#f87171">${s.commission>0?R(s.commission):'<span class="txm">—</span>'}</td>
+      <td style="font-weight:700;color:#dc2626">${s.commission>0?R(s.commission):'<span class="txm">—</span>'}</td>
       <td style="color:#fb923c">${cmtAvg>0?R(cmtAvg):'<span class="txm">—</span>'}</td>
       <td>${s.commission>0?`<span class="badge ${pct>40?'r':pct>25?'y':'g'}">${pct.toFixed(1)}%</span>`:'<span class="txm">—</span>'}</td>
       <td>${s.lastDate?fmtDate(s.lastDate):'—'}</td>
@@ -12622,7 +13392,7 @@ function renderDrivers(){
       <div class="kpi-val tpr">${R(s.revenue)}</div>
       <div class="kpi-sub" style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
         <span>${s.trips} viagem(ns) · Média ${R(avg)}</span>
-        ${s.commission>0?`<span style="color:#f87171;font-weight:600">Comissão paga: ${R(s.commission)}</span>
+        ${s.commission>0?`<span style="color:#dc2626;font-weight:600">Comissão paga: ${R(s.commission)}</span>
         <span style="color:var(--txm)">Média/viagem: ${R(cmtAvg)} · ${pct.toFixed(1)}% da receita</span>`
         :'<span style="color:var(--txm)">Sem comissão registrada</span>'}
       </div>
@@ -12777,6 +13547,8 @@ function importFullDB(event){
         alert('Arquivo inválido. Use um backup gerado pelo FleetControl.'); return;
       }
       DB = payload.db;
+      ensureDBShape();   // garante estrutura
+      migrateDB();       // v2: migra backup antigo importado (idempotente)
       saveDB();
       location.reload();
     } catch(err){
@@ -13330,8 +14102,14 @@ function seedTesteData(){
   }catch(e){ console.warn('[TESTE] falha ao semear dados ficticios', e); }
 }
 
-// Boot: se já logado nesta sessão, entra direto. Senão mostra lock.
-if(isLoggedThisSession()){
+// Boot
+if(window.__TESTE__){
+  seedTesteData();
+  sessionStorage.setItem('current_admin', JSON.stringify({id:'admin_teste',name:'Gestor (Teste)',role:'gestor'}));
+  sessionStorage.setItem('fleetcontrol_authok','1');
+  injectTesteBanner();
+  bootApp();
+} else if(isLoggedThisSession()){
   bootApp();
 } else {
   showLockOverlay();   // async, mas tudo bem
