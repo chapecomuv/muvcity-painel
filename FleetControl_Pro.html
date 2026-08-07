@@ -6473,7 +6473,7 @@ function toggleTripMenu(id, ev){
   const a=(lbl,call,cls)=>`<button class="${cls||''}" onclick="event.stopPropagation();document.getElementById('trip-row-menu').style.display='none';${call}">${lbl}</button>`;
   const _t=DB.trips.find(x=>x.id===id);
   const escalaItem=(_t&&isContinuousFret(_t))?a('📋 Escala do contrato',`openOperationSchedule('${id}')`):'';
-  m.innerHTML=a('Visualizar',`viewTrip('${id}')`)+escalaItem+a('Execução / fechamento',`openTripExecution('${id}')`)+a('Editar',`editTrip('${id}')`)+a('📄 Ordem de Serviço',`printSmartOS('${id}')`)+a('Voucher',`printTripVoucher('${id}')`)+a('Duplicar',`duplicateTrip('${id}')`)+`<div class="sep"></div>`+a('Excluir',`confirmDelete('trip','${id}')`,'del');
+  m.innerHTML=a('Visualizar',`viewTrip('${id}')`)+a('📤 Enviar para o motorista',`sendTripToDriver('${id}')`)+escalaItem+a('Execução / fechamento',`openTripExecution('${id}')`)+a('Editar',`editTrip('${id}')`)+a('📄 Ordem de Serviço',`printSmartOS('${id}')`)+a('Voucher',`printTripVoucher('${id}')`)+a('Duplicar',`duplicateTrip('${id}')`)+`<div class="sep"></div>`+a('Excluir',`confirmDelete('trip','${id}')`,'del');
   const r=ev.currentTarget.getBoundingClientRect(); const mw=196;
   m.style.display='block';
   m.style.top=(r.bottom+window.scrollY+4)+'px';
@@ -9635,6 +9635,12 @@ function onTripNFInput(){
 async function sendTripToDriver(tripId){
   const t=DB.trips.find(x=>x.id===tripId);
   if(!t){ alert('Viagem não encontrada'); return; }
+  // Sem motorista atribuído, a viagem NÃO aparece no app dele (o app filtra por motorista).
+  const _hasDriver=(Array.isArray(t.driverNames)&&t.driverNames.some(Boolean))||!!t.driverName;
+  if(!_hasDriver){
+    alert('⚠️ Esta viagem não tem motorista atribuído.\n\nAtribua um motorista (Editar viagem → Operação → Motorista) para ele conseguir vê-la no aplicativo. Sem isso, a viagem não aparece pra ninguém.');
+    return;
+  }
   // Gera código de 6 dígitos único e salva no Firebase em /trip-codes/<código>
   const veh=getVehicle(t.vehicleId);
   // Phone do cliente: usa o salvo na trip ou faz lookup pelo nome no DB.clients
