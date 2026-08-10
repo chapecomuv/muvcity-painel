@@ -4021,6 +4021,41 @@ function buildExecutionsFromTrip(t){
     history: []                        // auditoria: {at, by, field, from, to}
   }));
 }
+// Uma execução tem dado lançado? (usado pra não apagar dias editados ao reconciliar)
+function _execHasData(e){
+  return !!(e && (e.actualVehicleId||e.actualDriver||e.kmStart!=null||e.kmEnd!=null||
+    (e.fuelings&&e.fuelings.length)||(e.extraTrips&&e.extraTrips.length)||(e.occurrences&&e.occurrences.length)||
+    (e.status && e.status!=='programada')));
+}
+// Garante que a operação contínua tenha 1 execução por dia do contrato (persistidas).
+// Aditiva: adiciona dias que faltam, remove só dias fora do intervalo SEM dado, e mantém
+// alinhado o planejado (placa/motorista/horário) nos dias ainda 'programada' sem substituição.
+function syncTripExecutions(t){
+  if(!t || !isContinuousFret(t)) return;
+  if(!Array.isArray(t.executions)) t.executions=[];
+  const days=tripServiceDaysList(t);
+  const dayset=new Set(days);
+  const have=new Set(t.executions.map(e=>e.date));
+  const plannedDriver=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'';
+  // adiciona dias que faltam
+  days.forEach(dk=>{
+    if(have.has(dk)) return;
+    const h=(typeof plannedHorario==='function')?plannedHorario(t,dk):{pickup:t.pickupTime||'',return:t.returnTime||''};
+    t.executions.push({id:uid('exec'),date:dk,plannedVehicleId:t.vehicleId||'',actualVehicleId:'',
+      plannedDriver,actualDriver:'',kmStart:null,kmEnd:null,pickupTime:h.pickup,returnTime:h.return,
+      status:'programada',fuelings:[],extraTrips:[],occurrences:[],history:[]});
+  });
+  // remove dias fora do intervalo QUE não têm nada lançado (preserva dias já trabalhados)
+  t.executions=t.executions.filter(e=> dayset.has(e.date) || _execHasData(e));
+  // mantém o planejado alinhado com o contrato nos dias ainda 'programada' sem substituição
+  t.executions.forEach(e=>{
+    if(e.status==='programada'){
+      if(!e.actualVehicleId) e.plannedVehicleId=t.vehicleId||e.plannedVehicleId||'';
+      if(!e.actualDriver && plannedDriver) e.plannedDriver=plannedDriver;
+    }
+  });
+  t.executions.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
 function migrateDB(){
   const from = DB.schemaVersion || 0;
   if(from >= SCHEMA_VERSION) return;   // já migrado (idempotente)
@@ -6588,7 +6623,7 @@ let _opSchedTripId=null;
 const _execSel=new Set();   // dias marcados para ação em lote
 function openOperationSchedule(tripId){
   const t=DB.trips.find(x=>x.id===tripId); if(!t) return;
-  if(!Array.isArray(t.executions)||!t.executions.length) t.executions=buildExecutionsFromTrip(t);
+  { const _n0=(t.executions||[]).length; syncTripExecutions(t); if((t.executions||[]).length!==_n0){ try{ saveDB(); }catch(_){} } }
   _opSchedTripId=tripId; _execSel.clear();
   let host=document.getElementById('modal-opsched');
   if(!host){ host=document.createElement('div'); host.id='modal-opsched'; host.className='overlay'; document.body.appendChild(host); }
@@ -6710,6 +6745,10 @@ function openExecutionEditor(tripId, dk){
       </select></div>
       <div class="fg"><label class="fl">Registrar ocorrência</label><input type="text" class="fc" id="ex-occ" placeholder="Ex: atraso, passageiro faltou..."></div>
     </div>
+    <div class="fl-row ic jb" style="margin-top:10px;padding:9px 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px">
+      <span class="txs" style="font-weight:700">🧭 Deslocamentos extras do dia <span class="txm">(${(ex.extraTrips||[]).length})</span></span>
+      <button type="button" class="btn btn-gh btn-sm" onclick="closeModal('modal-exec');openExecExtras('${t.id}','${dk}')">Gerenciar</button>
+    </div>
     <details style="margin-top:8px"><summary class="txs txm" style="cursor:pointer">📜 Histórico de alterações · ocorrências</summary>
       <div style="margin-top:8px"><div class="txs" style="font-weight:700;margin-bottom:4px">Alterações</div>${hist}
       <div class="txs" style="font-weight:700;margin:8px 0 4px">Ocorrências</div>${occ}</div></details>
@@ -6745,6 +6784,89 @@ function saveExecution(){
   if(document.getElementById('modal-opsched')&&document.getElementById('modal-opsched').classList.contains('show')) renderOperationSchedule();
   try{ renderCurrentPage(); }catch(_){}
   showToast('Execução salva.','ok');
+}
+
+// ── BLOCO 7.2 — Deslocamentos extras por execução (ilimitados) ──
+let _extraEdit={tripId:null, dk:null};
+const _XT_BILL={incluido:'Incluído no contrato',cobravel:'Cobrável do cliente',nao_cobravel:'Não cobrável'};
+const _XT_APPR={aguardando:'Aguardando aprovação',aprovado:'Aprovado',rejeitado:'Rejeitado'};
+function openExecExtras(tripId, dk){
+  const t=DB.trips.find(x=>x.id===tripId); if(!t) return;
+  const ex=getExecution(t,dk,true); if(!ex) return;
+  if(!Array.isArray(ex.extraTrips)) ex.extraTrips=[];
+  _extraEdit={tripId, dk};
+  let host=document.getElementById('modal-exec-extras');
+  if(!host){ host=document.createElement('div'); host.id='modal-exec-extras'; host.className='overlay'; document.body.appendChild(host); }
+  renderExecExtras();
+  openModal('modal-exec-extras');
+}
+function renderExecExtras(){
+  const t=DB.trips.find(x=>x.id===_extraEdit.tripId); if(!t) return;
+  const ex=getExecution(t,_extraEdit.dk,true); if(!ex) return;
+  const host=document.getElementById('modal-exec-extras'); if(!host) return;
+  const dt=new Date(_extraEdit.dk+'T00:00:00');
+  const titulo=`${_WD_FULL[dt.getDay()]}, ${dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}`;
+  const mot=execDriver(ex)||'—', plc=vehicleName(execVehicleId(ex))||'—';
+  const list=(ex.extraTrips||[]).map((x,i)=>`
+    <div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+      <div class="fl-row ic jb" style="gap:8px"><b style="font-size:13px">${x.timeStart||''}${x.timeEnd?'–'+x.timeEnd:''} · ${(x.origin||'?')} → ${(x.destination||'?')}</b>
+        <button class="btn btn-gh btn-xs" onclick="removeExecExtra(${i})">Remover</button></div>
+      <div class="txs txm" style="margin-top:2px">${x.reason||'—'}${(x.kmStart!=null||x.kmEnd!=null)?` · KM ${x.kmStart!=null?x.kmStart:'—'} → ${x.kmEnd!=null?x.kmEnd:'—'}`:''}${x.note?' · '+x.note:''}</div>
+      <div class="txs" style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
+        <span class="badge b">${_XT_BILL[x.billing]||'—'}</span>
+        ${x.extraValue?`<span class="badge p">+ ${R(x.extraValue)}</span>`:''}
+        <span class="badge ${x.approval==='aprovado'?'g':x.approval==='rejeitado'?'r':'y'}">${_XT_APPR[x.approval]||'Aguardando aprovação'}</span>
+      </div>
+    </div>`).join('')||'<div class="txs txm" style="padding:6px 0 10px">Nenhum deslocamento extra neste dia.</div>';
+  host.innerHTML=`<div class="modal" style="max-width:620px">
+    <div class="modal-h"><span class="modal-t">🧭 Deslocamentos extras · ${titulo}</span><button class="xbtn" onclick="closeModal('modal-exec-extras')">✕</button></div>
+    <div class="txs txm" style="margin-bottom:10px">Motorista/placa do dia: <b>${mot}</b> · <b>${plc}</b> <span style="opacity:.7">(herdados da execução; edite lá se mudar)</span></div>
+    ${list}
+    <div class="fsec" style="margin-top:4px"><div class="fsec-t">➕ Novo deslocamento extra</div>
+      <div class="fr c2"><div class="fg"><label class="fl">Hora inicial</label><input type="time" class="fc" id="xt-ts"></div>
+        <div class="fg"><label class="fl">Hora final</label><input type="time" class="fc" id="xt-te"></div></div>
+      <div class="fr c2"><div class="fg"><label class="fl">Origem</label><input class="fc" id="xt-o" placeholder="De onde saiu"></div>
+        <div class="fg"><label class="fl">Destino</label><input class="fc" id="xt-d" placeholder="Para onde foi"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Motivo / solicitante</label><input class="fc" id="xt-r" placeholder="Ex: buscar passageiro, solicitado por..."></div></div>
+      <div class="fr c2"><div class="fg"><label class="fl">KM inicial</label><input type="number" class="fc" id="xt-ki" placeholder="0"></div>
+        <div class="fg"><label class="fl">KM final</label><input type="number" class="fc" id="xt-kf" placeholder="0"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Observação / comprovante</label><input class="fc" id="xt-n" placeholder="opcional"></div></div>
+      <div class="fsec-t" style="margin-top:8px;color:var(--txm);text-transform:none;letter-spacing:0;font-size:11px">🔒 Classificação interna — não aparece pro motorista nem na OS do cliente</div>
+      <div class="fr c2"><div class="fg"><label class="fl">Cobrança</label><select class="fc" id="xt-bill">
+        <option value="incluido">Incluído no contrato</option><option value="cobravel">Cobrável do cliente</option><option value="nao_cobravel">Não cobrável</option></select></div>
+        <div class="fg"><label class="fl">Valor adicional (R$)</label><input type="number" class="fc" id="xt-val" step="0.01" placeholder="0,00"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Aprovação</label><select class="fc" id="xt-appr">
+        <option value="aguardando">Aguardando aprovação</option><option value="aprovado">Aprovado</option><option value="rejeitado">Rejeitado</option></select></div></div>
+      <button type="button" class="btn btn-pr" style="width:100%;margin-top:8px" onclick="addExecExtra()">➕ Adicionar deslocamento</button>
+    </div>
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-exec-extras')">Fechar</button></div>
+  </div>`;
+}
+function addExecExtra(){
+  if(!requireEdit()) return;
+  const t=DB.trips.find(x=>x.id===_extraEdit.tripId); if(!t) return;
+  const ex=getExecution(t,_extraEdit.dk,true); if(!ex) return;
+  const g=id=>document.getElementById(id);
+  const kmS=g('xt-ki').value, kmE=g('xt-kf').value;
+  if(kmS!=='' && kmE!=='' && n(kmE)<n(kmS)){ showToast('KM final não pode ser menor que o inicial.','warn'); return; }
+  if(!g('xt-o').value.trim() && !g('xt-d').value.trim() && !g('xt-r').value.trim()){ showToast('Informe origem/destino ou motivo.','warn'); return; }
+  if(!Array.isArray(ex.extraTrips)) ex.extraTrips=[];
+  ex.extraTrips.push({ id:uid('xt'), timeStart:g('xt-ts').value, timeEnd:g('xt-te').value,
+    origin:g('xt-o').value.trim(), destination:g('xt-d').value.trim(), reason:g('xt-r').value.trim(),
+    kmStart:kmS!==''?n(kmS):null, kmEnd:kmE!==''?n(kmE):null, note:g('xt-n').value.trim(),
+    billing:g('xt-bill').value, extraValue:g('xt-val').value!==''?n(g('xt-val').value):null,
+    approval:g('xt-appr').value, by:_actorName(), at:_nowIso() });
+  _execLog(ex,'deslocamento extra','—',(g('xt-o').value||'?')+' → '+(g('xt-d').value||'?'));
+  saveDB(); renderExecExtras();
+  if(document.getElementById('modal-opsched')&&document.getElementById('modal-opsched').classList.contains('show')){ try{ renderOperationSchedule(); }catch(_){} }
+  showToast('Deslocamento extra adicionado.','ok');
+}
+function removeExecExtra(i){
+  if(!requireEdit()) return;
+  const t=DB.trips.find(x=>x.id===_extraEdit.tripId); if(!t) return;
+  const ex=getExecution(t,_extraEdit.dk,true); if(!ex||!Array.isArray(ex.extraTrips)||!ex.extraTrips[i]) return;
+  if(!confirm('Remover este deslocamento extra?')) return;
+  ex.extraTrips.splice(i,1); saveDB(); renderExecExtras();
 }
 
 // ── Modal: horários por dia da semana (weekdaySchedule) ──
@@ -6787,16 +6909,19 @@ function saveWeekdaySchedule(){
     if(p||r) ws[wd]={p,r};
   });
   t.weekdaySchedule=Object.keys(ws).length?ws:null;
-  // Re-aplica horário nas execuções ainda PROGRAMADAS (não mexe em dias já em andamento/finalizados)
+  // Pergunta se aplica às execuções FUTURAS ainda não realizadas.
+  // Nunca sobrescreve dias em andamento/finalizados (integridade).
+  const _d=new Date(); const todayKey=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
+  const future=(t.executions||[]).filter(ex=>ex.status==='programada' && (ex.date>=todayKey));
   let upd=0;
-  (t.executions||[]).forEach(ex=>{
-    if(ex.status!=='programada') return;
-    const h=plannedHorario(t,ex.date);
-    if(ex.pickupTime!==h.pickup||ex.returnTime!==h.return){ ex.pickupTime=h.pickup; ex.returnTime=h.return; upd++; }
-  });
+  if(future.length){
+    if(confirm(`Aplicar os novos horários às ${future.length} execução(ões) futura(s) ainda não realizada(s)?\n\n(Dias já em andamento ou finalizados não são alterados.)`)){
+      future.forEach(ex=>{ const h=plannedHorario(t,ex.date); if(ex.pickupTime!==h.pickup||ex.returnTime!==h.return){ ex.pickupTime=h.pickup; ex.returnTime=h.return; upd++; } });
+    }
+  }
   saveDB(); closeModal('modal-ws');
   if(document.getElementById('modal-opsched')&&document.getElementById('modal-opsched').classList.contains('show')) renderOperationSchedule();
-  showToast(`Horários salvos.${upd?` ${upd} dia(s) programado(s) atualizado(s).`:''}`,'ok');
+  showToast(`Horários salvos.${upd?` ${upd} dia(s) futuro(s) atualizado(s).`:''}`,'ok');
 }
 
 // ══════════ EXPENSES ══════════
@@ -9309,88 +9434,130 @@ function osQrImg(link){
   if(!link) return '';
   return `<div class="osx-qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(link)}" alt="QR da rota"><div>Escaneie a rota</div></div>`;
 }
+// Número único da OS — ano-sequencial (ex.: 2026-00427), estável por viagem.
+function getOsNumber(t){
+  if(t.osNumber) return t.osNumber;
+  let yr; try{ yr=new Date((t.date||t.departureDate||'')+'T00:00:00').getFullYear(); }catch(_){ yr=null; }
+  if(!yr||isNaN(yr)) yr=new Date().getFullYear();
+  if(!DB.settings) DB.settings={};
+  const seq=(DB.settings.lastOsNumber||426)+1;   // começa em 427 (mantém o padrão já usado)
+  DB.settings.lastOsNumber=seq;
+  t.osNumber=`${yr}-${String(seq).padStart(5,'0')}`;
+  try{ saveDB(); }catch(_){}
+  return t.osNumber;
+}
+function osQrBox(link){
+  if(!link) return '<div class="osx2-qr"></div>';
+  return `<div class="osx2-qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(link)}" alt="QR"><div>ABRIR ROTA</div></div>`;
+}
+// Anexo de Deslocamentos Extras — mesmo Nº da OS, agrupado por data, paginado (sem limite).
+function buildOsExtrasAnexo(t, osNum, servicoLabel, extras){
+  const byDate={}; extras.forEach(x=>{ (byDate[x.date]=byDate[x.date]||[]).push(x); });
+  const rows=[];
+  Object.keys(byDate).sort().forEach(dk=>byDate[dk].forEach(x=>{
+    const hor=(x.timeStart||x.hora||'')+(x.timeEnd?'–'+x.timeEnd:'');
+    rows.push(`<tr><td class="c">${fmtDate(dk)}</td><td class="c">${hor}</td><td>${x.origin||x.origem||''}</td><td>${x.destination||x.destino||''}</td><td>${x.reason||x.motivo||x.desc||x.note||''}</td><td>${x.driver||''}</td><td class="c">${x.plate||''}</td><td class="c">${x.kmStart!=null?n(x.kmStart).toLocaleString('pt-BR'):''}</td><td class="c">${x.kmEnd!=null?n(x.kmEnd).toLocaleString('pt-BR'):''}</td></tr>`);
+  }));
+  const tHead=`<thead><tr><th style="width:72px">Data</th><th style="width:70px">Horário</th><th>Origem</th><th>Destino</th><th>Motivo</th><th>Motorista</th><th style="width:64px">Placa</th><th style="width:58px">KM ini</th><th style="width:58px">KM fim</th></tr></thead>`;
+  const FIRST=20, CONT=30; const pages=[]; let idx=0,pn=0;
+  while(idx<rows.length || pn===0){
+    const isFirst=pn===0, take=isFirst?FIRST:CONT, chunk=rows.slice(idx,idx+take); idx+=take; pn++;
+    pages.push(`<div class="osx2-page">
+      <div class="osx2-conthead"><span>Anexo de Deslocamentos Extras · OS Nº ${osNum}</span><span>${(servicoLabel||'').toUpperCase()} · ${t.client||''}</span></div>
+      <div class="osx2-sec">Deslocamentos extras${isFirst?'':' (continuação)'}</div>
+      <table class="osx2-tbl osx2-anx">${tHead}<tbody>${chunk.join('')||'<tr><td colspan="9" class="c">—</td></tr>'}</tbody></table>
+    </div>`);
+    if(idx>=rows.length) break;
+  }
+  return pages.join('');
+}
 function printSmartOS(tripId){
   const t=DB.trips.find(x=>x.id===tripId); if(!t){ alert('Viagem não encontrada.'); return; }
   const s=DB.settings||{};
   const cname=s.companyName||'MUVCITY TRANSFER';
   const logo=s.companyLogo||null;
-  const osNum=(t.id||'').replace(/\D/g,'').slice(-6).padStart(6,'0');
   const cont=isContinuousFret(t);
+  const osNum=getOsNumber(t);
+  const legal=s.companyLegal||cname;
+  const cnpj=s.companyCnpj?('CNPJ '+((typeof fmtCNPJ==='function')?fmtCNPJ(s.companyCnpj):s.companyCnpj)):'';
   let servicoLabel; try{ servicoLabel=tripServiceLabel(t); }catch(_){ servicoLabel=cont?'Fretamento Contínuo':'Viagem'; }
-  // Tabela diária: execuções (contínuo) ou a própria viagem (1 dia). Placa/motorista EFETIVOS.
-  let dayRows;
-  if(cont){
-    if(!Array.isArray(t.executions)||!t.executions.length) t.executions=buildExecutionsFromTrip(t);
-    dayRows=t.executions.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(ex=>
-      `<tr><td class="c">${fmtDate(ex.date)}</td><td>${vehicleName(execVehicleId(ex))||'—'}</td><td>${execDriver(ex)||'—'}</td>`+
-      `<td class="c">${ex.kmStart!=null?n(ex.kmStart).toLocaleString('pt-BR'):''}</td><td class="c">${ex.kmEnd!=null?n(ex.kmEnd).toLocaleString('pt-BR'):''}</td></tr>`).join('');
-  } else {
-    const drv=(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames.join(', '):t.driverName)||'—';
-    dayRows=`<tr><td class="c">${fmtDate(t.date)}</td><td>${vehicleName(t.vehicleId)||'—'}</td><td>${drv}</td>`+
-      `<td class="c">${t.kmStart?n(t.kmStart).toLocaleString('pt-BR'):''}</td><td class="c">${t.kmEnd?n(t.kmEnd).toLocaleString('pt-BR'):''}</td></tr>`;
-  }
-  // Horários fixos por dia da semana (weekdaySchedule) ou horário único da operação
-  const horarioTxt=(()=>{
-    if(cont && t.weekdaySchedule){
-      const map={1:'Seg',2:'Ter',3:'Qua',4:'Qui',5:'Sex',6:'Sáb',0:'Dom'};
-      const parts=[1,2,3,4,5,6,0].filter(wd=>t.weekdaySchedule[wd]).map(wd=>{const w=t.weekdaySchedule[wd];return `${map[wd]} ${w.p||'—'}${w.r?'–'+w.r:''}`;});
-      if(parts.length) return parts.join('  ·  ');
-    }
-    return t.pickupTime?(t.returnTime?`${t.pickupTime}–${t.returnTime}`:t.pickupTime):'—';
-  })();
+  // Execuções (garante persistidas). Não-contínuo = 1 execução (o próprio dia).
+  if(cont){ const _n0=(t.executions||[]).length; syncTripExecutions(t); if((t.executions||[]).length!==_n0){ try{ saveDB(); }catch(_){} } }
+  const execs = (cont && Array.isArray(t.executions) && t.executions.length)
+    ? t.executions.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''))
+    : [{date:t.date||t.departureDate, pickupTime:t.pickupTime, returnTime:t.returnTime, plannedVehicleId:t.vehicleId, actualVehicleId:'',
+        plannedDriver:(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'', actualDriver:'', kmStart:t.kmStart, kmEnd:t.kmEnd}];
+  // Linha por dia: Data | Ida | Retorno | Motorista | Placa | KM inicial | KM final
+  const dayRow = ex => {
+    const h = (typeof plannedHorario==='function') ? plannedHorario(t, ex.date) : {pickup:t.pickupTime||'',return:t.returnTime||''};
+    const ida = ex.pickupTime || h.pickup || '';
+    const ret = ex.returnTime || h.return || '';
+    const mot = ((typeof execDriver==='function')? execDriver(ex): (ex.actualDriver||ex.plannedDriver||'')) || '';
+    const vid = (typeof execVehicleId==='function')? execVehicleId(ex): (ex.actualVehicleId||ex.plannedVehicleId||'');
+    const plc = vid ? (vehicleName(vid)||'') : '';
+    const kmI = ex.kmStart!=null ? n(ex.kmStart).toLocaleString('pt-BR') : '';
+    const kmF = ex.kmEnd!=null ? n(ex.kmEnd).toLocaleString('pt-BR') : '';
+    return `<tr><td class="c">${fmtDate(ex.date)}</td><td class="c">${ida}</td><td class="c">${ret}</td><td>${mot}</td><td class="c">${plc}</td><td class="c">${kmI}</td><td class="c">${kmF}</td></tr>`;
+  };
+  const allRows = execs.map(dayRow);
+  // Deslocamentos extras (pra decidir Anexo) — herdam motorista/placa da execução do dia
+  const extras=[]; execs.forEach(ex=>{ const mot=((typeof execDriver==='function')?execDriver(ex):(ex.actualDriver||ex.plannedDriver||''))||''; const vid=(typeof execVehicleId==='function')?execVehicleId(ex):(ex.actualVehicleId||ex.plannedVehicleId||''); const plc=vid?(vehicleName(vid)||''):''; (ex.extraTrips||[]).forEach(x=>extras.push({date:ex.date, driver:x.driver||mot, plate:x.plate||plc, ...x})); });
+  // Extras lançados pelo MOTORISTA no app (diário de bordo, tipo 'extra') — chegam pelo sync.
+  const _execByDate={}; execs.forEach(ex=>{ _execByDate[ex.date]=ex; });
+  (t.dailyLog||[]).forEach(e=>{ if((e.type||'')!=='extra') return;
+    const exD=_execByDate[e.date]; const mot=exD?(((typeof execDriver==='function')?execDriver(exD):(exD.actualDriver||exD.plannedDriver||''))||''):''; const vid=exD?((typeof execVehicleId==='function')?execVehicleId(exD):(exD.actualVehicleId||exD.plannedVehicleId||'')):''; const plc=vid?(vehicleName(vid)||''):'';
+    extras.push({date:e.date, timeStart:e.timeStart||e.hora||'', timeEnd:e.timeEnd||'', origin:e.origin||'', destination:e.destination||'', reason:e.reason||e.note||e.desc||'', kmStart:(e.kmStart!=null?e.kmStart:(e.km!=null?e.km:null)), kmEnd:(e.kmEnd!=null?e.kmEnd:null), driver:e.who||mot, plate:e.plate||plc}); });
+  const hasExtras=extras.length>0; const anexoNo = hasExtras ? '01' : null;
   const link=osRouteLink(t);
-  const rota=`${t.origin||'—'} → ${t.destination||'—'}`;
-  // Deslocamentos extras: das execuções (extraTrips) ou 2 linhas em branco. Sem coluna "Extra?", sem valor.
-  let extraRows='';
-  if(cont){
-    const ex=[]; (t.executions||[]).forEach(e=>(e.extraTrips||[]).forEach(x=>ex.push({date:e.date,...x})));
-    extraRows=ex.map(x=>`<tr><td class="c">${fmtDate(x.date)}</td><td>${x.desc||x.note||'—'}</td><td class="c">${x.km!=null?n(x.km).toLocaleString('pt-BR'):''}</td><td class="visto"></td></tr>`).join('');
-  }
-  if(!extraRows) extraRows=[1,2].map(()=>`<tr><td class="c"></td><td></td><td class="c"></td><td class="visto"></td></tr>`).join('');
-  const fuelRows=[1,2,3].map(()=>`<tr><td></td><td></td><td class="c"></td><td class="c"></td><td class="visto"></td></tr>`).join('');
-  const logoHtml=logo?`<img class="osx-logo" src="${logo}" alt="">`:`<div class="osx-logo">M</div>`;
-  const body=`<div class="osx-doc">
-    <div class="osx-head">
-      <div class="osx-brand">${logoHtml}<div><div class="osx-name">${cname}</div><div class="osx-os">Ordem de Serviço · Nº ${osNum}</div></div></div>
-      ${osQrImg(link)}
+  const rotaTxt = `${(t.origin||'—')}  &gt;  ${(t.destination||'—')}`;
+  const logoHtml = logo?`<img class="osx2-logo" src="${logo}" alt="">`:`<div class="osx2-logo">M</div>`;
+  const tHead = `<thead><tr>
+      <th style="width:78px">Data</th><th style="width:50px">Ida</th><th style="width:56px">Retorno</th>
+      <th>Motorista</th><th style="width:74px">Placa</th><th style="width:70px">KM inicial</th><th style="width:70px">KM final</th>
+    </tr></thead>`;
+  const bigHead = `
+    <div class="osx2-head">
+      <div class="osx2-brand">${logoHtml}
+        <div><div class="osx2-title">Ordem de Serviço</div>
+          <div class="osx2-sub">${(servicoLabel||'').toUpperCase()}</div>
+          <div class="osx2-osnum">Nº ${osNum}</div>
+          <div class="osx2-ficha">Ficha de campo do motorista</div></div>
+      </div>
+      ${osQrBox(link)}
     </div>
-    <div class="osx-title">${servicoLabel}</div>
-    <table class="osx-info">
-      <tr><td class="k">Contratante</td><td>${t.client||'—'}</td><td class="k">Serviço</td><td>${servicoLabel}</td></tr>
-      <tr><td class="k">Rota</td><td colspan="3">${rota}${link?`<div style="font-size:8px;color:#64748b;word-break:break-all;margin-top:2px">${link}</div>`:''}</td></tr>
-      <tr><td class="k">Horários</td><td colspan="3">${horarioTxt}</td></tr>
+    <div class="osx2-sec">Dados do serviço</div>
+    <table class="osx2-info">
+      <tr><td class="k">Cliente</td><td>${t.client||'—'}</td></tr>
+      <tr><td class="k">Serviço</td><td>${servicoLabel||'—'}</td></tr>
+      <tr><td class="k">Rota programada</td><td>${rotaTxt}${link?`<div class="osx2-link">${link}</div>`:''}</td></tr>
     </table>
-    <div class="osx-sec">Execução diária</div>
-    <table class="osx-tbl">
-      <thead><tr><th style="width:88px">Data</th><th style="width:90px">Placa</th><th>Motorista</th><th style="width:78px">KM inicial</th><th style="width:78px">KM final</th></tr></thead>
-      <tbody>${dayRows||'<tr><td colspan="5" class="c">—</td></tr>'}</tbody>
+    <div class="osx2-note">Embarque e retorno conforme a programação registrada em cada dia.</div>
+    <div class="osx2-sec">Execução do serviço</div>`;
+  const contHead = `<div class="osx2-conthead"><span>Ordem de Serviço · Nº ${osNum}</span><span>${(servicoLabel||'').toUpperCase()} · ${t.client||''}</span></div><div class="osx2-sec">Execução do serviço (continuação)</div>`;
+  const foot = `
+    <div class="osx2-sec">Lançamento no sistema</div>
+    <table class="osx2-foot">
+      <tr><td style="width:33%">[  ] Lançado no sistema</td>
+          <td style="width:34%">Gestor: ________________________</td>
+          <td style="width:33%">Data: ____/____/______</td></tr>
+      <tr><td colspan="3">Deslocamento extra: ${hasExtras?('Sim — Anexo nº '+anexoNo):'Não'}</td></tr>
     </table>
-    <div class="osx-sec">Deslocamentos extras</div>
-    <table class="osx-tbl">
-      <thead><tr><th style="width:88px">Data</th><th>Descrição</th><th style="width:78px">KM</th><th class="visto">Visto</th></tr></thead>
-      <tbody>${extraRows}</tbody>
-    </table>
-    <div class="osx-sec">Registro de abastecimento</div>
-    <table class="osx-tbl">
-      <thead><tr><th style="width:88px">Data</th><th>Posto</th><th style="width:66px">Litros</th><th style="width:78px">KM</th><th class="visto">Visto</th></tr></thead>
-      <tbody>${fuelRows}</tbody>
-    </table>
-    <div class="osx-sec">Controle de lançamento</div>
-    <table class="osx-tbl">
-      <thead><tr><th>Item</th><th style="width:88px">Lançado?</th><th style="width:110px">Data</th><th class="visto">Visto</th></tr></thead>
-      <tbody>
-        <tr><td>KM do período</td><td class="c"></td><td></td><td></td></tr>
-        <tr><td>Abastecimentos</td><td class="c"></td><td></td><td></td></tr>
-        <tr><td>Deslocamentos extras</td><td class="c"></td><td></td><td></td></tr>
-      </tbody>
-    </table>
-    <table class="osx-sign">
-      <tr><td>Motorista<div class="sub">${(Array.isArray(t.driverNames)&&t.driverNames.length?t.driverNames[0]:t.driverName)||'—'}</div></td>
-          <td>Contratante<div class="sub">${t.client||'—'}</div></td></tr>
-    </table>
-    <div class="osx-foot">${cname} · Documento operacional de comprovação de serviço — não contém valores.</div>
-  </div>`;
-  printDocWindow(`OS - ${t.client||'servico'} - ${new Date().toISOString().slice(0,10)}`, body);
+    <div class="osx2-legal">${legal}${cnpj?' | '+cnpj:''}</div>`;
+  // Paginação: chunk das linhas (nunca corta linha; repete Nº da OS + serviço + cabeçalho)
+  const FIRST=16, CONT=26; const pages=[]; let idx=0, pageNo=0;
+  while(idx<allRows.length || pageNo===0){
+    const isFirst=(pageNo===0), take=isFirst?FIRST:CONT, chunk=allRows.slice(idx, idx+take); idx+=take; pageNo++;
+    const isLast = idx>=allRows.length;
+    pages.push(`<div class="osx2-page">
+      ${isFirst?bigHead:contHead}
+      <table class="osx2-tbl">${tHead}<tbody>${chunk.join('')||'<tr><td colspan="7" class="c">—</td></tr>'}</tbody></table>
+      ${isLast?foot:''}
+    </div>`);
+    if(idx>=allRows.length) break;
+  }
+  let body=pages.join('');
+  if(hasExtras) body += buildOsExtrasAnexo(t, osNum, servicoLabel, extras);
+  printDocWindow(`OS ${osNum} - ${t.client||'servico'}`, body);
 }
 
 function editTrip(id){
@@ -10012,8 +10179,21 @@ function saveTrip(){
   // (driverExpenses, fuelEfficiency, driverStatus, driverLastSync, pickupTime,
   // passengers, itinerary, clientPhone, etc). Antes era `t.id===id?trip:t` e
   // apagava esses campos toda vez que o gestor salvasse uma viagem editada.
+  // Fretamento contínuo: avisa quantas execuções (1 por dia) serão geradas — só quando a contagem muda.
+  if(isContinuousFret(trip)){
+    try{
+      const days=tripServiceDaysList(trip);
+      const existing=id?((DB.trips.find(x=>x.id===id)||{}).executions):null;
+      const existingCount=Array.isArray(existing)?existing.length:0;
+      if(days.length && (!id || days.length!==existingCount)){
+        if(!confirm(`Serão geradas ${days.length} execuções entre ${fmtDate(days[0])} e ${fmtDate(days[days.length-1])}.\n\nUma para cada dia do serviço. Continuar?`)) return;
+      }
+    }catch(_){}
+  }
   if(id) DB.trips=DB.trips.map(t=>t.id===id?{...t,...trip}:t);
   else DB.trips.push(trip);
+  // Fretamento contínuo: persiste as execuções por dia (base da Escala e da OS de 15 dias)
+  try{ const _saved=DB.trips.find(x=>x.id===(id||trip.id)); if(_saved) syncTripExecutions(_saved); }catch(_){}
   saveDB();closeModal('modal-trip');renderCurrentPage();
 }
 
@@ -13100,6 +13280,36 @@ function printDocWindow(title, bodyHTML){
     .osx-sign td{border:1px solid #1e3a5f;padding:24px 10px 6px;text-align:center;font-size:10px;font-weight:700;width:50%}
     .osx-sign .sub{font-weight:400;color:#555;font-size:9px}
     .osx-foot{margin-top:12px;text-align:center;font-size:8.5px;color:#64748b;border-top:1px solid #cbd5e1;padding-top:6px}
+
+    /* ══ OS v3 (ficha de campo) — A4, azul-marinho, branca, paginada ══ */
+    .osx2-page{padding:11mm 11mm;page-break-after:always;color:#0f172a}
+    .osx2-page:last-child{page-break-after:auto}
+    .osx2-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:2.5px solid #1e3a5f;padding-bottom:9px;margin-bottom:9px}
+    .osx2-brand{display:flex;gap:11px;align-items:flex-start}
+    .osx2-logo{width:42px;height:42px;border-radius:7px;object-fit:contain;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0}
+    .osx2-title{font-size:17px;font-weight:800;color:#1e3a5f;letter-spacing:.4px;line-height:1.1;text-transform:uppercase}
+    .osx2-sub{font-size:10px;font-weight:800;color:#1e3a5f;letter-spacing:.6px;margin-top:1px}
+    .osx2-osnum{font-size:12px;font-weight:700;color:#1e3a5f;margin-top:3px}
+    .osx2-ficha{font-size:8.5px;color:#64748b;margin-top:1px}
+    .osx2-qr{text-align:center;font-size:8px;color:#1e3a5f;font-weight:800;flex-shrink:0}
+    .osx2-qr img{width:82px;height:82px;display:block;border:1px solid #cbd5e1}
+    .osx2-qr div{margin-top:2px;letter-spacing:.5px}
+    .osx2-sec{font-size:10px;font-weight:800;color:#1e3a5f;text-transform:uppercase;letter-spacing:.5px;margin:9px 0 4px}
+    .osx2-info{width:100%;border-collapse:collapse;margin-bottom:2px}
+    .osx2-info td{border:1px solid #1e3a5f;padding:4px 8px;font-size:10.5px;vertical-align:top}
+    .osx2-info .k{background:#eef2f7;font-weight:700;text-transform:uppercase;font-size:9px;letter-spacing:.3px;color:#1e3a5f;white-space:nowrap;width:1%}
+    .osx2-link{font-size:7.5px;color:#64748b;word-break:break-all;margin-top:2px}
+    .osx2-note{font-size:9.5px;color:#475569;font-style:italic;margin:4px 0 2px}
+    .osx2-tbl{width:100%;border-collapse:collapse}
+    .osx2-tbl th{background:#1e3a5f;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:.3px;padding:5px 6px;border:1px solid #1e3a5f;text-align:left}
+    .osx2-tbl td{border:1px solid #1e3a5f;padding:0 7px;height:27px;font-size:11px;vertical-align:middle}
+    .osx2-tbl td.c{text-align:center}
+    .osx2-tbl tr{page-break-inside:avoid}
+    .osx2-anx td{height:22px;font-size:10px}
+    .osx2-conthead{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1e3a5f;padding-bottom:6px;margin-bottom:6px;font-size:10px;font-weight:700;color:#1e3a5f}
+    .osx2-foot{width:100%;border-collapse:collapse;margin-top:4px}
+    .osx2-foot td{border:1px solid #1e3a5f;padding:9px 8px;font-size:10px;font-weight:600;color:#1e3a5f}
+    .osx2-legal{text-align:center;font-size:8px;color:#64748b;margin-top:8px}
   `;
   w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${title}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${css}</style></head><body>${bodyHTML}</body></html>`);
   w.document.close();

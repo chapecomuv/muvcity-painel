@@ -1333,9 +1333,21 @@ function openDailyKmModal(tripId){
               <input type="text" inputmode="decimal" class="fc" id="dk-kmend" placeholder="Ex: 124481" style="font-size:17px;font-weight:700"></div>
           </div>
         </div>
-        <div class="fg" id="dk-grp-kmsingle" style="display:none">
-          <label class="fl">KM da viagem extra *</label>
-          <input type="text" inputmode="decimal" class="fc" id="dk-km" placeholder="Ex: 18" style="font-size:18px;font-weight:700">
+        <div id="dk-grp-kmsingle" style="display:none">
+          <div class="fr2">
+            <div class="fg"><label class="fl">Origem</label>
+              <input type="text" class="fc" id="dk-xorig" placeholder="De onde saiu"></div>
+            <div class="fg"><label class="fl">Destino</label>
+              <input type="text" class="fc" id="dk-xdest" placeholder="Para onde foi"></div>
+          </div>
+          <div class="fr2">
+            <div class="fg"><label class="fl">KM inicial</label>
+              <input type="text" inputmode="decimal" class="fc" id="dk-xkmi" placeholder="hodômetro (opc.)"></div>
+            <div class="fg"><label class="fl">KM final</label>
+              <input type="text" inputmode="decimal" class="fc" id="dk-xkmf" placeholder="hodômetro (opc.)"></div>
+          </div>
+          <div class="fg"><label class="fl">Ou KM rodado direto</label>
+            <input type="text" inputmode="decimal" class="fc" id="dk-km" placeholder="Ex: 18"></div>
         </div>
         <div id="dk-grp-espera" style="display:none">
           <div class="fr2">
@@ -1372,10 +1384,16 @@ function saveDailyKm(tripId){
     if(ke<ks){ showToast('KM final não pode ser menor que o inicial','warn'); return; }
     entry={...base, kmStart:ks, kmEnd:ke, km:Math.round((ke-ks)*100)/100};
   } else if(ty==='extra'){
-    const km=n(document.getElementById('dk-km').value);
-    if(km<=0){ showToast('Informe o KM','warn'); return; }
     if(!note){ showToast('Descreva a viagem extra','warn'); return; }
-    entry={...base, km};
+    const kmi=n(document.getElementById('dk-xkmi')?.value), kmf=n(document.getElementById('dk-xkmf')?.value);
+    const kmDireto=n(document.getElementById('dk-km')?.value);
+    if(kmi>0 && kmf>0 && kmf<kmi){ showToast('KM final não pode ser menor que o inicial','warn'); return; }
+    const km=kmDireto>0?kmDireto:(kmi>0&&kmf>0?Math.round((kmf-kmi)*100)/100:0);
+    entry={...base, reason:note,
+      origin:(document.getElementById('dk-xorig')?.value||'').trim(),
+      destination:(document.getElementById('dk-xdest')?.value||'').trim(),
+      kmStart:kmi>0?kmi:null, kmEnd:kmf>0?kmf:null, km,
+      timeStart:new Date().toTimeString().slice(0,5)};
   } else if(ty==='espera'){
     const a=document.getElementById('dk-arrival').value;
     const b=document.getElementById('dk-boarding').value;
@@ -1393,6 +1411,12 @@ function saveDailyKm(tripId){
   closeAllOverlays();
   showToast('📋 Registrado no diário!','ok');
   render();
+}
+// Atalho rápido: abre o diário já no modo "Deslocamento extra" (foco em origem)
+function openDriverExtra(tripId){
+  openDailyKmModal(tripId);
+  try{ setDailyType('extra'); }catch(_){}
+  setTimeout(()=>{ try{ document.getElementById('dk-xorig')?.focus(); }catch(_){} },160);
 }
 function deleteDailyKm(tripId, entryId){
   const trip=DB.trips.find(t=>t.id===tripId); if(!trip) return;
@@ -1562,6 +1586,10 @@ function renderTripScreen(root, trip){
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       📋 Registrar KM do Dia
     </button>
+    <button class="btn btn-lg" style="margin-top:10px;background:linear-gradient(135deg,#059669,#047857);color:#fff" onclick="openDriverExtra('${trip.id}')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      🧭 Deslocamento extra
+    </button>
     <button class="btn btn-dg btn-lg" style="margin-top:10px" onclick="openFinishTripModal('${trip.id}')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 6 20 20 12 6 4"/></svg>
       Finalizar Viagem
@@ -1677,6 +1705,12 @@ function openStartTripModal(tripId){
         </div>
         <div class="banner info">
           📍 <span>Anote o <b>KM inicial</b> do veículo agora. Esse número é a base de tudo. Se for abastecer antes de sair, registre também.</span>
+        </div>
+        <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.22);border-radius:12px;padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.4px;color:#34d399;text-transform:uppercase;margin-bottom:8px">✅ Confirme antes de iniciar</div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13.5px"><span class="txm">👤 Motorista</span><b style="color:#fff">${(DB.driver&&DB.driver.name)||'—'}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13.5px"><span class="txm">🚐 Veículo / placa</span><b style="color:#fff">${trip.vehiclePlate||'—'}${trip.vehicleModel?' · '+trip.vehicleModel:''}</b></div>
+          <div class="txm" style="font-size:11px;margin-top:6px">Se não for você ou não for essa van, avise o gestor antes de iniciar.</div>
         </div>
         <div class="fg">
           <label class="fl">KM Inicial *</label>
