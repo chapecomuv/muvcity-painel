@@ -1365,6 +1365,8 @@ select.fc option{background:#fff;color:var(--tx)}
     <div class="nav-grp">Análises</div>
     <div class="nav-item" onclick="nav('reports')">
       <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Relatórios</div>
+    <div class="nav-item" onclick="openOsBuilder()">
+      <span class="nav-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Ordem de Serviço</div>
 
     <div class="nav-grp gestor-only">Sistema</div>
     <div class="nav-item gestor-only" onclick="nav('admins')">
@@ -9470,6 +9472,165 @@ function buildOsExtrasAnexo(t, osNum, servicoLabel, extras){
     if(idx>=rows.length) break;
   }
   return pages.join('');
+}
+
+/* ══════════ EMISSÃO AVULSA DE OS (desamarrada da viagem) ══════════
+   Gera uma OS em branco pra preencher à mão: cliente opcional, por período
+   (com diálogo de ida-e-volta) ou por quantidade de linhas. */
+function openOsBuilder(){
+  const clientOpts=(DB.clients||[]).map(c=>`<option value="${(c.name||'').replace(/"/g,'&quot;')}">`).join('');
+  const today=new Date().toISOString().split('T')[0];
+  let host=document.getElementById('modal-os-builder');
+  if(!host){ host=document.createElement('div'); host.id='modal-os-builder'; host.className='overlay'; document.body.appendChild(host); }
+  host.innerHTML=`<div class="modal" style="max-width:600px">
+    <div class="modal-h"><span class="modal-t">🧾 Emitir Ordem de Serviço</span><button class="xbtn" onclick="closeModal('modal-os-builder')">✕</button></div>
+    <div class="txs txm" style="margin-bottom:12px">Gere uma OS pra preencher à mão. O <b>cliente é opcional</b> — deixe vazio pra imprimir folhas em branco e deixar nas vans.</div>
+    <div class="fsec">
+      <div class="fsec-t">Dados (opcionais)</div>
+      <div class="fr c2">
+        <div class="fg"><label class="fl">Cliente</label>
+          <input class="fc" id="osb-client" list="osb-client-list" placeholder="— sem cliente (em branco) —">
+          <datalist id="osb-client-list">${clientOpts}</datalist></div>
+        <div class="fg"><label class="fl">Tipo de serviço</label>
+          <input class="fc" id="osb-service" value="Fretamento contínuo"></div>
+      </div>
+      <div class="fr c2">
+        <div class="fg"><label class="fl">Origem</label><input class="fc" id="osb-origin" placeholder="opcional"></div>
+        <div class="fg"><label class="fl">Destino</label><input class="fc" id="osb-dest" placeholder="opcional"></div>
+      </div>
+      <div class="fr c2">
+        <div class="fg"><label class="fl">Hora de ida (padrão)</label><input type="time" class="fc" id="osb-ida"></div>
+        <div class="fg"><label class="fl">Hora de retorno (padrão)</label><input type="time" class="fc" id="osb-ret"></div>
+      </div>
+    </div>
+    <div class="fsec">
+      <div class="fsec-t">Quantas linhas gerar</div>
+      <div class="fr"><div class="fg"><label class="fl">Modo</label>
+        <select class="fc" id="osb-mode" onchange="_osbToggleMode()">
+          <option value="periodo">Por período (datas)</option>
+          <option value="qtd">Quantidade de linhas (em branco)</option>
+        </select></div></div>
+      <div id="osb-periodo">
+        <div class="fr c2">
+          <div class="fg"><label class="fl">Data inicial</label><input type="date" class="fc" id="osb-di" value="${today}"></div>
+          <div class="fg"><label class="fl">Data final</label><input type="date" class="fc" id="osb-df" value="${today}"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px;color:var(--tx)">
+          <input type="checkbox" id="osb-idavolta" style="width:16px;height:16px"> Ida e volta em linhas separadas (2 por dia)</label>
+        <div class="txs txm" style="margin-top:4px">Se o período tiver mais de 1 dia e você não marcar, eu pergunto na hora de gerar.</div>
+      </div>
+      <div id="osb-qtd" style="display:none">
+        <div class="fr c2">
+          <div class="fg"><label class="fl">Quantas linhas?</label><input type="number" class="fc" id="osb-n" min="1" max="300" value="16"></div>
+          <div class="fg"><label class="fl">Datas a partir de (opcional)</label><input type="date" class="fc" id="osb-nstart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fl-row ic jb mt4"><button class="btn btn-gh" onclick="closeModal('modal-os-builder')">Cancelar</button>
+      <button class="btn btn-pr" onclick="generateBuilderOS()">🖨️ Gerar Ordem de Serviço</button></div>
+  </div>`;
+  openModal('modal-os-builder');
+}
+function _osbToggleMode(){
+  const m=document.getElementById('osb-mode').value;
+  document.getElementById('osb-periodo').style.display=(m==='periodo')?'':'none';
+  document.getElementById('osb-qtd').style.display=(m==='qtd')?'':'none';
+}
+function _osbDays(di,df){
+  const s=new Date(di+'T00:00:00'), e=new Date(df+'T00:00:00'); const out=[];
+  if(isNaN(s)||isNaN(e)||e<s) return [];
+  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) out.push(_migYmd(d));
+  return out;
+}
+function generateBuilderOS(){
+  const g=id=>document.getElementById(id);
+  const cfg={ client:g('osb-client').value.trim(), service:g('osb-service').value.trim()||'Fretamento contínuo',
+    origin:g('osb-origin').value.trim(), destination:g('osb-dest').value.trim(),
+    ida:g('osb-ida').value, ret:g('osb-ret').value, rows:[], layout:'day' };
+  const mode=g('osb-mode').value;
+  if(mode==='periodo'){
+    const di=g('osb-di').value, df=g('osb-df').value;
+    if(!di||!df){ showToast('Informe data inicial e final.','warn'); return; }
+    const days=_osbDays(di,df);
+    if(!days.length){ showToast('Período inválido (data final antes da inicial?).','warn'); return; }
+    let idaVolta=g('osb-idavolta').checked;
+    if(days.length>1 && !idaVolta){
+      idaVolta=confirm(`O período tem ${days.length} dias.\n\nQuer IDA e VOLTA em linhas separadas? (${days.length} dias → ${days.length*2} linhas)\n\nOK = ida e volta separadas · Cancelar = 1 linha por dia`);
+    }
+    if(idaVolta){
+      cfg.layout='leg';
+      cfg.rows=days.flatMap(d=>[
+        {date:d,leg:'Ida',hora:cfg.ida||'',traj:(cfg.origin&&cfg.destination)?`${cfg.origin} → ${cfg.destination}`:''},
+        {date:d,leg:'Volta',hora:cfg.ret||'',traj:(cfg.origin&&cfg.destination)?`${cfg.destination} → ${cfg.origin}`:''}]);
+    } else {
+      cfg.rows=days.map(d=>({date:d,ida:cfg.ida||'',ret:cfg.ret||''}));
+    }
+  } else {
+    const N=parseInt(g('osb-n').value)||0;
+    if(N<1){ showToast('Informe a quantidade de linhas.','warn'); return; }
+    const nstart=g('osb-nstart').value;
+    let days=[];
+    if(nstart){ const d=new Date(nstart+'T00:00:00'); for(let i=0;i<N;i++) days.push(_migYmd(new Date(d.getFullYear(),d.getMonth(),d.getDate()+i))); }
+    cfg.rows=Array.from({length:N},(_,i)=>({date:days[i]||'',ida:cfg.ida||'',ret:cfg.ret||''}));
+  }
+  closeModal('modal-os-builder');
+  printBlankOS(cfg);
+}
+function printBlankOS(cfg){
+  const s=DB.settings||{}; const cname=s.companyName||'MUVCITY TRANSFER';
+  const legal=s.companyLegal||cname; const cnpj=s.companyCnpj?('CNPJ '+((typeof fmtCNPJ==='function')?fmtCNPJ(s.companyCnpj):s.companyCnpj)):'';
+  const logo=s.companyLogo||null;
+  if(!DB.settings) DB.settings={};
+  const seq=(DB.settings.lastOsNumber||426)+1; DB.settings.lastOsNumber=seq; try{saveDB();}catch(_){}
+  const osNum=`${new Date().getFullYear()}-${String(seq).padStart(5,'0')}`;
+  const link=(cfg.origin||cfg.destination)?`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(cfg.origin||'')}&destination=${encodeURIComponent(cfg.destination||'')}`:'';
+  const logoHtml=logo?`<img class="osx2-logo" src="${logo}" alt="">`:`<div class="osx2-logo">M</div>`;
+  const rotaTxt=(cfg.origin||cfg.destination)?`${cfg.origin||'—'}  &gt;  ${cfg.destination||'—'}`:'________________________________';
+  let tHead, rowFn, colspan;
+  if(cfg.layout==='leg'){
+    tHead=`<thead><tr><th style="width:76px">Data</th><th style="width:56px">Sentido</th><th style="width:50px">Hora</th><th>Trajeto</th><th>Motorista</th><th style="width:70px">Placa</th><th style="width:62px">KM ini</th><th style="width:62px">KM fim</th></tr></thead>`;
+    rowFn=r=>`<tr><td class="c">${r.date?fmtDate(r.date):''}</td><td class="c">${r.leg||''}</td><td class="c">${r.hora||''}</td><td>${r.traj||''}</td><td></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>`;
+    colspan=8;
+  } else {
+    tHead=`<thead><tr><th style="width:80px">Data</th><th style="width:50px">Ida</th><th style="width:56px">Retorno</th><th>Motorista</th><th style="width:74px">Placa</th><th style="width:70px">KM inicial</th><th style="width:70px">KM final</th></tr></thead>`;
+    rowFn=r=>`<tr><td class="c">${r.date?fmtDate(r.date):''}</td><td class="c">${r.ida||''}</td><td class="c">${r.ret||''}</td><td></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>`;
+    colspan=7;
+  }
+  const allRows=(cfg.rows||[]).map(rowFn);
+  const bigHead=`
+    <div class="osx2-head">
+      <div class="osx2-brand">${logoHtml}
+        <div><div class="osx2-title">Ordem de Serviço</div>
+          <div class="osx2-sub">${(cfg.service||'').toUpperCase()}</div>
+          <div class="osx2-osnum">Nº ${osNum}</div>
+          <div class="osx2-ficha">Ficha de campo do motorista</div></div>
+      </div>
+      ${link?`<div class="osx2-qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(link)}" alt="QR"><div>ABRIR ROTA</div></div>`:''}
+    </div>
+    <div class="osx2-sec">Dados do serviço</div>
+    <table class="osx2-info">
+      <tr><td class="k">Cliente</td><td>${cfg.client||'________________________________'}</td></tr>
+      <tr><td class="k">Serviço</td><td>${cfg.service||'—'}</td></tr>
+      <tr><td class="k">Rota</td><td>${rotaTxt}</td></tr>
+    </table>
+    <div class="osx2-note">Preencha os campos em branco conforme a execução de cada dia.</div>
+    <div class="osx2-sec">Execução do serviço</div>`;
+  const contHead=`<div class="osx2-conthead"><span>Ordem de Serviço · Nº ${osNum}</span><span>${(cfg.service||'').toUpperCase()}${cfg.client?' · '+cfg.client:''}</span></div><div class="osx2-sec">Execução do serviço (continuação)</div>`;
+  const foot=`
+    <div class="osx2-sec">Lançamento no sistema</div>
+    <table class="osx2-foot">
+      <tr><td style="width:33%">[  ] Lançado no sistema</td><td style="width:34%">Gestor: ________________________</td><td style="width:33%">Data: ____/____/______</td></tr>
+    </table>
+    <div class="osx2-legal">${legal}${cnpj?' | '+cnpj:''}</div>`;
+  const FIRST=cfg.layout==='leg'?18:16, CONT=cfg.layout==='leg'?30:26;
+  const pages=[]; let idx=0,pn=0;
+  while(idx<allRows.length || pn===0){
+    const isFirst=pn===0, take=isFirst?FIRST:CONT, chunk=allRows.slice(idx,idx+take); idx+=take; pn++;
+    const isLast=idx>=allRows.length;
+    pages.push(`<div class="osx2-page">${isFirst?bigHead:contHead}<table class="osx2-tbl">${tHead}<tbody>${chunk.join('')||`<tr><td colspan="${colspan}" class="c">—</td></tr>`}</tbody></table>${isLast?foot:''}</div>`);
+    if(idx>=allRows.length) break;
+  }
+  printDocWindow(`OS ${osNum}${cfg.client?' - '+cfg.client:''}`, pages.join(''));
 }
 function printSmartOS(tripId){
   const t=DB.trips.find(x=>x.id===tripId); if(!t){ alert('Viagem não encontrada.'); return; }
