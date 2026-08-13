@@ -246,7 +246,6 @@ textarea.fc{min-height:80px;resize:vertical}
 //  MUVCITY — APP DO MOTORISTA
 // ════════════════════════════════════════════════════════════
 
-/* Produção — sincroniza com o Firebase real. (Gerado a partir do sandbox _TESTE.) */
 window.__TESTE__ = false;
 
 let DB = {};
@@ -789,7 +788,11 @@ function isMyTrip(trip){
   // Se o meu nome está na lista, a viagem é minha (cada motorista designado a vê).
   const names = (Array.isArray(trip.driverNames)&&trip.driverNames.length)
     ? trip.driverNames : [trip.driverName];
-  if(myName) return names.some(nm=>normalizeName(nm)===myName);
+  if(myName){
+    if(names.some(nm=>normalizeName(nm)===myName)) return true;
+    // v3 (aditivo): fui escalado numa execução específica desta viagem (Central de Escala do gestor)
+    if(Array.isArray(trip.executions) && trip.executions.some(e=>{ const nm=normalizeName(e.actualDriver||e.plannedDriver||''); return nm && nm===myName; })) return true;
+  }
   return false;   // sem identificação → não mostra (evita vazar viagem de outro)
 }
 
@@ -805,6 +808,13 @@ function myCoversDay(t, dk){
   const s=_mySeg(t);
   if(s && Array.isArray(s.days) && s.days.length) return s.days.includes(dk);
   if(s && s.from){ const to=s.to||s.from; return dk>=s.from && dk<=to; }
+  // v3: roteia pela execução do dia (planejado × executado). actualDriver definido = definitivo.
+  const _myN=normalizeName(DB.driver?.name||'');
+  if(_myN && Array.isArray(t.executions)){
+    const _e=t.executions.find(x=>x.date===dk);
+    if(_e && _e.actualDriver) return normalizeName(_e.actualDriver)===_myN;      // executado manda
+    if(_e && _e.plannedDriver && normalizeName(_e.plannedDriver)===_myN) return true;  // planejado pra mim
+  }
   const from=t.date||''; const to=t.returnDate||from;
   return !!from && dk>=from && dk<=(to||from);
 }
